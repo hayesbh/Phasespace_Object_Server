@@ -10,47 +10,7 @@
         <!--JavaScript Libraries-->
 	    <script type='text/javascript' src='http://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.js'></script>
 	    <!--JS script for setting up ROS bridge connections-->
-	    <script type='text/javascript' type='text/javascript'>
-	    	    var ros = new ROSLIB.Ros();
-  				ros.on('error', function(error) {
-    				console.log(error);
-  				});
-  				ros.on('connection', function() {
-    				console.log('Connection made!');
-  				});
-  				ros.connect('ws://130.132.249.173:9090');
-  				var add = new ROSLIB.Service({
-    				ros : ros,
-    				name : '/add',
-    				serviceType : 'test/Object'
-  				});
-  				function addObject(called){
-  					var addreq = new ROSLIB.ServiceRequest({
-  						name : called
-  					});
-  				};
-  				
-  				function update(){
-  					var listener = new ROSLIB.Topic({
-						ros : ros,
-						name : '/info',
-						messageType : 'std_msgs/String'
-					});
-  					listener.subscribe(function(message){
-  						console.log('Received message on ' + listener.name + ': ' + message.data);
-  						var substr = message.data.split(',');
-  						console.log('Index = ' + substr[0]);
-  						console.log('POS = ' + substr[1]);
-  						console.log('Rotation = ' + substr[2]);
-  						$('#'+ substr[0] +' .info').html('');
-  						$('#'+ substr[0] +' .info').append(substr[1]);
-  						listener.unsubscribe();
-  					});
-
-  				};
-   				setInterval(update, 1000);
-
-	    </script>
+	    <script type='text/javascript' src='ros.js'></script>
 	    <!--JS script for website interface-->
 	    <script type='text/javascript' src='script.js'></script>
 	</head>

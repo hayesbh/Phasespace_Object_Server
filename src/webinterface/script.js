@@ -1,7 +1,7 @@
 $(document).ready(function(){
-  	var index = 0;
-  	$("#add").click(function(){
-    	$("#add_selection").toggle();
+	var index = 0;
+	$("#add").click(function(){
+		$("#add_selection").toggle();
 	});
 	$("#ADD").click(function(){
 		$("#add_selection").hide();
@@ -19,7 +19,7 @@ $(document).ready(function(){
 								"<p class='info'></p></div>");
 			addObject($('#AddName').val());
 			index++;
-		};
+		}
 	});
 	$('#AddName').click(function(){
 		$(this).val('');
@@ -30,10 +30,10 @@ $(document).ready(function(){
 		if(event.which == 13){
 			$("#delete_selection").hide();
 			$("#"+$('#index').val()).remove();
-		};
-	});	
+		}
+	});
 	$("#delete").click(function(){
-    	$("#delete_selection").toggle();
+		$("#delete_selection").toggle();
 	});
 	$("#DELETE").click(function(){
 		$("#delete_selection").hide();
@@ -46,7 +46,7 @@ $(document).ready(function(){
 	$("#markers_section").keypress(function(){
 		if(event.which == 13){
 			$("markers_section").hide();
-		};
+		}
 	});
 	$('#capture').click(function(){
 		$("#markers_section").hide();

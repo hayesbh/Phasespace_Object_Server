@@ -28,7 +28,7 @@
 #include "PhaseSpace/ObjectClass.h"
 
 /*OWL (PhaseSpace System API)*/
-#include "PhaseSpace/owl/owl.h"
+#include "owl/owl.h"
 
 #define MARKER_COUNT 200
 #define SERVER_NAME "192.168.2.123"
