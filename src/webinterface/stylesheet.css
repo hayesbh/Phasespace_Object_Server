@@ -1,0 +1,96 @@
+body {
+	background-color: white;
+}
+div.header {
+	font-size: 24px;
+	font-weight: bold;
+	margin: auto;
+	text-shadow: 0px 0px 4px #CACACA;
+	text-align: center;
+}
+
+button {
+	margin: 10px 10px 10px 10px;
+	background-color: #2971D5;
+	box-shadow: inset 0 1px 0 0 rgba(225,225,225, 0.4);
+	border-radius: 4px;
+	color: white;
+	padding: 7.5px 15px;
+	text-decoration: none;
+	border: 1px solid rgba(0,0,0, 0.05);
+	display: block;
+}
+
+button.depressed {
+  background-color: #595965 !important;
+  box-shadow: inset 0 -1px 0 0 rgba(255, 255, 255, 0.4);
+}
+
+button:hover {
+  	background-color: #3D86FA;
+}
+
+button.red {
+  background-color: #D54129 !important;
+}
+
+button.red:hover {
+  	background-color: #FA563D !important;
+}
+
+button.green {
+  background-color: #29B541 !important;
+}
+
+button.green:hover {
+  background-color: #3DCA56 !important;
+}
+
+
+
+.mainsection {
+	margin: 10px 10px 10px 10px;
+	padding: 10px 10px 10px 10px;
+	box-shadow: 0px 2px 6px #888;
+}
+
+.object {
+	margin: 10px 10px 10px 10px;
+	padding: 10px 10px 10px 10px;
+}
+.submenu {
+	display:none;
+}
+
+div#main_menu {
+	display: inline-block;
+	float: left;
+	position: relative;
+	width: 400px;
+	height: 100%;
+    padding: 10px 0px 10px 0px;
+    text-align: left;
+	background-color: #FFFFFF;
+	border: 0px;
+	border-radius: 3px;
+	font-family: verdana;
+	box-shadow: 0px 2px 6px #888;  
+    margin: 50px 10px 50px 10px;
+}
+div#sidebar{
+	display: inline-block;
+	position: relative;
+	width: 300px;
+	height: 100%;
+    padding: 10px 0px 10px 0px;
+    text-align: left;
+	background-color: #FFFFFF;
+	border: 0px;
+	border-radius: 3px;
+	font-family: verdana;
+	box-shadow: 0px 2px 6px #888;  
+    margin: 50px 10px 50px 10px;
+}
+div.object p{
+	display: inline;
+}
