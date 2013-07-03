@@ -21,8 +21,8 @@
 
 /*Set up ROS messages*/
 #include "std_msgs/String.h"
-#include "core_object_server/Point.h"
-#include "core_object_server/Quaternion.h"
+#include "geometry_msgs/Point.h"
+#include "geometry_msgs/Quaternion.h"
 #include "core_object_server/ObjectInfo.h"
 #include "core_object_server/ObjectDigest.h"
 
@@ -336,13 +336,13 @@ int main(int argc, char **argv) {
         info.id = iter->get_id();
         info.name = iter->get_name();
         /*set position info*/
-        core_object_server::Point loc;
+        geometry_msgs::Point loc;
         loc.x = position.x;
         loc.y = position.y;
         loc.z = position.z;
         info.pos = loc;
         /*set rotation info*/
-        core_object_server::Quaternion q;
+        geometry_msgs::Quaternion q;
         q.w = rotation[0];
         q.x = rotation[1];
         q.y = rotation[2];

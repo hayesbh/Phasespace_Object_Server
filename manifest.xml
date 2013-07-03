@@ -1,11 +1,10 @@
-<?xml version="1.0"?>
 <package>
-  <name>SHL Core Object Server</name>
   <version>0.0.0</version>
   <description>This is an Object server that interfaces with the PhaseSpace system to retrieve and publish object data</description>
-  <maintainer email="dylan.visher@yale.edu">Dylan Visher</maintainer>
   <license>TODO</license>
   <depend package="std_msgs"/>
   <depend package="roscpp"/>
+  <depend package="rospy"/>
   <depend package="visualization_msgs"/>
+  <depend package="geometry_msgs"/>
 </package>

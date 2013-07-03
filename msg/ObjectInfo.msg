@@ -1,4 +1,4 @@
 int64 id
 string name
-Point pos
-Quaternion rot
+geometry_msgs/Point pos
+geometry_msgs/Quaternion rot
