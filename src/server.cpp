@@ -21,8 +21,8 @@
 
 /*Set up ROS messages*/
 #include "std_msgs/String.h"
-#include "geometry_msgs/Point.h"
-#include "geometry_msgs/Quaternion.h"
+#include "core_object_server/Point.h"
+#include "core_object_server/Quaternion.h"
 #include "core_object_server/ObjectInfo.h"
 #include "core_object_server/ObjectDigest.h"
 
@@ -61,6 +61,12 @@ int FindIndex(int id, vector<int> v) {
   }
   return -1;
 }
+vector<ObjectClass>::iterator FindByID(int id, vector<ObjectClass> objects) {
+  vector<ObjectClass>::iterator iter;
+  for (iter = objects.begin(); iter != objects.end(); ++iter)
+    if (iter->get_id() == id) return iter;
+  return iter;
+}
 
 /**
  * [get_unadded_points returns the points that are availible but have not been set]
@@ -82,18 +88,19 @@ vector<Point> get_unadded_points() {
   /*Make a vector of Point that have not been added*/
   vector<Point> points;
   if (n == 0) {
+    printf("no markers found\n");
     return points;
   }
   for (int i = 0; i < n; i++) {
     /*Only Add to Points if the Marker has data and that data is good*/
-    if ((find(ids_set.begin(), ids_set.end(), markers[i].id) != ids_set.end())
+    if ((find(ids_set.begin(), ids_set.end(), markers[i].id) == ids_set.end())
         && (markers[i].cond > 0)) {
       Point point;
       /*Push the information from the OWLMarker into the Point*/
       point.Update(markers[i]);
       points.push_back(point);
       /*Add this to the id's that have been set already*/
-       ids_set.push_back(point.id);
+      ids_set.push_back(point.id);
     }
   }
   return points;
@@ -104,8 +111,7 @@ vector<Point> get_unadded_points() {
  * @return      [A vector of Points that are unassigned but availible]
  */
 vector<Point> get_points(int time) {
-  printf("getting points\n");
-  int rate = 30;
+  int rate = 10;
   time *= rate;
   vector<Point> points;
   ros::Rate r(rate);
@@ -128,31 +134,24 @@ vector<Point> get_points(int time) {
 bool delete_object(core_object_server::delete_object::Request &req,
                    core_object_server::delete_object::Response &res) {
   ROS_INFO("Object Deletion: ID: %ld", req.id);
-  /**  the index of this object
-    * Return to caller if this object does not exist
-    */
-  int object_index = FindIndex(req.id, ids_set);
-  if (object_index == -1) {
+  vector<ObjectClass>::iterator target = FindByID(req.id, object_vector);
+  if (target == object_vector.end()) {
+    printf("no such object exists\n");
     res.success = false;
     return true;
   }
   stringstream info;
   info << "Object (" << req.id << ") " "deleted\n";
   info << "Points: ";
-
-  vector<Point> object_points = object_vector[object_index].get_points();
-  printf("object points grabbed\n");
-  /*Remove the Object from the Tracked Objects List*/
-  object_vector.erase(object_vector.begin()+object_index,
-                       object_vector.begin()+object_index+1);
-  printf("obeject erased\n");
   /*Remove the Object's Associated Marker ID's from the list of set IDs*/
+  vector<Point> object_points = target->get_points();
   vector<Point>::iterator iter;
   for (iter = object_points.begin(); iter != object_points.end(); ++iter) {
     remove(ids_set.begin(), ids_set.end(), iter->id);
-    printf("id: %i erased", iter->id);
     info << iter->id << " ";
   }
+  /*Remove the Object from the Tracked Objects List*/
+  object_vector.erase(target, target+1);
   /*Print out that this Object was successfully Removed*/
   info << "removed";
   ROS_INFO("%s", info.str().c_str());
@@ -172,17 +171,33 @@ bool delete_object(core_object_server::delete_object::Request &req,
 bool add_points(core_object_server::add_points::Request &req,
                 core_object_server::add_points::Response &res) {
   ROS_INFO("Add Points to Object: %ld for %ld seconds", req.id, req.time);
+  /*locate target object*/
+  vector<ObjectClass>::iterator target = FindByID(req.id, object_vector);
+  if (target == object_vector.end()) {
+    printf("no such object exists\n");
+    res.info = "No Such Object Exists";
+    return true;
+  }
+  printf("old points\n");
+  (*target).PrintPoints();
+  ObjectClass &var = *target;
+  /*Gather points*/
   vector<Point> points = get_points(req.time);
+  printf("Points Gathered\n");
   if (points.size() == 0) {
     ROS_WARN("No Additional Points Recieved");
     res.success = false;
     res.info.append("No Points Recieved");
     return true;
   }
-  /*find out which object we are looking at*/
-  int object_index = FindIndex(req.id, ids_set);
+  printf("There are %ld additional points\n", points.size());
+  vector<Point>::iterator i;
+  for (i = points.begin(); i != points.end(); ++i) {
+    printf("%s\n",i->print().c_str());
+  }
   /*Add the Points To this Object*/
-  object_vector[object_index].AddPoints(points);
+  var.AddPoints(points);
+  printf("Points Added\n");
   /*info string to eventually return*/
   stringstream info;
   info << "Object: " << req.id << " has added the points: ";
@@ -207,7 +222,8 @@ bool add_points(core_object_server::add_points::Request &req,
  */
 bool add_object(core_object_server::add_object::Request &req,
                 core_object_server::add_object::Response &res) {
-  ROS_INFO("Adding Object: Name: %s, Given %i time", req.name.c_str(), req.time);
+  ROS_INFO("Adding Object: Name: %s, Given %i time",
+                    req.name.c_str(), req.time);
   /*make a new object Object*/
   ObjectClass temp_object;
   /*Find the unassigned markers*/
@@ -229,12 +245,15 @@ bool add_object(core_object_server::add_object::Request &req,
   ROS_INFO("%s", info.str().c_str());
   /*Initialize this New Object with the name given and the new points*/
   temp_object.init(object_count, req.name, points);
+  printf("finished init\n");
   /*Add this object to the list of tracked objects*/
   object_vector.push_back(temp_object);
+  printf("finished push_back\n");
   /*Update the universal object_count*/
   object_count++;
   /*Send the service caller the information associated with their call*/
   res.info = info.str();
+  printf("sent info\n");
   return true;
 }
 string print_digest(core_object_server::ObjectDigest digest) {
@@ -274,14 +293,19 @@ int main(int argc, char **argv) {
     return 0;
   }
   /*Set the Default Frequency to Maximum*/
-  owlSetFloat(OWL_FREQUENCY, 20);
+  owlSetFloat(OWL_FREQUENCY, 30);
   /*Start streaming from the PhaseSpace System*/
   owlSetInteger(OWL_STREAMING, OWL_ENABLE);
+  /*set Scale of OWL System*/
+  //owlScale(0.1);
+  const float pose[7] = { 0 , 0 , 0, 0, 0, 0, 0 };
+  owlLoadPose(pose);
   /*Add in ROS functionality to make rosnode*/
   ros::init(argc, argv, "server");
   ros::NodeHandle n;
   /*publish object information on info channel*/
-  ros::Publisher publisher = n.advertise<core_object_server::ObjectDigest>("info", 1000);
+  ros::Publisher publisher =
+    n.advertise<core_object_server::ObjectDigest>("info", 1000);
   /*rviz publisher*/
   ros::Publisher rviz_pub =
       n.advertise<visualization_msgs::Marker>("visualization_marker", 1);
@@ -294,7 +318,7 @@ int main(int argc, char **argv) {
       n.advertiseService("add_points", add_points);
   ros::ServiceServer rm_obj =
       n.advertiseService("delete_object", delete_object);
-  ros::Rate loop_rate(20);
+  ros::Rate loop_rate(30);
   while (ros::ok()) {
     /*Populate the markers with new Data from the PhaseSpace System*/
     int err;

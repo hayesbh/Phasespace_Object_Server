@@ -8,6 +8,7 @@
 #define _SHL_COREOBJECTSERVER_OBJECTTYPE_H
 
 #include <vector>
+#include <math.h>
 #include "./Point.h"
 
 namespace object_server {
@@ -16,6 +17,7 @@ const float PI = 3.14159265358979f;
 
 using std::vector;
 using object_server::Point;
+using std::acos;
 
 /**
  * [FindById finds the point with the id given]
@@ -76,6 +78,7 @@ class ObjectType {
    */
   void init(vector<Point> p) {
     points = p;
+    PrintPoints();
     GetCenter();
     GetAxis();
     GetAngle();
@@ -97,6 +100,7 @@ class ObjectType {
         }
       }
     }
+    PrintPoints();
     return;
   }
   /**
@@ -111,7 +115,17 @@ class ObjectType {
    * @param new_points [a list of Points]
    */
   void AddPoints(vector<Point> new_points) {
-    points.insert(points.end(), new_points.begin(), new_points.end());
+    printf("Enter OT\n");
+    printf("old_points\n");
+    PrintPoints();
+    printf("new_points\n");
+    vector<Point>::iterator i;
+    for (i = new_points.begin(); i != new_points.end(); ++i) {
+      printf("%s\n",i->print().c_str());
+    }
+    printf("combine\n");
+    points.insert(points.begin(), new_points.begin(), new_points.end());
+    printf("Exit OT\n");
   }
   /**
    * [getCenter Default algorithm for getting the center]
@@ -193,9 +207,8 @@ class ObjectType {
     Point Z;
     Z.init(0, 0, 1);
     /*Find axis of rotation as unit vector*/
-    Point axis = v.cross(Z);
-    Point u = axis.times(v.magnitude());
-    float alpha = v.z/(v.magnitude());
+    Point u = v.cross(Z).normalize();
+    float alpha = acos(v.z * (1 / v.magnitude()));
     /*the quaternion*/
     vector<float> Q;
     float plus = cos(alpha/2);
@@ -209,6 +222,12 @@ class ObjectType {
     /*set z*/
     Q.push_back(plus + u.z*mult);
     return Q;
+  }
+  void PrintPoints() {
+    vector<Point>::iterator i;
+    for (i = points.begin(); i != points.end(); ++i) {
+      printf("%s\n",i->print().c_str());
+    }
   }
 };
 
