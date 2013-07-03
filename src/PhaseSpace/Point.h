@@ -4,12 +4,19 @@
  * Date: 5/18/13
  * About: Point Class for describing 3D points
  */
+
+#ifndef _SHL_COREOBJECTSERVER_POINT_H
+#define _SHL_COREOBJECTSERVER_POINT_H
+
 #include <vector>
 #include <sstream>
 #include <string>
 #include "./owlAux.h"
 
-using namespace std;
+namespace object_server {
+
+using std::string;
+using std::stringstream;
 /*Point Class for Handling Vector's in the Mathematical Sense*/
 class Point {
  public:
@@ -28,7 +35,7 @@ class Point {
    * @param  Z [z coordinate]
    * @return   [return the point]
    */
-  Point init(float X, float Y, float Z) {
+  void init(float X, float Y, float Z) {
     current = 1;
     x = X;
     y = Y;
@@ -38,7 +45,7 @@ class Point {
    * [init initialize the point with no coordinates]
    * @return [default point at origin]
    */
-  Point init() {
+  void init() {
     current = 0;
     x = y = z = 0;
   }
@@ -47,7 +54,7 @@ class Point {
    * @param  mark [OWLMarker given by PhaseSpace API]
    * @return      [return this new point]
    */
-  Point Update(OWLMarker mark) {
+  void Update(OWLMarker mark) {
     current = 1;
     id = mark.id;
     x = mark.x;
@@ -65,6 +72,7 @@ class Point {
     P.x = x - p.x;
     P.y = y - p.y;
     P.z = z - p.z;
+    return P;
   }
   /**
    * [times scalar multiplication of point]
@@ -77,6 +85,7 @@ class Point {
     P.x = x*a;
     P.y = y*a;
     P.z = z*a;
+    return P;
   }
   /**
    * [add adds two points together]
@@ -89,6 +98,7 @@ class Point {
     P.x = x + p.x;
     P.y = y + p.y;
     P.z = z + p.z;
+    return P;
   }
   /**
    * [cross performs the cross product of this point on the given]
@@ -127,11 +137,13 @@ class Point {
     float mag = magnitude();
     if (mag == 0) {
       printf("normalize failed: mag = 0");
-      return p.init();
+      p.init();
+      return p;
     }
     x /= mag;
     y /= mag;
     z /= mag;
+    return p;
   }
   /**
    * [DistanceToPoint finds the distance from this point to another]
@@ -156,9 +168,12 @@ class Point {
    * @return [this new string]
    */
   string print() {
-    ostringstream s;
+    stringstream s;
     s << "(" << x << "," << y << "," << z << ")";
     return s.str();
   }
 };
 
+}  // namespace object_server
+
+#endif

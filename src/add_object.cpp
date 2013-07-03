@@ -5,6 +5,7 @@
  * About: ROS client for the add_object server
  * Adds this obejct to the tracked objects
  */
+
 #include <cstdlib>
 #include "ros/ros.h"
 #include "core_object_server/add_object.h"
@@ -19,7 +20,8 @@ int main(int argc, char **argv) {
   }
   /*Initialize the service client Node on the add_object service*/
   ros::NodeHandle n;
-  ros::ServiceClient client = n.serviceClient<core_object_server::add_object>("add_object");
+  ros::ServiceClient client =
+    n.serviceClient<core_object_server::add_object>("add_object");
   core_object_server::add_object srv;
   srv.request.name = argv[1];
   /*default time is one second*/

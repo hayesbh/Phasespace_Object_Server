@@ -5,12 +5,18 @@
  * About: Object Class for Tracking Purposes
  */
 
+#ifndef _SHL_COREOBJECTSERVER_OBJECTCLASS_H
+#define _SHL_COREOBJECTSERVER_OBJECTCLASS_H
+
 #include <vector>
 #include <string>
 /*Including the owl standard library and error messages*/
 #include "./ObjectType.h"
 
-using namespace std;
+namespace object_server {
+
+using std::vector;
+using std::string;
 
 class ObjectClass {
  private:
@@ -73,7 +79,7 @@ class ObjectClass {
    * @param  new_points [new points to also be in this object]
    * @return            [whether this addition was successful]
    */
-  bool AddPoints(vector<Point> new_points) {
+  void AddPoints(vector<Point> new_points) {
     type.AddPoints(new_points);
   }
   /**
@@ -86,4 +92,6 @@ class ObjectClass {
   }
 };
 
+}  // namespace object_server
 
+#endif

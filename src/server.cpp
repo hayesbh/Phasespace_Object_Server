@@ -4,6 +4,7 @@
  * Date: 5/18/13
  * About: ROS node for tracking objects in the PhaseSpace System
  */
+
 /*Include the ROS system*/
 #include <ros/ros.h>
 /*rviz integration*/
@@ -11,6 +12,7 @@
 /*C++ includes*/
 #include <string>
 #include <vector>
+#include <algorithm>
 
 /*service files*/
 #include "core_object_server/add_object.h"
@@ -30,24 +32,31 @@
 /*OWL (PhaseSpace System API)*/
 #include "owl/owl.h"
 
+using std::vector;
+using object_server::ObjectClass;
+using object_server::Point;
+using std::string;
+using std::stringstream;
+
 #define MARKER_COUNT 200
 #define SERVER_NAME "192.168.2.123"
 #define INIT_FLAGS 0
+
 
 int object_count = 0;
 OWLMarker markers[MARKER_COUNT];
 vector<int> ids_set;
 int tracker = 0;
-vector<ObjectClass> objects_vector;
+vector<ObjectClass> object_vector;
 
 /**
- * [find finds a given int (id) in a vector (v)]
+ * [FindIndex finds a given int (id) in a vector (v)]
  * @param  id [int to find in vector]
  * @param  v  [vector to look in]
  * @return    [if success index if failiure -1]
  */
-int find(int id, vector<int> v) {
-  for (int i = 0; i < v.size(); i++) {
+int FindIndex(int id, vector<int> v) {
+  for (unsigned int i = 0; i < v.size(); i++) {
     if (id == v[i]) return i;
   }
   return -1;
@@ -77,7 +86,8 @@ vector<Point> get_unadded_points() {
   }
   for (int i = 0; i < n; i++) {
     /*Only Add to Points if the Marker has data and that data is good*/
-    if ((find(markers[i].id, ids_set) == -1) && (markers[i].cond > 0)) {
+    if ((find(ids_set.begin(), ids_set.end(), markers[i].id) != ids_set.end())
+        && (markers[i].cond > 0)) {
       Point point;
       /*Push the information from the OWLMarker into the Point*/
       point.Update(markers[i]);
@@ -118,30 +128,30 @@ vector<Point> get_points(int time) {
 bool delete_object(core_object_server::delete_object::Request &req,
                    core_object_server::delete_object::Response &res) {
   ROS_INFO("Object Deletion: ID: %ld", req.id);
-  /** Find the index of this object
+  /**  the index of this object
     * Return to caller if this object does not exist
     */
-  int object_index = find(req.id, ids_set);
+  int object_index = FindIndex(req.id, ids_set);
   if (object_index == -1) {
     res.success = false;
     return true;
   }
-  ostringstream info;
-  info << ("Object (%ld) ", req.id) << "deleted\n";
+  stringstream info;
+  info << "Object (" << req.id << ") " "deleted\n";
   info << "Points: ";
 
-  vector<Point> object_points = objects_vector[object_index].get_points();
+  vector<Point> object_points = object_vector[object_index].get_points();
   printf("object points grabbed\n");
   /*Remove the Object from the Tracked Objects List*/
-  objects_vector.erase(objects_vector.begin()+object_index,
-                       objects_vector.begin()+object_index+1);
+  object_vector.erase(object_vector.begin()+object_index,
+                       object_vector.begin()+object_index+1);
   printf("obeject erased\n");
   /*Remove the Object's Associated Marker ID's from the list of set IDs*/
-  for (int i = 0; i < object_points.size(); i++) {
-    int index = find(object_points[i].id, ids_set);
-    ids_set.erase(ids_set.begin()+index, ids_set.begin()+index+1);
-    printf("id: %i erased", object_points[i].id);
-    info << object_points[i].id << " ";
+  vector<Point>::iterator iter;
+  for (iter = object_points.begin(); iter != object_points.end(); ++iter) {
+    remove(ids_set.begin(), ids_set.end(), iter->id);
+    printf("id: %i erased", iter->id);
+    info << iter->id << " ";
   }
   /*Print out that this Object was successfully Removed*/
   info << "removed";
@@ -170,17 +180,17 @@ bool add_points(core_object_server::add_points::Request &req,
     return true;
   }
   /*find out which object we are looking at*/
-  int object_index = find(req.id, ids_set);
+  int object_index = FindIndex(req.id, ids_set);
   /*Add the Points To this Object*/
-  objects_vector[object_index].AddPoints(points);
+  object_vector[object_index].AddPoints(points);
   /*info string to eventually return*/
-  ostringstream info;
+  stringstream info;
   info << "Object: " << req.id << " has added the points: ";
   res.success = true;
   /*create a new vector of ids to add*/
-  vector<int> ids;
-  for (int i = 0; i < points.size(); i++) {
-    info << points[i].id << " ";
+  vector<Point>::iterator iter;
+  for (iter = points.begin(); iter != points.end(); ++iter) {
+    info << iter->id << " ";
   }
   ROS_INFO("%s", info.str().c_str());
   res.info = info.str();
@@ -210,17 +220,17 @@ bool add_object(core_object_server::add_object::Request &req,
     return true;
   }
   /*Print out which points are being added to this new object*/
-  ostringstream info;
+  stringstream info;
   info << "Object " << req.name << " using points: ";
-  vector<int> ids;
-  for (int i = 0; i < points.size(); i++) {
-    info << points[i].id << " ";
+  vector<Point>::iterator iter;
+  for (iter = points.begin(); iter != points.end(); ++iter) {
+    info << iter->id << " ";
   }
   ROS_INFO("%s", info.str().c_str());
   /*Initialize this New Object with the name given and the new points*/
   temp_object.init(object_count, req.name, points);
   /*Add this object to the list of tracked objects*/
-  objects_vector.push_back(temp_object);
+  object_vector.push_back(temp_object);
   /*Update the universal object_count*/
   object_count++;
   /*Send the service caller the information associated with their call*/
@@ -230,18 +240,21 @@ bool add_object(core_object_server::add_object::Request &req,
 string print_digest(core_object_server::ObjectDigest digest) {
   stringstream print;
   print << digest.time << "\n";
-  for (int i = 0; i < digest.objects.size(); i++) {
-    print << "(" << digest.objects[i].id << ")";
-    print << digest.objects[i].name;
-    print << "[" << digest.objects[i].pos.x;
-    print << "," << digest.objects[i].pos.y;
-    print << "," << digest.objects[i].pos.z << "]";
-    print << "[" << digest.objects[i].rot.w << ",";
-    print << digest.objects[i].rot.x;
-    print << "," << digest.objects[i].rot.y << ",";
-    print << digest.objects[i].rot.z << "]" << "\n";
+  vector<core_object_server::ObjectInfo>::iterator iter;
+  for (iter = digest.objects.begin(); iter != digest.objects.end(); ++iter) {
+    print << "(" << iter->id << ")";
+    print << iter->name;
+    print << "[" << iter->pos.x;
+    print << "," << iter->pos.y;
+    print << "," << iter->pos.z << "]";
+    print << "[" << iter->rot.w << ",";
+    print << iter->rot.x;
+    print << "," << iter->rot.y << ",";
+    print << iter->rot.z << "]" << "\n";
   } return print.str();
 }
+
+
 /**server: Integration into the OWL PhaseSpace System
   *Keep track of the objects that are in the system*/
 int main(int argc, char **argv) {
@@ -305,22 +318,23 @@ int main(int argc, char **argv) {
     core_object_server::ObjectDigest digest;
     digest.time = timestamp.sec;
     /*If there are no Object's set print that out*/
-    if (objects_vector.size() == 0) {
+    if (object_vector.size() == 0) {
       ROS_INFO("No Objects Set");
       publisher.publish(digest);
     /*Otherwise opdate each object with the new marker information*/
     } else {
-      for (int i = 0; i < objects_vector.size(); i++) {
+      vector<ObjectClass>::iterator iter;
+      for (iter = object_vector.begin(); iter != object_vector.end(); ++iter) {
         /*Update Objects and Get Info*/
-        objects_vector[i].Update(markers, n);
+        iter->Update(markers, n);
         /*Get POS*/
-        Point position = objects_vector[i].get_pos();
+        Point position = iter->get_pos();
         /*Get Rotation*/
-        vector<float> rotation = objects_vector[i].get_rotation();
+        vector<float> rotation = iter->get_rotation();
         /*Make ObjectInfo*/
         core_object_server::ObjectInfo info;
-        info.id = objects_vector[i].get_id();
-        info.name = objects_vector[i].get_name();
+        info.id = iter->get_id();
+        info.name = iter->get_name();
         /*set position info*/
         core_object_server::Point loc;
         loc.x = position.x;
@@ -343,7 +357,7 @@ int main(int argc, char **argv) {
         marker.header.stamp = timestamp;
         /*Set namespace and id*/
         marker.ns = "PhaseSpace_Objects";
-        marker.id = objects_vector[i].get_id();
+        marker.id = iter->get_id();
         marker.type = shape;
         /*prepare to add object to rviz*/
         marker.action = visualization_msgs::Marker::ADD;
@@ -380,6 +394,3 @@ int main(int argc, char **argv) {
   owlDone();
   return 0;
 }
-
-
-

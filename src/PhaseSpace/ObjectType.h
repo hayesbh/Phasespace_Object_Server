@@ -4,25 +4,32 @@
  * Date: 5/18/13
  * About: ObjectType contains type specific information
  */
+#ifndef _SHL_COREOBJECTSERVER_OBJECTTYPE_H
+#define _SHL_COREOBJECTSERVER_OBJECTTYPE_H
+
 #include <vector>
 #include "./Point.h"
 
+namespace object_server {
+
 const float PI = 3.14159265358979f;
 
-using namespace std;
+using std::vector;
+using object_server::Point;
 
 /**
- * [find_id finds the point with the id given]
+ * [FindById finds the point with the id given]
  * @param  id     [id of the point desired]
  * @param  points [vector of points to look in]
  * @return        [the index of the point with this id]
  */
-int find_id(int id, vector<Point> points) {
-  for (int i = 0; i < points.size(); i++) {
-    if (points[i].id == id)
-      return i;
+vector<Point>::iterator FindById(int id, vector<Point> points) {
+  vector<Point>::iterator iter;
+  for (iter = points.begin(); iter != points.end(); ++iter) {
+    if (iter->id == id)
+      return iter;
   }
-  return -1;
+  return points.end();
 }
 vector<float> Qmult(vector<float> v1, vector<float> v2) {
   Point p1; p1.init(v1[1], v1[2], v1[3]);
@@ -42,6 +49,7 @@ vector<float> Qconj(vector<float> v) {
   conj.push_back(-1*v[1]);
   conj.push_back(-1*v[2]);
   conj.push_back(-1*v[3]);
+  return conj;
 }
 float Qnorm(vector<float> v) {
   return sqrt(pow(v[0], 2) + pow(v[1], 2) + pow(v[2], 2) + pow(v[3], 2));
@@ -78,13 +86,14 @@ class ObjectType {
    * @param n       [number of markers in the markers array]
    */
   void Update(OWLMarker *markers, int n) {
-    for (int i = 0; i < n; i++) {
-      for (int j = 0; j < points.size(); j++) {
-        if (markers[i].id == points[j].id) {
+    for (int i = 0; i < n; ++i) {
+      vector<Point>::iterator iter;
+      for (iter = points.begin(); iter != points.end(); ++iter) {
+        if (markers[i].id == iter->id) {
           if (markers[i].cond > 0)
-            points[j].Update(markers[i]);
+            iter->Update(markers[i]);
           else
-            points[j].current = 0;
+            iter->current = 0;
         }
       }
     }
@@ -113,11 +122,12 @@ class ObjectType {
     p.init();
     int pointsUsed = 0;
     /*The Default Center is the Average of the points*/
-    for (int i = 0; i < points.size(); i++) {
-      if (points[i].current) {
-        p.x += points[i].x;
-        p.y += points[i].y;
-        p.z += points[i].z;
+    vector<Point>::iterator iter;
+    for (iter = points.begin(); iter != points.end(); ++iter) {
+      if (iter->current) {
+        p.x += iter->x;
+        p.y += iter->y;
+        p.z += iter->z;
         pointsUsed++;
        }
      }
@@ -137,25 +147,28 @@ class ObjectType {
   Point GetAxis() {
      /*If Axis has already been set*/
      if (Axis.size() == 2) {
-      int p1 = find_id(Axis[0], points);
-      int p2 = find_id(Axis[1], points);
-      return points[p2].sub(points[p1]);
+      vector<Point>::iterator it1 = FindById(Axis[0], points);
+      vector<Point>::iterator it2 = FindById(Axis[1], points);
+      return (*it2).sub(*it1);
      }
      float maxdist2 = 0;
      Point P1;
      Point P2;
      if (points.size() < 2) {
-       return P1.init();
+       P1.init();
+       return P1;
      }
-     for (int i = 0; i < points.size(); i++) {
-       for (int j = i+1; j < points.size(); j++) {
-         float dist2 = pow(points[i].x - points[j].x, 2)
-                     + pow(points[i].y - points[j].y, 2)
-                     + pow(points[i].z - points[j].z, 2);
+     vector<Point>::iterator it1;
+     vector<Point>::iterator it2;
+     for (it1 = points.begin(); it1 != points.end(); ++it1) {
+       for (it2 = points.begin()+1; it2 != points.end(); ++it2) {
+         float dist2 = pow(it1->x - it2->x, 2)
+                     + pow(it1->y - it2->y, 2)
+                     + pow(it1->z - it2->z, 2);
          if (dist2 > maxdist2) {
            maxdist2 = dist2;
-           P1 = points[i];
-           P2 = points[j];
+           P1 = *it1;
+           P2 = *it2;
          }
        }
      }
@@ -198,3 +211,6 @@ class ObjectType {
     return Q;
   }
 };
+
+}  // namespace object_server
+#endif
