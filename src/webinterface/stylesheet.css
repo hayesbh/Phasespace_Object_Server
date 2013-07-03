@@ -17,6 +17,7 @@ button {
 	color: white;
 	padding: 7.5px 15px;
 	text-decoration: none;
+	border: 1px solid #eeeeee;
 	border: 1px solid rgba(0,0,0, 0.05);
 	display: block;
 }
@@ -46,8 +47,6 @@ button.green:hover {
   background-color: #3DCA56;
 }
 
-
-
 .mainsection {
 	margin: 10px 10px 10px 10px;
 	padding: 10px 10px 10px 10px;
@@ -63,7 +62,7 @@ button.green:hover {
 }
 
 #main_menu {
-	display: inline-block;
+	float: left;
 	position: relative;
 	width: 400px;
 	height: 100%;

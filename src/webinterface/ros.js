@@ -8,13 +8,50 @@ ros.on('connection', function() {
 ros.connect('ws://192.168.2.121:9090');
 var add = new ROSLIB.Service({
 	ros : ros,
-	name : '/add',
-	serviceType : 'core_object_server/Object'
+	name : '/add_object',
+	serviceType : 'core_object_server/add_object'
 });
-function addObject(called){
+function addObject(called, t){
 	var addreq = new ROSLIB.ServiceRequest({
-		name : called
+		name : called,
+    time : t
 	});
+  add.callService(addreq, function(result){
+    console.log('Result for service call on ' +
+    add.name +
+    ': (' + result.success + ') ' + result.info);
+  });
+}
+var del = new ROSLIB.Service({
+  ros : ros,
+  name : '/delete_object',
+  serviceType : 'core_object_server/delete_object'
+});
+function deleteObject(identification){
+  var delreq = new ROSLIB.ServiceRequest({
+    id: identification
+  });
+  del.callService(delreq, function(result){
+    console.log('Result for service call on ' +
+    delreq.name +
+    ': (' + result.success + ') ');
+  });
+}
+var points = new ROSLIB.Service({
+  ros : ros,
+  name : '/add_points',
+  serviceType : 'core_object_server/add_points'
+});
+function addPoints(identification, t){
+  var pointsreq = new ROSLIB.ServiceRequest({
+    id : identification,
+    time: t
+  });
+  points.callService(pointsreq, function(result){
+    console.log('Result for service call on ' +
+    delreq.name +
+    ': (' + result.success + ') ' + result.info);
+  });
 }
 
 function update(){
