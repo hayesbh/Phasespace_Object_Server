@@ -167,7 +167,7 @@ class Point {
    * [print returns the string representation of the points x,y,z]
    * @return [this new string]
    */
-  string print() {
+  string print() const {
     stringstream s;
     s << "(" << x << "," << y << "," << z << ")";
     return s.str();
