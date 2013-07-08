@@ -68,7 +68,12 @@ vector<ObjectClass>::iterator FindByID(int id, vector<ObjectClass> objects) {
     if (iter->get_id() == id) return iter;
   return iter;
 }
-
+vector<ObjectClass>::iterator FindObject(int id) {
+  vector<ObjectClass>::iterator iter;
+  for (iter = object_vector_.begin(); iter != object_vector_.end(); ++iter)
+    if (iter->get_id() == id) return iter;
+  return iter;
+}
 /**
  * [get_unadded_points returns the points that are available but have not been set]
  * @return        [Points that have not been assigned]
@@ -123,6 +128,7 @@ vector<Point> get_points(int time) {
   while (time > 0) {
     vector <Point> new_points = get_unadded_points();
     points.insert(points.end(), new_points.begin(), new_points.end());
+    /*TODO make this abstracted out dependent on rate*/
     ros::Duration(0.1).sleep();
     time--;
   }
@@ -139,7 +145,7 @@ vector<Point> get_points(int time) {
 bool delete_object(core_object_server::delete_object::Request &req,
                    core_object_server::delete_object::Response &res) {
   ROS_INFO("delete_object: Object Deletion: ID: %ld", req.id);
-  vector<ObjectClass>::iterator target_iter = FindByID(req.id, object_vector_);
+  vector<ObjectClass>::iterator target_iter = FindObject(req.id);
   if (target_iter == object_vector_.end()) {
     ROS_INFO("delete_object: target object does not exist");
     res.success = false;
@@ -162,6 +168,7 @@ bool delete_object(core_object_server::delete_object::Request &req,
   /*Print out that this Object was successfully Removed*/
   info << "removed";
   ROS_INFO("%s", info.str().c_str());
+  res.success = true;
   return true;
 }
 
@@ -179,7 +186,7 @@ bool add_points(core_object_server::add_points::Request &req,
                 core_object_server::add_points::Response &res) {
   ROS_INFO("Add Points to Object: %ld for %ld seconds", req.id, req.time);
   /*locate target object*/
-  vector<ObjectClass>::iterator target = FindByID(req.id, object_vector_);
+  vector<ObjectClass>::iterator target = FindObject(req.id);
   if (target == object_vector_.end()) {
     ROS_INFO("add_points: no such target object exists\n");
     res.info = "No Such Object Exists";

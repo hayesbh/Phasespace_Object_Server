@@ -80,6 +80,8 @@ class ObjectClass {
    * @return            [whether this addition was successful]
    */
   void AddPoints(vector<Point> new_points) {
+    printf("printing points OC\n");
+    PrintPoints();
     printf("Enter OC\n");
     type.AddPoints(new_points);
     printf("Exit OC\n");
