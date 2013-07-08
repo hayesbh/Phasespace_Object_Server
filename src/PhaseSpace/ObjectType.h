@@ -100,7 +100,6 @@ class ObjectType {
         }
       }
     }
-    PrintPoints();
     return;
   }
   /**
@@ -115,17 +114,11 @@ class ObjectType {
    * @param new_points [a list of Points]
    */
   void AddPoints(vector<Point> new_points) {
-    printf("Enter OT\n");
-    printf("old_points\n");
-    PrintPoints();
-    printf("new_points\n");
     vector<Point>::iterator i;
-    for (i = new_points.begin(); i != new_points.end(); ++i) {
+    /*for (i = new_points.begin(); i != new_points.end(); ++i) {
       printf("%s\n",i->print().c_str());
-    }
-    printf("combine\n");
+    }*/
     points.insert(points.begin(), new_points.begin(), new_points.end());
-    printf("Exit OT\n");
   }
   /**
    * [getCenter Default algorithm for getting the center]

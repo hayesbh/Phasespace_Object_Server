@@ -192,12 +192,9 @@ bool add_points(core_object_server::add_points::Request &req,
     res.info = "No Such Object Exists";
     return true;
   }
-  ROS_INFO("add_points: old points\n");
-  (*target).PrintPoints();
   ObjectClass &object = *target;
   /*Gather points*/
   vector<Point> points = get_points(req.time);
-  ROS_INFO("add_points: Points Gathered\n");
   if (points.size() == 0) {
     ROS_WARN("add_points: No Additional Points Recieved");
     res.success = false;
@@ -206,12 +203,8 @@ bool add_points(core_object_server::add_points::Request &req,
   }
   ROS_INFO("There are %ld additional points\n", points.size());
   vector<Point>::const_iterator i;
-  for (i = points.begin(); i != points.end(); ++i) {
-    printf("%s\n",i->print().c_str());
-  }
   /*Add the Points To this Object*/
   object.AddPoints(points);
-  ROS_INFO("add_points: Points Added\n");
   /*info string to eventually return*/
   stringstream info;
   info << "Object: " << req.id << " has added the points: ";
@@ -260,15 +253,13 @@ bool add_object(core_object_server::add_object::Request &req,
   ROS_INFO("%s", info.str().c_str());
   /*Initialize this New Object with the name given and the new points*/
   temp_object.init(object_count_, req.name, points);
-  ROS_INFO("add_object: finished init\n");
   /*Add this object to the list of tracked objects*/
   object_vector_.push_back(temp_object);
-  ROS_INFO("add_object: finished push_back\n");
   /*Update the universal object_count*/
   object_count_++;
   /*Send the service caller the information associated with their call*/
   res.info = info.str();
-  ROS_INFO("add_object: sent info\n");
+  ROS_INFO("Object Added: %s\n", info.str().c_str());
   return true;
 }
 
@@ -295,6 +286,7 @@ string print_digest(core_object_server::ObjectDigest const &digest) {
 /**server: Integration into the OWL PhaseSpace System
   *Keep track of the objects that are in the system*/
 int main(int argc, char **argv) {
+  int frequency = 20;
   /*** Initialize PhaseSpace OWL API ***/
   /*Integration into the OWL PhaseSpace API*/
   /*This section follows EXAMPLE 1 for point tracking*/
@@ -312,12 +304,12 @@ int main(int argc, char **argv) {
     return 0;
   }
   /*Set the Default Frequency to Maximum*/
-  owlSetFloat(OWL_FREQUENCY, 30);
+  owlSetFloat(OWL_FREQUENCY, frequency);
   /*Start streaming from the PhaseSpace System*/
   owlSetInteger(OWL_STREAMING, OWL_ENABLE);
-  /*set Scale of OWL System*/
+  /*set Scale of OWL System*/ 
+  const float pose[7] = { 2088.42,643.981,-1244.09, 0.877595, 0, -0.0294676, .478496 };
   //owlScale(0.1);
-  const float pose[7] = { 0 , 0 , 0, 0, 0, 0, 0 };
   owlLoadPose(pose);
 
   /*** Initialize ROS Node ***/
@@ -326,7 +318,7 @@ int main(int argc, char **argv) {
   ros::NodeHandle n;
   /*publish object information on core_object_server/objects channel*/
   ros::Publisher publisher =
-    n.advertise<core_object_server::ObjectDigest>("objects", 1000);
+    n.advertise<core_object_server::ObjectDigest>("objects", 0);
   /*rviz publisher*/
   ros::Publisher rviz_pub =
       n.advertise<visualization_msgs::Marker>("visualization_marker", 1);
@@ -340,7 +332,7 @@ int main(int argc, char **argv) {
   ros::ServiceServer rm_obj =
       n.advertiseService("delete_object", delete_object);
   
-  ros::Rate loop_rate(30); //30Hz operational rate
+  ros::Rate loop_rate(frequency); //30Hz operational rate
 
   while (ros::ok()) {
     /*Populate the markers with new Data from the PhaseSpace System*/
