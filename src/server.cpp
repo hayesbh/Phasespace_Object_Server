@@ -97,7 +97,7 @@ vector<Point> get_unadded_points() {
      * If the OWL System has not been able to gather Data on Any Points
      * The OWL System is not working properly
      */
-    ROS_WARN("get_unadded_points: no markers found\n");
+    //  ROS_WARN("get_unadded_points: no markers found\n");
     return points;
   }
   for (int i = 0; i < num_markers; i++) {
@@ -282,11 +282,10 @@ string print_digest(core_object_server::ObjectDigest const &digest) {
   return print.str();
 }
 
-
 /**server: Integration into the OWL PhaseSpace System
   *Keep track of the objects that are in the system*/
 int main(int argc, char **argv) {
-  int frequency = 20;
+  int frequency = 10;
   /*** Initialize PhaseSpace OWL API ***/
   /*Integration into the OWL PhaseSpace API*/
   /*This section follows EXAMPLE 1 for point tracking*/
@@ -308,9 +307,17 @@ int main(int argc, char **argv) {
   /*Start streaming from the PhaseSpace System*/
   owlSetInteger(OWL_STREAMING, OWL_ENABLE);
   /*set Scale of OWL System*/ 
-  const float pose[7] = { 2088.42,643.981,-1244.09, 0.877595, 0, -0.0294676, .478496 };
-  //owlScale(0.1);
-  owlLoadPose(pose);
+  // Rotate System
+  // pos -2106.48, -636.975, 1248.58
+  // {0.593436, 0., -0.803116, -0.0532773}
+  // 0.283318, -0.805066, -0.0316099, 0.520193
+  // q = 0.283227, 0., -0.95695, -0.0634824
+  // const float pose[7] = { -2106.48, -636.975, 1248.58, 1, 0, 0, 0};
+  // const float pose[7] = { 0, 0, 0, 0.283318, -0.805066, -0.0316099, 0.520193 };
+  // const float pose[7] = { 0, 0, 0, 0.283227, 0, -0.95695, -0.0634824};
+  // const float pose[7] = { 0, 0, 0, 0.283227, 0, -0.95695, -0.0634824};
+  owlScale(0.001);
+  // owlLoadPose(pose);
 
   /*** Initialize ROS Node ***/
   /*Add in ROS functionality to make rosnode*/

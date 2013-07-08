@@ -15,6 +15,7 @@
 
 namespace object_server {
 
+
 using std::string;
 using std::stringstream;
 /*Point Class for Handling Vector's in the Mathematical Sense*/
