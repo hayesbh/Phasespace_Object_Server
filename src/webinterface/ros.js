@@ -1,3 +1,4 @@
+var index = 0;
 var ros = new ROSLIB.Ros();
 ros.on('error', function(error) {
 	console.log(error);
@@ -5,13 +6,14 @@ ros.on('error', function(error) {
 ros.on('connection', function() {
 	console.log('Connection made!');
 });
-ros.connect('ws://http://130.132.249.173:9090');
+ros.connect('ws://192.168.2.121:9090');
 var add = new ROSLIB.Service({
 	ros : ros,
 	name : '/add_object',
 	serviceType : 'core_object_server/add_object'
 });
 function addObject(called, t){
+  alertify.alert("message");
 	var addreq = new ROSLIB.ServiceRequest({
 		name : called,
     time : +t
@@ -20,6 +22,15 @@ function addObject(called, t){
     console.log('Result for service call on ' +
     add.name +
     ': (' + result.success + ') ' + result.info);
+    if (result.success) {
+      $('#sidebar').append("<div class='object' id='"+index+"'>"+
+                "<p>(" + index + ') '+ addreq.called + ': </p>'+
+                "<p class='info'></p></div>");
+      index++;
+
+    } else {
+      alertify.error("Unable to Add Object: "+ result.info);
+    }
   });
 }
 var del = new ROSLIB.Service({
@@ -28,13 +39,17 @@ var del = new ROSLIB.Service({
   serviceType : 'core_object_server/delete_object'
 });
 function deleteObject(identification){
+  console.log(identification);
   var delreq = new ROSLIB.ServiceRequest({
-    id: identification
+    id: parseInt(identification, 10)
   });
   del.callService(delreq, function(result){
     console.log('Result for service call on ' +
-    delreq.name +
+    delreq.id +
     ': (' + result.success + ') ');
+    if(result.success) {
+      $("#"+delreq.id).remove();
+    }
   });
 }
 var points = new ROSLIB.Service({
@@ -44,12 +59,12 @@ var points = new ROSLIB.Service({
 });
 function addPoints(identification, t){
   var pointsreq = new ROSLIB.ServiceRequest({
-    id : identification,
-    time: t
+    id : +identification,
+    time: +t
   });
   points.callService(pointsreq, function(result){
     console.log('Result for service call on ' +
-    delreq.name +
+    pointsreq.name +
     ': (' + result.success + ') ' + result.info);
   });
 }

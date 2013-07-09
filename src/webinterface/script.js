@@ -1,54 +1,58 @@
 $(document).ready(function(){
-	var index = 0;
+	//FOR ADDING OBJECTS
+	//EXPANSION EFFECT
 	$("#add").click(function(){
 		$("#add_selection").toggle();
 	});
+	//BUTTON - ROS core_object_server add_object call
 	$("#ADD").click(function(){
-		$("#add_selection").hide();
-		$('#sidebar').append("<div class='object' id='"+index+"'>"+
-								"<p>(" + index + ') '+ $('#AddName').val() + ': </p>'+
-								"<p class='info'></p></div>");
 		addObject($('#AddName').val(), $('#AddTime').val());
-		index++;
+		$("#add_selection").hide();
 	});
+	//CALL THE SAME SERVICE IF ENTER IS CLCIKED
 	$("#add_selection").keypress(function(){
 		if(event.which == 13){
-			$("#add_selection").hide();
-			$('#sidebar').append("<div class='object' id='"+index+"'>"+
-								"<p>(" + index + ') '+ $('#AddName').val() + ': </p>'+
-								"<p class='info'></p></div>");
 			addObject($('#AddName').val(), $('#AddTime').val());
-			index++;
+			$("#add_selection").hide();
 		}
 	});
+	//IF YOU TRY TO EDIT THE NAME THEN IT WIPES IT FOR YOU
 	$('#AddName').click(function(){
 		$(this).val('');
 	});
 
-
-	$("#delete_selection").keypress(function(){
-		if(event.which == 13){
-			$("#delete_selection").hide();
-			$("#"+$('#index').val()).remove();
-		}
-	});
+	//FOR DELETING OBJECTS
+	//EXPANSION EFFECT
 	$("#delete").click(function(){
 		$("#delete_selection").toggle();
 	});
+	//DELETE OBJECT ON CLICK
 	$("#DELETE").click(function(){
+		deleteObject($('#index').val());
 		$("#delete_selection").hide();
-		$("#"+$('#index').val()).remove();
 	});
-
+	//DELETE ON ENTER IF YOU ARE WITHIN THE SECTION
+	$("#delete_selection").keypress(function(){
+		if(event.which == 13){
+			deleteObject($('#index').val());
+			$("#delete_selection").hide();
+		}
+	});
+	//FOR THE ADDITION OF POINTS TO AN OBJECT
+	//EXPANSION EFFECT
 	$('#markers').click(function(){
 		$("#markers_section").toggle();
 	});
+	//CAPTURE MARKERS ON CLICK OF BUTTON
+	$('#capture').click(function(){
+		addPoints($('#objectindex').val(), $('#time').val());
+		$("#markers_section").hide();
+	});
+	//CAPTURE MARKERS ON ENTER
 	$("#markers_section").keypress(function(){
 		if(event.which == 13){
+			addPoints($('#objectindex').val(), $('#time').val());
 			$("markers_section").hide();
 		}
-	});
-	$('#capture').click(function(){
-		$("#markers_section").hide();
 	});
 });
