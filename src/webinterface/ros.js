@@ -13,7 +13,8 @@ var add = new ROSLIB.Service({
 	serviceType : 'core_object_server/add_object'
 });
 function addObject(called, t){
-  alertify.alert("message");
+  alertify.log("Adding Object for "+ t +" seconds", 1, t*1000);
+  console.log(t);
 	var addreq = new ROSLIB.ServiceRequest({
 		name : called,
     time : +t
@@ -27,9 +28,9 @@ function addObject(called, t){
                 "<p>(" + index + ') '+ addreq.called + ': </p>'+
                 "<p class='info'></p></div>");
       index++;
-
+      alertify.success("Object Successfully Added");
     } else {
-      alertify.error("Unable to Add Object: "+ result.info);
+      alertify.error("Unable to Add Object: "+ result.info, 2500);
     }
   });
 }
@@ -49,7 +50,8 @@ function deleteObject(identification){
     ': (' + result.success + ') ');
     if(result.success) {
       $("#"+delreq.id).remove();
-    }
+      alertify.success("Object Successfully Deleted");
+    } else alertify.error("Deletion Failed");
   });
 }
 var points = new ROSLIB.Service({
@@ -66,6 +68,9 @@ function addPoints(identification, t){
     console.log('Result for service call on ' +
     pointsreq.name +
     ': (' + result.success + ') ' + result.info);
+    if(resulty.success) {
+      alertify.success("Points Successfully Added");
+    } else alertify.error("Points Failed To Add");
   });
 }
 
