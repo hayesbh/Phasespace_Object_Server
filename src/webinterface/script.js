@@ -8,7 +8,7 @@ $(document).ready(function(){
 		$('#sidebar').append("<div class='object' id='"+index+"'>"+
 								"<p>(" + index + ') '+ $('#AddName').val() + ': </p>'+
 								"<p class='info'></p></div>");
-		addObject($('#AddName').val());
+		addObject($('#AddName').val(), $('#AddTime').val());
 		index++;
 	});
 	$("#add_selection").keypress(function(){
@@ -17,7 +17,7 @@ $(document).ready(function(){
 			$('#sidebar').append("<div class='object' id='"+index+"'>"+
 								"<p>(" + index + ') '+ $('#AddName').val() + ': </p>'+
 								"<p class='info'></p></div>");
-			addObject($('#AddName').val());
+			addObject($('#AddName').val(), $('#AddTime').val());
 			index++;
 		}
 	});

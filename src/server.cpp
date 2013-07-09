@@ -43,13 +43,31 @@ using std::stringstream;
 #define SERVER_NAME "192.168.2.123"
 #define INIT_FLAGS 0
 
-
 int object_count_ = 0;
 OWLMarker markers[MARKER_COUNT];
 vector<int> ids_set_;
 int tracker_ = 0;
 vector<ObjectClass> object_vector_;
+const float shift[3] = { 2.10094,0.637346,-1.24804 };
+const float rotate[3][3] = {{0.802454, 0.0236066, -0.599659},
+                            {0.529394, 0.213418, 0.823575},
+                            {-0.14712, 0.976347, -0.158438}};
 
+void Transform(OWLMarker *mark) {
+  float x = mark->x - shift[0];
+  float y = mark->y - shift[1];
+  float z = mark->z - shift[2];
+
+  mark->x = rotate[0][0]*x + rotate[0][1]*y + rotate[0][2]*z;
+  mark->y = rotate[1][0]*x + rotate[1][1]*y + rotate[1][2]*z;
+  mark->z = rotate[2][0]*x + rotate[2][1]*y + rotate[2][2]*z;
+  return;
+}
+void TransformMarkers(OWLMarker markers[MARKER_COUNT], int n) {
+  for (int i = 0; i < n; i++) {
+    Transform(&markers[i]);
+  } return;
+}
 /**
  * [FindIndex finds a given int (id) in a vector (v)]
  * @param  id [int to find in vector]
@@ -82,6 +100,7 @@ vector<Point> get_unadded_points() {
   int err;
   /*Recieve Updated Information about the Markers*/
   int num_markers = owlGetMarkers(markers, MARKER_COUNT);
+  TransformMarkers(markers, num_markers);
   /*Catch errors in the OWL System*/
   if ((err = owlGetError()) != OWL_NO_ERROR) {
     ROS_ERROR("get_unadded_points: owlGetError %d", err);
@@ -307,6 +326,7 @@ int main(int argc, char **argv) {
   /*Start streaming from the PhaseSpace System*/
   owlSetInteger(OWL_STREAMING, OWL_ENABLE);
   /*set Scale of OWL System*/ 
+  owlScale(0.001);
   // Rotate System
   // pos -2106.48, -636.975, 1248.58
   // {0.593436, 0., -0.803116, -0.0532773}
@@ -316,7 +336,7 @@ int main(int argc, char **argv) {
   // const float pose[7] = { 0, 0, 0, 0.283318, -0.805066, -0.0316099, 0.520193 };
   // const float pose[7] = { 0, 0, 0, 0.283227, 0, -0.95695, -0.0634824};
   // const float pose[7] = { 0, 0, 0, 0.283227, 0, -0.95695, -0.0634824};
-  owlScale(0.001);
+  
   // owlLoadPose(pose);
 
   /*** Initialize ROS Node ***/
@@ -345,6 +365,7 @@ int main(int argc, char **argv) {
     /*Populate the markers with new Data from the PhaseSpace System*/
     int err;
     int n = owlGetMarkers(markers, MARKER_COUNT);
+    TransformMarkers(markers, n);
     ros::Time timestamp;
     timestamp = ros::Time::now();
     if ((err = owlGetError()) != OWL_NO_ERROR) {

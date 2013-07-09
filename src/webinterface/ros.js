@@ -5,7 +5,7 @@ ros.on('error', function(error) {
 ros.on('connection', function() {
 	console.log('Connection made!');
 });
-ros.connect('ws://192.168.2.121:9090');
+ros.connect('ws://http://130.132.249.173:9090');
 var add = new ROSLIB.Service({
 	ros : ros,
 	name : '/add_object',
@@ -14,7 +14,7 @@ var add = new ROSLIB.Service({
 function addObject(called, t){
 	var addreq = new ROSLIB.ServiceRequest({
 		name : called,
-    time : t
+    time : +t
 	});
   add.callService(addreq, function(result){
     console.log('Result for service call on ' +
