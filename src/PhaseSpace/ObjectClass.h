@@ -12,6 +12,7 @@
 #include <string>
 /*Including the owl standard library and error messages*/
 #include "./ObjectType.h"
+#include "./Glove.h"
 
 namespace object_server {
 
@@ -90,11 +91,31 @@ class ObjectClass {
   void Update(OWLMarker *markers, int n) {
     type.Update(markers, n);
   }
+
   void PrintPoints() {
     type.PrintPoints();
   }
 };
-
 }  // namespace object_server
+
+namespace object {
+using std::vector;
+using object_server::Point;
+/**
+ * [FindById finds the point with the id given]
+ * @param  id     [id of the point desired]
+ * @param  points [vector of points to look in]
+ * @return        [the index of the point with this id]
+ */
+const vector<Point>::iterator FindById(int id, vector<Point> &points) {
+  vector<Point>::iterator iter;
+  for (iter = points.begin(); iter != points.end(); ++iter) {
+    if (iter->id == id)
+      return iter;
+  }
+  return points.end();
+}
+
+}  // namespace object
 
 #endif

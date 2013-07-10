@@ -15,9 +15,9 @@
 
 namespace object_server {
 
-
 using std::string;
 using std::stringstream;
+using std::vector;
 /*Point Class for Handling Vector's in the Mathematical Sense*/
 class Point {
  public:
@@ -159,10 +159,14 @@ class Point {
    * @param  line [two points that define a line]
    * @return      [the distacne]
    */
-  float distanceToLine(std::vector<Point> line) {
+  float DistanceToLine(vector<Point> line) {
     Point x2x1 = line[1].sub(line[0]);
     return (x2x1.cross(line[0].sub(*this))).magnitude()
                 / (x2x1).magnitude();
+  }
+  float DistanceToPlane(float plane[4]) {
+    return std::abs(plane[0] * z + plane[1] * y + plane[2] * x + plane[3]) /
+    sqrt(pow(plane[0], 2) + pow(plane[1], 2) + pow(plane[2], 2));
   }
   /**
    * [print returns the string representation of the points x,y,z]
@@ -174,7 +178,26 @@ class Point {
     return s.str();
   }
 };
-
 }  // namespace object_server
+
+namespace points {
+
+using object_server::Point;
+using std::vector;
+float* PointsToPlane (Point p1, Point p2, Point p3, float plane[4]) {
+  Point n = (p1.sub(p2)).cross(p2.sub(p3));
+  float d = n.x * p1.x + n.y * p1.y + n.z * p1.z;
+  plane[0] = n.x; plane[1] = n.y; plane[2] = n.z; plane[3] = d;
+  return plane;
+}
+
+vector<Point>::iterator FindByID(int id, vector<Point> points) {
+  vector<Point>::iterator iter;
+  for (iter = points.begin(); iter != points.end(); ++iter)
+    if (iter->id == id) return iter;
+  return iter;
+}
+
+}  // namespace points
 
 #endif

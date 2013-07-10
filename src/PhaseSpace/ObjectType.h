@@ -10,6 +10,7 @@
 #include <vector>
 #include <math.h>
 #include "./Point.h"
+#include "./quaternion.h"
 
 namespace object_server {
 
@@ -18,58 +19,22 @@ const float PI = 3.14159265358979f;
 using std::vector;
 using object_server::Point;
 using std::acos;
+using points::PointsToPlane;
+using quaternions::Qmult;
+using quaternions::Qconj;
+using quaternions::Qnorm;
+using quaternions::Qinv;
+using points::FindByID;
 
-/**
- * [FindById finds the point with the id given]
- * @param  id     [id of the point desired]
- * @param  points [vector of points to look in]
- * @return        [the index of the point with this id]
- */
-vector<Point>::iterator FindById(int id, vector<Point> points) {
-  vector<Point>::iterator iter;
-  for (iter = points.begin(); iter != points.end(); ++iter) {
-    if (iter->id == id)
-      return iter;
-  }
-  return points.end();
-}
-vector<float> Qmult(vector<float> v1, vector<float> v2) {
-  Point p1; p1.init(v1[1], v1[2], v1[3]);
-  Point p2; p2.init(v2[1], v2[2], v2[3]);
-  vector<float> result;
-  result.push_back(v1[0]*v2[0] - p1.dot(p2));
-  Point vec;
-  vec = p2.times(v1[0]).add(p1.times(v2[0])).add(p1.cross(p2));
-  result.push_back(vec.x);
-  result.push_back(vec.y);
-  result.push_back(vec.z);
-  return result;
-}
-vector<float> Qconj(vector<float> v) {
-  vector<float> conj;
-  conj.push_back(v[0]);
-  conj.push_back(-1*v[1]);
-  conj.push_back(-1*v[2]);
-  conj.push_back(-1*v[3]);
-  return conj;
-}
-float Qnorm(vector<float> v) {
-  return sqrt(pow(v[0], 2) + pow(v[1], 2) + pow(v[2], 2) + pow(v[3], 2));
-}
-vector<float> Qinv(vector<float> v) {
-  float divisor = pow(Qnorm(v), 2);
-  vector<float> inverse = Qconj(v);
-  inverse[0] /= divisor;
-  inverse[1] /= divisor;
-  inverse[2] /= divisor;
-  inverse[3] /= divisor;
-  return inverse;
-}
 /*This class is a wrapper for object type specific information*/
 class ObjectType {
   private:
     vector<Point> points;
     vector<int> Axis;
+    vector<int> ShortAxis;
+    float width;
+    float length;
+    float height;
 
   public:
   /**
@@ -80,7 +45,7 @@ class ObjectType {
     points = p;
     PrintPoints();
     GetCenter();
-    GetAxis();
+    length = GetAxis().magnitude();
     GetAngle();
   }
   /**
@@ -154,8 +119,8 @@ class ObjectType {
   Point GetAxis() {
      /*If Axis has already been set*/
      if (Axis.size() == 2) {
-      vector<Point>::iterator it1 = FindById(Axis[0], points);
-      vector<Point>::iterator it2 = FindById(Axis[1], points);
+      vector<Point>::iterator it1 = FindByID(Axis[0], points);
+      vector<Point>::iterator it2 = FindByID(Axis[1], points);
       return (*it2).sub(*it1);
      }
      float maxdist2 = 0;
@@ -181,7 +146,58 @@ class ObjectType {
      }
      Axis.push_back(P1.id);
      Axis.push_back(P2.id);
+     /* Set Length of the Object */
+     length = P2.sub(P1).magnitude();
      return P2.sub(P1);
+  }
+  Point GetShortAxis() {
+    Point P;
+    if (Axis.size () != 2 || points.size() < 3) {
+      P.init(1000000, 1000000, 1000000);
+      width = 0;
+      return P;
+    } else {
+      Point P = points[0];
+      vector<Point>::iterator it1 = FindByID(Axis[0], points);
+      vector<Point>::iterator it2 = FindByID(Axis[1], points);
+      vector<Point> Ax;
+      Ax.push_back(*it1);
+      Ax.push_back(*it2);
+      float maxdist = P.DistanceToLine(Ax);
+      vector<Point>::iterator it;
+      for (it = points.begin()+1; it != points.end(); ++it) {
+          float dist = it->DistanceToLine(Ax);
+          if (dist > maxdist) {
+            maxdist = dist;
+            P = *it;
+          }
+        }
+        width = maxdist;
+        ShortAxis.push_back(P.id);
+        return P;
+    }
+  }
+  void GetHeight() {
+    if ( (Axis.size () != 2 && ShortAxis.size() != 1 )|| points.size() < 4) {
+      height = 0;
+    } else {
+      float plane[4] = {0, 0, 0, 0};
+      vector<Point>::iterator p1 = FindByID(Axis[0], points);
+      vector<Point>::iterator p2 = FindByID(Axis[1], points);
+      vector<Point>::iterator p3 = FindByID(ShortAxis[0], points);
+      PointsToPlane(*p1, *p2, *p3, plane);
+      float maxdist = 0;
+      vector<Point>::iterator it;
+      for (it = points.begin()+1; it != points.end(); ++it) {
+        if(it->id != Axis[0] && it->id != Axis[1] && it->id != ShortAxis[0]) {
+          float dist = it->DistanceToPlane(plane);
+          if(dist > maxdist) {
+            maxdist = dist;
+          }
+        }
+      }
+      height = maxdist;
+    }
   }
   /**
    * [GetAngle gets the Euler Angles of the Object]

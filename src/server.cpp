@@ -38,6 +38,7 @@ using object_server::ObjectClass;
 using object_server::Point;
 using std::string;
 using std::stringstream;
+using object::FindById;
 
 #define MARKER_COUNT 200
 #define SERVER_NAME "192.168.2.123"
@@ -68,24 +69,7 @@ void TransformMarkers(OWLMarker markers[MARKER_COUNT], int n) {
     Transform(&markers[i]);
   } return;
 }
-/**
- * [FindIndex finds a given int (id) in a vector (v)]
- * @param  id [int to find in vector]
- * @param  v  [vector to look in]
- * @return    [if success index if failiure -1]
- */
-int FindIndex(int id, vector<int> const &v) {
-  vector<int>::const_iterator iter = std::find(v.begin(), v.end(), id);
-  if (iter == v.end()) return -1;
-  return *iter;
-}
 
-vector<ObjectClass>::iterator FindByID(int id, vector<ObjectClass> objects) {
-  vector<ObjectClass>::iterator iter;
-  for (iter = objects.begin(); iter != objects.end(); ++iter)
-    if (iter->get_id() == id) return iter;
-  return iter;
-}
 vector<ObjectClass>::iterator FindObject(int id) {
   vector<ObjectClass>::iterator iter;
   for (iter = object_vector_.begin(); iter != object_vector_.end(); ++iter)
