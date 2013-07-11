@@ -19,22 +19,32 @@ const float PI = 3.14159265358979f;
 using std::vector;
 using object_server::Point;
 using std::acos;
+using std::abs;
+using std::pow;
 using points::PointsToPlane;
 using quaternions::Qmult;
 using quaternions::Qconj;
 using quaternions::Qnorm;
+using quaternions::Qnormalize;
 using quaternions::Qinv;
 using points::FindByID;
 
 /*This class is a wrapper for object type specific information*/
 class ObjectType {
   private:
+    /* Location Information */
     vector<Point> points;
-    vector<int> Axis;
-    vector<int> ShortAxis;
-    float width;
-    float length;
-    float height;
+    Point center;
+    /* Angle Information */
+    Point OriginalAxis;
+    vector<int> AngleAxis;
+    Point vAngleAxis;
+    /* Quaternion Rotation Information */
+    vector<float> angle;
+    /* x, y, z, scale for global representation of dimension */
+    float x_scale;
+    float y_scale;
+    float z_scale;
 
   public:
   /**
@@ -43,34 +53,52 @@ class ObjectType {
    */
   void init(vector<Point> p) {
     points = p;
-    PrintPoints();
+    /* Get the Center and the Axis for Angle information */
     GetCenter();
-    GetAxis();
+    GetAngleAxis();
+    /* Get Angle information */
     GetAngle();
-    
-    GetShortAxis();
-    GetHeight();
-  }
-  float get_width(){
-    return width;
-  }
-  float get_length(){
-    return length;
-  }
-  float get_height(){
-    return height;
-  }
-  void get_dimensions(float dim[3]){
-    dim[0] = length;
-    dim[1] = width * 2;
-    dim[2] = height * 2;
+    /* Get Dimensional information */
+    GetScale();
   }
   /**
-   * [update updates the objects points with new marker information]
+   * [get_dimensions returns the global dimension information]
+   * @param dim[3] [A vector that stores the dimensional information]
+   */
+  void get_dimensions(float dim[3]) {
+    dim[0] = x_scale;
+    dim[1] = y_scale;
+    dim[2] = z_scale;
+  }
+  /**
+   * [get_points return the points associated with the object]
+   * @return [these points]
+   */
+  vector<Point> get_points() {
+    return points;
+  }
+  /**
+   * [get_center return the stored information about the center]
+   * @return [Point describing center of object]
+   */
+  Point get_center() {
+    return center;
+  }
+  /**
+   * [get_angle return the stored rotation information]
+   * @return [a quaternion representing the angle]
+   */
+  vector<float> get_angle() {
+    return angle;
+  }
+
+  /**
+   * [Update updates the objects points with new marker information]
    * @param markers [PhaseSpace markers with new info]
    * @param n       [number of markers in the markers array]
    */
   void Update(OWLMarker *markers, int n) {
+    /* Update markers information */
     for (int i = 0; i < n; ++i) {
       vector<Point>::iterator iter;
       for (iter = points.begin(); iter != points.end(); ++iter) {
@@ -82,14 +110,64 @@ class ObjectType {
         }
       }
     }
+    /* Update Information about the center */
+    GetCenter();
+    /* Update Information about the Angle Axis */
+    GetAngleAxis();
+    /* Find the New Angle */
+    GetAngle();
+    /* Get the Scaling information */
+    GetScale();
     return;
   }
+  Point MaxPoint(int dimension) {
+    Point max = center;
+    vector<Point>::iterator iter;
+    for(iter = points.begin(); iter != points.end(); ++iter) {
+      if(!(iter->current)) continue;
+      if (dimension == 0) {
+        if(iter->x > max.x) {
+          max = *iter;
+        }
+      } else if (dimension == 1) {
+        if(iter->y > max.y) {
+          max = *iter;
+        }
+      } else {
+        if(iter->z > max.z) {
+          max = *iter;
+        }
+      }
+    } return max;
+  }
+  Point MinPoint(int dimension) {
+    Point min = center;
+    vector<Point>::iterator iter;
+    for(iter = points.begin(); iter != points.end(); ++iter) {
+      if(!(iter->current)) continue;
+      if (dimension == 0) {
+        if(iter->x < min.x) {
+          min = *iter;
+        }
+      } else if (dimension == 1) {
+        if(iter->y < min.y) {
+          min = *iter;
+        }
+      } else {
+        if(iter->z < min.z) {
+          min = *iter;
+        }
+      }
+    } return min;
+  }
   /**
-   * [get_points return the points associated with the object]
-   * @return [these points]
+   * [GetScale finds the global x, y, and z scale of the object]
    */
-  vector<Point> get_points() {
-    return points;
+  void GetScale() {
+    float buffer = 1.20;
+    x_scale = MaxPoint(0).sub(MinPoint(0)).x * buffer;
+    y_scale = MaxPoint(1).sub(MinPoint(1)).y * buffer;
+    z_scale = MaxPoint(2).sub(MinPoint(2)).z * buffer;
   }
   /**
    * [AddPoints adds new_points to the Object]
@@ -97,16 +175,13 @@ class ObjectType {
    */
   void AddPoints(vector<Point> new_points) {
     vector<Point>::iterator i;
-    /*for (i = new_points.begin(); i != new_points.end(); ++i) {
-      printf("%s\n",i->print().c_str());
-    }*/
     points.insert(points.begin(), new_points.begin(), new_points.end());
   }
   /**
    * [getCenter Default algorithm for getting the center]
    * @return [A point describing the center]
    */
-  Point GetCenter() {
+  void GetCenter() {
     Point p;
     p.init();
     int pointsUsed = 0;
@@ -124,94 +199,61 @@ class ObjectType {
         p.x /= pointsUsed;
         p.y /= pointsUsed;
         p.z /= pointsUsed;
-        return p;
+        center = p;
+        return;
      } else {
-        return points[0];
+        center = points[0];
+        return;
      }
   }
   /**
-   * [GetAxis sets the two Axis point ids]
-   * @return [returns the vector between these points]
+   * [GetAngleAxis sets or finds the vector of the Axis that defines angle]
+   * @return [this vector axis]
    */
-  Point GetAxis() {
-     /*If Axis has already been set*/
-     if (Axis.size() == 2) {
-      vector<Point>::iterator it1 = FindByID(Axis[0], points);
-      vector<Point>::iterator it2 = FindByID(Axis[1], points);
-      return (*it2).sub(*it1);
-     }
-     float maxdist2 = 0;
-     Point P1;
-     Point P2;
-     if (points.size() < 2) {
-       P1.init();
-       return P1;
-     }
-     vector<Point>::iterator it1;
-     vector<Point>::iterator it2;
-     for (it1 = points.begin(); it1 != points.end(); ++it1) {
-       for (it2 = points.begin()+1; it2 != points.end(); ++it2) {
-         float dist2 = pow(it1->x - it2->x, 2)
-                     + pow(it1->y - it2->y, 2)
-                     + pow(it1->z - it2->z, 2);
-         if (dist2 > maxdist2) {
-           maxdist2 = dist2;
-           P1 = *it1;
-           P2 = *it2;
-         }
-       }
-     }
-     Axis.push_back(P1.id);
-     Axis.push_back(P2.id);
-     /* Set Length of the Object */
-     length = P2.sub(P1).magnitude();
-     return P2.sub(P1);
-  }
-  Point GetShortAxis() {
-    if (Axis.size () != 2 || points.size() < 3) {
-      width = 0;
-      return points[0];
+  Point GetAngleAxis(){
+    if (AngleAxis.size() == 2) {
+      vector<Point>::iterator it1 = FindByID(AngleAxis[0], points);
+      vector<Point>::iterator it2 = FindByID(AngleAxis[1], points);
+      if(it1->current == 0 || it2->current == 0) {
+        return vAngleAxis;
+      }
+      vAngleAxis = it2->sub(*it1);
+      return vAngleAxis;
     } else {
-      Point P = points[0];
-      vector<Point>::iterator it1 = FindByID(Axis[0], points);
-      vector<Point>::iterator it2 = FindByID(Axis[1], points);
-      vector<Point> Ax;
-      Ax.push_back(*it1);
-      Ax.push_back(*it2);
-      float maxdist = P.DistanceToLine(Ax);
-      vector<Point>::iterator it;
-      for (it = points.begin()+1; it != points.end(); ++it) {
-          float dist = it->DistanceToLine(Ax);
-          if (dist > maxdist) {
-            maxdist = dist;
-            P = *it;
-          }
-        }
-        width = maxdist;
-        ShortAxis.push_back(P.id);
-        return P;
-    }
-  }
-  void GetHeight() {
-    if ((Axis.size () != 2 && ShortAxis.size() != 1 )|| points.size() < 4) {
-      height = 0;
-    } else {
-      float plane[4] = {0, 0, 0, 0};
-      vector<Point>::iterator p1 = FindByID(Axis[0], points);
-      vector<Point>::iterator p2 = FindByID(Axis[1], points);
-      vector<Point>::iterator p3 = FindByID(ShortAxis[0], points);
-      PointsToPlane(*p1, *p2, *p3, plane);
-      float maxdist = 0;
-      vector<Point>::iterator it;
-      for (it = points.begin()+1; it != points.end(); ++it) {
-        if(it->id != Axis[0] && it->id != Axis[1] && it->id != ShortAxis[0]) {
-          float dist = it->DistanceToPlane(plane);
-          if(dist > maxdist) {
-            maxdist = dist;
+      /* If there are not enough points then just return the 0 vector */ 
+      if (points.size() < 2) {
+        vAngleAxis.init();
+        return vAngleAxis;
+      }
+      /* Max distance Squared to compare with */
+      float maxdist2 = 0;
+      /* P1 and P2 are the Points that define the vector */
+      Point P1;
+      Point P2;
+      /*Iterators for going throught the points that define the object*/
+      vector<Point>::iterator it1;
+      vector<Point>::iterator it2;
+      for (it1 = points.begin(); it1 != points.end(); ++it1) {
+      if(!(it1->current)) continue;
+        for (it2 = points.begin()+1; it2 != points.end(); ++it2) {
+          if(!(it2->current)) continue;
+            float dist2 = pow(it1->x - it2->x, 2)
+                      + pow(it1->y - it2->y, 2)
+                      + pow(it1->z - it2->z, 2);
+          if (dist2 > maxdist2) {
+            maxdist2 = dist2;
+            P1 = *it1;
+            P2 = *it2;
           }
         }
       }
-      height = maxdist;
+      /* If we are looking for the Axis that defines the angle
+         Make sure that the id's are set so that it can be consistent */
+      AngleAxis.push_back(P1.id);
+      AngleAxis.push_back(P2.id);
+      OriginalAxis = P2.sub(P1);
+      vAngleAxis = OriginalAxis;
+      return vAngleAxis;
     }
   }
   /**
@@ -220,32 +262,30 @@ class ObjectType {
    */
   /*http://www.vbforums.com/showthread.php?
   584390-Quaternion-from-two-3D-Position-Vectors*/
-  vector<float> GetAngle() {
-    Point v = GetAxis();
+  void GetAngle() {
     /*If the Axis is unpopulated, it was unable to find two points*/
-    if (Axis.size() != 2) {
-      vector<float> P(3, 0);
-      P.push_back(1);
-      return P;
+    vector<float> default_Q;
+    default_Q.push_back(1);
+    default_Q.push_back(0);
+    default_Q.push_back(0);
+    default_Q.push_back(0);
+    if (AngleAxis.size() != 2) {
+      angle = default_Q;
+      return;
     }
-    Point Z;
-    Z.init(0, 0, 1);
-    /*Find axis of rotation as unit vector*/
-    Point u = v.cross(Z).normalize();
-    float alpha = acos(v.z * (1 / v.magnitude()));
-    /*the quaternion*/
+    if(OriginalAxis.magnitude() == 0 || vAngleAxis.magnitude() == 0) {
+      angle = default_Q;
+      return;
+    }
     vector<float> Q;
-    float plus = cos(alpha/2);
-    float mult = sin(alpha/2);
-    /*set w*/
-    Q.push_back(plus);
-    /*set x*/
-    Q.push_back(plus + u.x*mult);
-    /*set y*/
-    Q.push_back(plus + u.y*mult);
-    /*set z*/
-    Q.push_back(plus + u.z*mult);
-    return Q;
+    Point cross = vAngleAxis.cross(OriginalAxis);
+    Q.push_back(sqrt(pow(vAngleAxis.magnitude(), 2) * pow(OriginalAxis.magnitude(), 2)) + vAngleAxis.dot(OriginalAxis));
+    Q.push_back(cross.x);
+    Q.push_back(cross.y);
+    Q.push_back(cross.z);
+    angle = Q;
+    // angle = Qnormalize(Q);
+    return;
   }
   void PrintPoints() {
     vector<Point>::iterator i;

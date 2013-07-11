@@ -223,7 +223,8 @@ bool add_points(core_object_server::add_points::Request &req,
 }
 
 /**
- * [add_object ROS service to track a new object]
+ * [add_object ROS service to track a new object
+ *             Make sure that the Long axis is visible in the End]
  * @param  req [ROS add_object service request]
  *             [name: Name for the new object]
  *             [time: Time to look for markers]
@@ -413,7 +414,7 @@ int main(int argc, char **argv) {
         /*Publish to RVIZ*/
         visualization_msgs::Marker marker;
         /*frame of reference*/
-        marker.header.frame_id ="/base_link";
+        marker.header.frame_id ="/tablesurface";
         marker.header.stamp = timestamp;
         /*Set namespace and id*/
         marker.ns = "PhaseSpace_Objects";
@@ -439,7 +440,7 @@ int main(int argc, char **argv) {
         marker.color.g = 1.0f;
         marker.color.b = 0.0f;
         marker.color.a = 1.0;
-        marker.lifetime = ros::Duration();
+        marker.lifetime = ros::Duration(1.0/frequency);
         rviz_pub.publish(marker);
       }
     }

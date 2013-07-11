@@ -38,6 +38,13 @@ vector<float> Qconj(vector<float> v) {
 float Qnorm(vector<float> v) {
   return sqrt(pow(v[0], 2) + pow(v[1], 2) + pow(v[2], 2) + pow(v[3], 2));
 }
+vector<float> Qnormalize(vector<float> v) {
+  vector<float>::iterator iter;
+  float mag = Qnorm(v);
+  for(iter = v.begin(); iter != v.end(); ++iter) {
+  	*iter = *iter / mag;
+  } return v;
+}
 vector<float> Qinv(vector<float> v) {
   float divisor = pow(Qnorm(v), 2);
   vector<float> inverse = Qconj(v);
@@ -46,6 +53,13 @@ vector<float> Qinv(vector<float> v) {
   inverse[2] /= divisor;
   inverse[3] /= divisor;
   return inverse;
+}
+Point QRotate(Point p, vector<float> q) {
+	q = Qnormalize(q);
+	Point u;
+	u.init(q[1], q[2], q[3]);
+	float s = q[0];
+	return u.times(2.0f * u.dot(p)).add(p.times(s*s - u.dot(u))).add(u.cross(p).times(s * 2.0f));
 }
 
 }  // namespace quaternions

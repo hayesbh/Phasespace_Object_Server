@@ -101,6 +101,14 @@ class Point {
     P.z = z + p.z;
     return P;
   }
+  Point add(float f) {
+    Point P;
+    P.current = current;
+    P.x = x + f;
+    P.y = y + f;
+    P.z = z + f;
+    return P;
+  }
   /**
    * [cross performs the cross product of this point on the given]
    * @param  p [the given point]

@@ -59,14 +59,14 @@ class ObjectClass {
    * @return [a point describing location rel to camera 0]
    */
   Point get_pos() {
-    return type.GetCenter();
+    return type.get_center();
   }
   /**
    * [get_rotation finds the rotation of this object]
    * @return [a quaternion describing rotation]
    */
   vector<float> get_rotation() {
-    return type.GetAngle();
+    return type.get_angle();
   }
   /**
    * [get_points returns the points in Object]
