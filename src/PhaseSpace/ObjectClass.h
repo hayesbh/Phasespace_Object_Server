@@ -75,6 +75,9 @@ class ObjectClass {
   vector<Point> get_points() {
     return type.get_points();
   }
+  void get_dimensions(float dim[3]){
+    type.get_dimensions(dim);
+  } 
   /**
    * [AddPoints adds points to this object]
    * @param  new_points [new points to also be in this object]

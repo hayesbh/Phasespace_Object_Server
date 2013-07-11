@@ -59,7 +59,7 @@ void Transform(OWLMarker *mark) {
   float y = mark->y - shift[1];
   float z = mark->z - shift[2];
 
-  mark->x = rotate[0][0]*x + rotate[0][1]*y + rotate[0][2]*z;
+  mark->x = -1*(rotate[0][0]*x + rotate[0][1]*y + rotate[0][2]*z);
   mark->y = rotate[1][0]*x + rotate[1][1]*y + rotate[1][2]*z;
   mark->z = rotate[2][0]*x + rotate[2][1]*y + rotate[2][2]*z;
   return;
@@ -403,6 +403,11 @@ int main(int argc, char **argv) {
         q.y = rotation[2];
         q.z = rotation[3];
         info.rot = q;
+        float dimensions[3] = {0, 0, 0};
+        iter->get_dimensions(dimensions);
+        info.dim.push_back(dimensions[0]);
+        info.dim.push_back(dimensions[1]);
+        info.dim.push_back(dimensions[2]);
         /*Add Object to ObjectDigest*/
         digest.objects.push_back(info);
         /*Publish to RVIZ*/
@@ -426,9 +431,9 @@ int main(int argc, char **argv) {
         marker.pose.orientation.z = rotation[2];
         marker.pose.orientation.w = rotation[3];
         /*set the marker scale*/
-        marker.scale.x = 100;
-        marker.scale.y = 100;
-        marker.scale.z = 100;
+        marker.scale.x = dimensions[0];
+        marker.scale.y = dimensions[1];
+        marker.scale.z = dimensions[2];
         /*set color*/
         marker.color.r = 0.0f;
         marker.color.g = 1.0f;

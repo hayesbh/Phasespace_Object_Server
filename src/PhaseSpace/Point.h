@@ -165,7 +165,7 @@ class Point {
                 / (x2x1).magnitude();
   }
   float DistanceToPlane(float plane[4]) {
-    return std::abs(plane[0] * z + plane[1] * y + plane[2] * x + plane[3]) /
+    return std::abs(plane[0] * x + plane[1] * y + plane[2] * z + plane[3]) /
     sqrt(pow(plane[0], 2) + pow(plane[1], 2) + pow(plane[2], 2));
   }
   /**

@@ -45,8 +45,25 @@ class ObjectType {
     points = p;
     PrintPoints();
     GetCenter();
-    length = GetAxis().magnitude();
+    GetAxis();
     GetAngle();
+    
+    GetShortAxis();
+    GetHeight();
+  }
+  float get_width(){
+    return width;
+  }
+  float get_length(){
+    return length;
+  }
+  float get_height(){
+    return height;
+  }
+  void get_dimensions(float dim[3]){
+    dim[0] = length;
+    dim[1] = width * 2;
+    dim[2] = height * 2;
   }
   /**
    * [update updates the objects points with new marker information]
@@ -151,11 +168,9 @@ class ObjectType {
      return P2.sub(P1);
   }
   Point GetShortAxis() {
-    Point P;
     if (Axis.size () != 2 || points.size() < 3) {
-      P.init(1000000, 1000000, 1000000);
       width = 0;
-      return P;
+      return points[0];
     } else {
       Point P = points[0];
       vector<Point>::iterator it1 = FindByID(Axis[0], points);
@@ -178,7 +193,7 @@ class ObjectType {
     }
   }
   void GetHeight() {
-    if ( (Axis.size () != 2 && ShortAxis.size() != 1 )|| points.size() < 4) {
+    if ((Axis.size () != 2 && ShortAxis.size() != 1 )|| points.size() < 4) {
       height = 0;
     } else {
       float plane[4] = {0, 0, 0, 0};
