@@ -62,6 +62,10 @@ class Point {
     y = mark.y;
     z = mark.z;
   }
+  int equals(Point p) {
+    int i = (p.x == x && p.y == y && p.z == z);
+    return i;
+  }
   /**
    * [sub subtract two points]
    * @param  p [the point to subtract from this]
@@ -119,7 +123,7 @@ class Point {
     (p.current && current) ? (c.current = 1) : (c.current = 0);
     c.x = y * p.z - z * p.y;
     c.y = z * p.x - x * p.z;
-    c.z = x * p.y - y * p.x;
+    c.z = -(x * p.y - y * p.x);
     return c;
   }
   /**
@@ -149,9 +153,9 @@ class Point {
       p.init();
       return p;
     }
-    x /= mag;
-    y /= mag;
-    z /= mag;
+    p.x = x / mag;
+    p.y = y / mag;
+    p.z = z / mag;
     return p;
   }
   /**
@@ -167,10 +171,10 @@ class Point {
    * @param  line [two points that define a line]
    * @return      [the distacne]
    */
-  float DistanceToLine(vector<Point> line) {
-    Point x2x1 = line[1].sub(line[0]);
-    return (x2x1.cross(line[0].sub(*this))).magnitude()
-                / (x2x1).magnitude();
+  Point VectorPerpendicularTo(vector<Point> line) {
+    Point v = line[1].sub(line[0]);
+    Point u = this->sub(line[0]);
+    return u.sub(v.normalize().times(v.dot(u)));
   }
   float DistanceToPlane(float plane[4]) {
     return std::abs(plane[0] * x + plane[1] * y + plane[2] * z + plane[3]) /
