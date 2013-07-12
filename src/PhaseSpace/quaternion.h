@@ -62,6 +62,7 @@ Point QRotate(Point p, vector<float> q) {
 	return u.times(2.0f * u.dot(p)).add(p.times(s*s - u.dot(u))).add(u.cross(p).times(s * 2.0f));
 }
 
+
 }  // namespace quaternions
 
 #endif

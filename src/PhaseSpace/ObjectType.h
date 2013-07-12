@@ -282,16 +282,14 @@ class ObjectType {
       } else {
         u = it2->sub(*it1);
       }
-      
+      GetAngle();
       Point v;
       if(it3->id == it1->id) {
         v = it4->sub(*it3);
       } else {
         v = it3->sub(*it4);
-      } 
-      GetAngle();
+      }
       vAngleAxis2 = u.sub(v.normalize().times(u.dot(v))).normalize();
-      vAngleAxis2 = QRotate(vAngleAxis2, Qinv(angle));
       // Now find the normal component
       return vAngleAxis2;
     } else {
@@ -333,8 +331,6 @@ class ObjectType {
       }
       /* If we are looking for the Axis that defines the angle
          Make sure that the id's are set so that it can be consistent */
-      GetAngle();
-      OriginalAxis2 = QRotate(OriginalAxis2, Qinv(angle));
       AngleAxis2.push_back(P1.id);
       AngleAxis2.push_back(P2.id);
       vAngleAxis2 = OriginalAxis2;
@@ -381,8 +377,9 @@ class ObjectType {
       return;
     }
     vector<float> Q2;
-    Point cross2 = vAngleAxis2.cross(OriginalAxis2);
-    Q2.push_back(sqrt(pow(vAngleAxis2.magnitude(), 2) * pow(OriginalAxis2.magnitude(), 2)) + vAngleAxis2.dot(OriginalAxis2));
+    Point temp = QRotate(vAngleAxis2, angle);
+    Point cross2 = temp.cross(OriginalAxis2);
+    Q2.push_back(sqrt(pow(temp.magnitude(), 2) * pow(OriginalAxis2.magnitude(), 2)) + temp.dot(OriginalAxis2));
     Q2.push_back(cross2.z);
     Q2.push_back(cross2.y);
     Q2.push_back(cross2.x);
