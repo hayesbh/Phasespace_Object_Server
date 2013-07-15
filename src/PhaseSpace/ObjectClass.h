@@ -77,6 +77,12 @@ class ObjectClass {
   }
   void get_dimensions(float dim[3]){
     type.get_dimensions(dim);
+  }
+  int CollidesWith(Point p) {
+    return type.CollidesWith(p);
+  }
+  int IntersectsBox(Point C, float width) {
+    return type.IntersectsBox(C, width);
   } 
   /**
    * [AddPoints adds points to this object]

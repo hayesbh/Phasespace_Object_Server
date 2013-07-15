@@ -17,7 +17,7 @@ namespace object_server {
 /*Math And Vectors*/
 using std::vector;
 using std::acos;
-using std::abs;
+using std::fabs;
 using std::pow;
 /* Points */
 using object_server::Point;
@@ -138,6 +138,74 @@ class ObjectType {
     GetScale();
     return;
   }
+  int CollidesWith(Point p) {
+    //Rotate point to be reflective of object at origin
+    p = QRotate(p, Qinv(angle)).sub(center);
+    if(p.x > x_scale/2 || p.x < -x_scale/2) return 0; 
+    else if(p.y > y_scale/2 || p.y < -y_scale/2) return 0; 
+    else if(p.z > z_scale/2 || p.z < -z_scale/2) return 0;
+    else return 1;
+  }
+  int IntersectsBox(Point C, float width) {
+    Point A[3] = { QRotate(Point::static_init(1,0,0), angle),
+                   QRotate(Point::static_init(0,1,0), angle),
+                   QRotate(Point::static_init(0,0,1), angle) };
+    Point D = center.sub(C);
+    float a[3] = { x_scale/2, y_scale/2, z_scale/2 };
+    float b[3] = { width/2, width/2, width/2 };
+    float c[3][3] = {{0,0,0},{0,0,0},{0,0,0}};
+    if ((a[0] +
+        b[0]*(c[0][0] = fabs(A[0].x)) + b[1]*(c[0][1] = fabs(A[0].y)) + b[2]*(c[0][2] = fabs(A[0].z)))
+        < fabs(A[0].dot(center)))
+       return 0;
+    if ((a[1] +
+        b[0]*(c[1][0] = fabs(A[1].x)) + b[1]*(c[1][1] = fabs(A[1].y)) + b[2]*(c[1][2] = fabs(A[1].z)))
+        < fabs(A[1].dot(center)))
+       return 0;
+    if ((a[2] +
+        b[0]*(c[2][0] = fabs(A[2].x)) + b[1]*(c[2][1] = fabs(A[2].y)) + b[2]*(c[2][2] = fabs(A[2].z)))
+        < fabs(A[2].dot(center)))
+       return 0;
+    if ((a[0] * c[0][0] + a[1] * c[1][0] + a[2] * c[2][0]) +
+       b[0]
+       < fabs(D.x)) return 0;
+    if ((a[0] * c[0][1] + a[1] * c[1][1] + a[2] * c[2][1]) +
+       b[1]
+       < fabs(D.y)) return 0;
+    if ((a[0] * c[0][2] + a[1] * c[1][2] + a[2] * c[2][2]) +
+       b[2]
+       < fabs(D.z)) return 0;
+    if ((a[1] * c[2][0] + a[2] * c[1][0]) +
+        (b[1] * c[0][2] + b[2] * c[0][1])
+       < fabs(c[1][0] * A[2].dot(D) - c[2][0] * A[1].dot(D))) return 0;
+    if ((a[1] * c[2][1] + a[2] * c[1][1]) +
+        (b[0] * c[0][2] + b[2] * c[0][1])
+       < fabs(c[1][0] * A[2].dot(D) - c[2][1] * A[1].dot(D))) return 0;
+    if ((a[1] * c[2][2] + a[2] * c[1][2]) +
+        (b[0] * c[0][1] + b[1] * c[0][0])
+       < fabs(c[1][2] * A[2].dot(D) - c[2][2] * A[1].dot(D))) return 0;
+    
+    if ((a[0] * c[2][0] + a[2] * c[0][0]) +
+        (b[1] * c[1][2] + b[2] * c[1][1])
+       < fabs(c[2][0] * A[0].dot(D) - c[0][0] * A[2].dot(D))) return 0;
+    if ((a[0] * c[2][1] + a[2] * c[0][1]) +
+        (b[0] * c[1][2] + b[2] * c[1][0])
+       < fabs(c[2][1] * A[0].dot(D) - c[0][1] * A[2].dot(D))) return 0;
+    if ((a[0] * c[2][2] + a[2] * c[0][2]) +
+        (b[0] * c[1][1] + b[1] * c[1][0])
+       < fabs(c[2][2] * A[0].dot(D) - c[0][2] * A[2].dot(D))) return 0;
+    
+    if ((a[0] * c[1][0] + a[1] * c[0][0]) +
+        (b[1] * c[2][2] + b[2] * c[2][1])
+       < fabs(c[0][0] * A[1].dot(D) - c[1][0] * A[2].dot(D))) return 0;
+    if ((a[0] * c[1][1] + a[1] * c[0][1]) +
+        (b[0] * c[2][2] + b[2] * c[2][0])
+       < fabs(c[0][0] * A[1].dot(D) - c[1][1] * A[2].dot(D))) return 0;
+    if ((a[0] * c[1][2] + a[1] * c[0][2]) +
+        (b[0] * c[2][1] + b[1] * c[2][0])
+       < fabs(c[0][2] * A[1].dot(D) - c[1][2] * A[2].dot(D))) return 0;
+    return 1;
+  }
   /**
    * [MaxDimensionalDistance  Finds dimensions along given local axis]
    * @param  dimension [0 --> x axis, 1 --> y axis, 2 --> z axis]
@@ -157,7 +225,7 @@ class ObjectType {
     for(iter = points.begin(); iter != points.end(); ++iter) {
       if(!(iter->current)) continue;
       float temp;
-      if((temp = abs(iter->sub(center).dot(axis))) > max)
+      if((temp = fabs(iter->sub(center).dot(axis))) > max)
         max = temp;
     } return max;
   }

@@ -41,14 +41,21 @@ class Point {
     x = X;
     y = Y;
     z = Z;
+    return;
+  }
+  static Point static_init(float X, float Y, float Z) {
+    Point p;
+    p.init(X, Y, Z);
+    return p;
   }
   /**
    * [init initialize the point with no coordinates]
    * @return [default point at origin]
    */
-  void init() {
+  void  init() {
     current = 0;
     x = y = z = 0;
+    return;
   }
   /**
    * [Update updates the point information with marker info]
@@ -177,7 +184,7 @@ class Point {
     return u.sub(v.normalize().times(v.dot(u)));
   }
   float DistanceToPlane(float plane[4]) {
-    return std::abs(plane[0] * x + plane[1] * y + plane[2] * z + plane[3]) /
+    return std::fabs(plane[0] * x + plane[1] * y + plane[2] * z + plane[3]) /
     sqrt(pow(plane[0], 2) + pow(plane[1], 2) + pow(plane[2], 2));
   }
   /**

@@ -18,6 +18,8 @@
 #include "core_object_server/add_object.h"
 #include "core_object_server/add_points.h"
 #include "core_object_server/delete_object.h"
+#include "core_object_server/collides_with.h"
+#include "core_object_server/box_filled.h"
 
 /*Set up ROS messages*/
 #include "std_msgs/String.h"
@@ -49,16 +51,18 @@ OWLMarker markers[MARKER_COUNT];
 vector<int> ids_set_;
 int tracker_ = 0;
 vector<ObjectClass> object_vector_;
+/*Camera Frame Information*/
 const float shift[3] = { 2.10094,0.637346,-1.24804 };
 const float rotate[3][3] = {{0.802454, 0.0236066, -0.599659},
                             {0.529394, 0.213418, 0.823575},
                             {-0.14712, 0.976347, -0.158438}};
 
+/* SECTION 1 CHANGING FRAME OF REFERENCES */
 void Transform(OWLMarker *mark) {
   float x = mark->x - shift[0];
   float y = mark->y - shift[1];
   float z = mark->z - shift[2];
-
+  /* TODO REDO THE ROTATION MATRIX TO TAKE THIS X INTO ACCOUNT */
   mark->x = -1*(rotate[0][0]*x + rotate[0][1]*y + rotate[0][2]*z);
   mark->y = rotate[1][0]*x + rotate[1][1]*y + rotate[1][2]*z;
   mark->z = rotate[2][0]*x + rotate[2][1]*y + rotate[2][2]*z;
@@ -76,6 +80,8 @@ vector<ObjectClass>::iterator FindObject(int id) {
     if (iter->get_id() == id) return iter;
   return iter;
 }
+
+/* SERVICE AUXILLARY PROGRAMS */
 /**
  * [get_unadded_points returns the points that are available but have not been set]
  * @return        [Points that have not been assigned]
@@ -137,6 +143,8 @@ vector<Point> get_points(int time) {
   }
   return points;
 }
+
+/* ROS SERVICES */
 
 /**
  * [delete_object deletes an Object from the list of Tracked Objects]
@@ -266,7 +274,30 @@ bool add_object(core_object_server::add_object::Request &req,
   ROS_INFO("Object Added: %s\n", info.str().c_str());
   return true;
 }
-
+bool collision_detection(core_object_server::collides_with::Request &req,
+                         core_object_server::collides_with::Response &res) {
+  Point p;
+  p.init(req.x, req.y, req.z);
+  vector<ObjectClass>::iterator iter;
+  res.collides = false;
+  for (iter = object_vector_.begin(); iter != object_vector_.end(); ++iter)
+    if (iter->CollidesWith(p)) { 
+      res.collides = true;
+      ROS_INFO("COLLISION DETECTED");
+    }
+  return true;
+}
+bool box_filled(core_object_server::box_filled::Request &req,
+                core_object_server::box_filled::Response &res) {
+  Point Center;
+  Center.init(req.x, req.y, req.z);
+  vector<ObjectClass>::iterator iter;
+  res.filled = false;
+  for (iter = object_vector_.begin(); iter != object_vector_.end(); ++iter)
+    if( iter->IntersectsBox(Center, req.width)) res.filled = true;
+  return true;
+}
+/* PRINTING OBJECT DATA */
 string print_digest(core_object_server::ObjectDigest const &digest) {
   stringstream print;
   print << digest.time << "\n";
@@ -343,6 +374,10 @@ int main(int argc, char **argv) {
       n.advertiseService("add_points", add_points);
   ros::ServiceServer rm_obj =
       n.advertiseService("delete_object", delete_object);
+  ros::ServiceServer collision =
+      n.advertiseService("collides_with", collision_detection);
+  ros::ServiceServer intersect =
+      n.advertiseService("box_filled", box_filled);
   
   ros::Rate loop_rate(frequency); //30Hz operational rate
 
