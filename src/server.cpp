@@ -128,7 +128,7 @@ vector<Point> get_unadded_points() {
  * @param  time [Time in Seconds the System will look for new points]
  * @return      [A vector of Points that are unassigned but available]
  */
-vector<Point> get_points(int time) {
+vector<Point> get_points(int time, bool glove = false) {
   ROS_ASSERT(time >= 0);
 
   int rate = 10;
@@ -140,6 +140,15 @@ vector<Point> get_points(int time) {
     /*TODO make this abstracted out dependent on rate*/
     ros::Duration(0.1).sleep();
     time--;
+  }
+  if (glove && points.size() > 0 && points.size() < 7) {
+    int mult = points[0].id / 7;
+    vector<Point>::iterator iter;
+    for (int i = 0; i < 7; i++) {
+      /* if the id was not found push it back the glove will handle the rest */
+      if (object::FindById(i + mult * 7, points) == points.end())
+        ids_set_.push_back(i + mult * 7); 
+    }
   }
   return points;
 }
@@ -264,7 +273,7 @@ bool add_object(core_object_server::add_object::Request &req,
   }
   ROS_INFO("%s", info.str().c_str());
   /*Initialize this New Object with the name given and the new points*/
-  temp_object.init(object_count_, req.name, points);
+  temp_object.init(object_count_, req.name, points, req.type);
   /*Add this object to the list of tracked objects*/
   object_vector_.push_back(temp_object);
   /*Update the universal object_count*/

@@ -6,13 +6,13 @@ $(document).ready(function(){
 	});
 	//BUTTON - ROS core_object_server add_object call
 	$("#ADD").click(function(){
-		addObject($('#AddName').val(), $('#AddTime').val());
+		addObject($('#AddName').val(), $('#AddTime').val(), $('#AddType').val());
 		$("#add_selection").hide();
 	});
 	//CALL THE SAME SERVICE IF ENTER IS CLCIKED
 	$("#add_selection").keypress(function(){
 		if(event.which == 13){
-			addObject($('#AddName').val(), $('#AddTime').val());
+			addObject($('#AddName').val(), $('#AddTime').val(), $('#AddType').val());
 			$("#add_selection").hide();
 		}
 	});

@@ -1,5 +1,6 @@
 string name
 int32 time
+string type
 ---
 bool success
 string info

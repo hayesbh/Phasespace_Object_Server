@@ -12,12 +12,13 @@ var add = new ROSLIB.Service({
 	name : '/add_object',
 	serviceType : 'core_object_server/add_object'
 });
-function addObject(called, t){
+function addObject(called, t, ty){
   alertify.log("Adding Object for "+ t +" seconds", 1, t*1000);
   console.log(t);
 	var addreq = new ROSLIB.ServiceRequest({
 		name : called,
-    time : +t
+		time : +t
+		type : ty
 	});
   add.callService(addreq, function(result){
     console.log('Result for service call on ' +

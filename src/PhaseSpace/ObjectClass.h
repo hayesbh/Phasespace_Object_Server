@@ -35,7 +35,7 @@ class ObjectClass {
    * @param called         [User given name]
    * @param points         [Vector of Points that define Object]
    */
-  void init(int identification, string called, vector<Point> points) {
+  void init(int identification, string called, vector<Point> points, string t){
     name = called;
     id = identification;
     type.init(points);
