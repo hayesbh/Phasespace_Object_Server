@@ -210,12 +210,21 @@ float* PointsToPlane (Point p1, Point p2, Point p3, float plane[4]) {
   return plane;
 }
 
-vector<Point>::iterator FindByID(int id, vector<Point> points) {
+/**
+ * [FindById finds the point with the id given]
+ * @param  id     [id of the point desired]
+ * @param  points [vector of points to look in]
+ * @return        [the index of the point with this id]
+ */
+const vector<Point>::iterator FindById(int id, vector<Point> &points) {
   vector<Point>::iterator iter;
-  for (iter = points.begin(); iter != points.end(); ++iter)
-    if (iter->id == id) return iter;
-  return iter;
+  for (iter = points.begin(); iter != points.end(); ++iter) {
+    if (iter->id == id)
+      return iter;
+  }
+  return points.end();
 }
+
 
 }  // namespace points
 

@@ -55,4 +55,9 @@ $(document).ready(function(){
 			$("markers_section").hide();
 		}
 	});
+        function refresh() {
+          console.log("refresh\n");
+          setInterval(update, 100);
+        }
+        refresh();
 });

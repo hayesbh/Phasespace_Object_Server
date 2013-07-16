@@ -15,19 +15,19 @@ var add = new ROSLIB.Service({
 function addObject(called, t, ty){
   alertify.log("Adding Object for "+ t +" seconds", 1, t*1000);
   console.log(t);
-	var addreq = new ROSLIB.ServiceRequest({
-		name : called,
-		time : +t
-		type : ty
-	});
+  var addreq = new ROSLIB.ServiceRequest({
+    name : called,
+    time : +t,
+    type : ty
+  });
   add.callService(addreq, function(result){
     console.log('Result for service call on ' +
     add.name +
     ': (' + result.success + ') ' + result.info);
     if (result.success) {
-      $('#sidebar').append("<div class='object' id='"+index+"'>"+
-                "<p>(" + index + ') '+ addreq.called + ': </p>'+
-                "<p class='info'></p></div>");
+      //$('#sidebar').append("<div class='object' id='"+index+"'>"+
+      //          "<p>(" + index + ') '+ addreq.name + ': </p>'+
+      //          "<p class='info'></p></div>");
       index++;
       alertify.success("Object Successfully Added");
     } else {
@@ -50,7 +50,7 @@ function deleteObject(identification){
     delreq.id +
     ': (' + result.success + ') ');
     if(result.success) {
-      $("#"+delreq.id).remove();
+      //$("#"+delreq.id).remove();
       alertify.success("Object Successfully Deleted");
     } else alertify.error("Deletion Failed");
   });
@@ -76,41 +76,38 @@ function addPoints(identification, t){
 }
 
 function update(){
-	var listener = new ROSLIB.Topic({
-	ros : ros,
-	name : '/info',
-	messageType : 'core_object_server/ObjectDigest'
-});
-	listener.subscribe(function(message){
-			console.log('Received message on ' + listener.name);
-			console.log('Received message at ' + message.time);
-			for (var i = 0; i < message.objects.size(); i++) {
-        var str = "<p>(" + message.objects[i].id + ")" +
-                    message.objects[i].name + "</p><p>" +
-                    "[" + message.objects[i].pos.x + ', ' +
-                          message.objects[i].pos.y + ', ' +
-                          message.objects[i].pos.z + "]</p><p>" +
-                    "[" + message.objects[i].rot.w + ', ' +
-                          message.objects[i].rot.x + ', ' +
-                          message.objects[i].rot.y + ', ' +
-                          message.objects[i].rot.z + "]</p>";
-				console.log('Index: ' + message.objects[i].id);
-				console.log('Name: ' + message.objects[i].name);
-				console.log('Position: ' +
-					message.objects[i].pos.x + ', ' +
-					message.objects[i].pos.y + ', ' +
-					message.objects[i].pos.z);
-				console.log('Rotation: ' +
-					message.objects[i].rot.w + ', ' +
-					message.objects[i].rot.x + ', ' +
-					message.objects[i].rot.y + ', ' +
-					message.objects[i].rot.z);
-				/*Clear the associated id*/
-				$('#'+ substr[0] +' .info').html('');
-        $('#'+ substr[0] +' .info').append(str);
-			}
-		listener.unsubscribe();
-	});
-
+  console.log("update");
+  var listener = new ROSLIB.Topic({
+    ros : ros,
+    name : '/objects',
+    messageType : 'core_object_server/ObjectDigest'
+  });
+  listener.subscribe(function(message){
+    console.log('Received message on ' + listener.name);
+    console.log('Received message at ' + message.time);
+    $('.info').html('');
+    for (var i = 0; i < message.objects.length; i++) {
+      var str = "<p>(" + message.objects[i].id + ")" +
+                         message.objects[i].name + "</p><p>" +
+                   "[" + message.objects[i].pos.x + ', ' +
+                         message.objects[i].pos.y + ', ' +
+                         message.objects[i].pos.z + "]</p><p>" +
+                   "[" + message.objects[i].rot.w + ', ' +
+                         message.objects[i].rot.x + ', ' +
+                         message.objects[i].rot.y + ', ' +
+                         message.objects[i].rot.z + "]</p>";
+      console.log('Index: ' + message.objects[i].id);
+      console.log('Name: ' + message.objects[i].name);
+      console.log('Position: ' + message.objects[i].pos.x + ', ' +
+			 message.objects[i].pos.y + ', ' +
+		         message.objects[i].pos.z);
+			 console.log('Rotation: ' +
+			 message.objects[i].rot.w + ', ' +
+	 		 message.objects[i].rot.x + ', ' +
+			 message.objects[i].rot.y + ', ' +
+		         message.objects[i].rot.z);
+      $('.info').append(str);
+    }
+    listener.unsubscribe();
+  });
 }
-setInterval(update, 1000);

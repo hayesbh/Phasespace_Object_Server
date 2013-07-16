@@ -146,8 +146,13 @@ vector<Point> get_points(int time, bool glove = false) {
     vector<Point>::iterator iter;
     for (int i = 0; i < 7; i++) {
       /* if the id was not found push it back the glove will handle the rest */
-      if (object::FindById(i + mult * 7, points) == points.end())
-        ids_set_.push_back(i + mult * 7); 
+      if (points::FindById(i + mult * 7, points) == points.end()) {
+        ids_set_.push_back(i + mult * 7);
+        Point p;
+        p.init();
+        p.id = (i+ mult * 7);
+        points.push_back(p);
+      }
     }
   }
   return points;
@@ -256,7 +261,7 @@ bool add_object(core_object_server::add_object::Request &req,
   /*make a new object Object*/
   ObjectClass temp_object;
   /*Find the unassigned markers*/
-  vector<Point> points = get_points(req.time);
+  vector<Point> points = get_points(req.time, (req.type == "glove"));
   /*If no points were found reveal that adding this object was unsuccessful*/
   if (points.size() == 0) {
     ROS_WARN("No Points Recieved");
@@ -280,6 +285,7 @@ bool add_object(core_object_server::add_object::Request &req,
   object_count_++;
   /*Send the service caller the information associated with their call*/
   res.info = info.str();
+  res.success = true;
   ROS_INFO("Object Added: %s\n", info.str().c_str());
   return true;
 }

@@ -22,7 +22,7 @@ using std::pow;
 /* Points */
 using object_server::Point;
 using points::PointsToPlane;
-using points::FindByID;
+using points::FindById;
 /* Quaternions */
 using quaternions::Qmult;
 using quaternions::Qnormalize;
@@ -31,17 +31,18 @@ using quaternions::QRotate;
 
 /* This class is a wrapper for object type specific information */
 class ObjectType {
-  private:
+  protected:
     /* Location Information */
     vector<Point> points;
     Point center;
     /* Angle Information */
     Point OriginalAxis1;
-    vector<int> AngleAxis1;
+    /* iterators pointing to the axis points in points */
+    vector<vector<Point>::iterator> AngleAxis1;
     Point vAngleAxis1;
     /* The Second Axis for Another Axis of Rotation Information */
     Point OriginalAxis2;
-    vector<int> AngleAxis2;
+    vector<vector<Point>::iterator> AngleAxis2;
     Point vAngleAxis2;
     /* Quaternion Rotation Information */
     vector<float> angle;
@@ -244,7 +245,7 @@ class ObjectType {
    */
   void AddPoints(vector<Point> new_points) {
     vector<Point>::iterator i;
-    points.insert(points.begin(), new_points.begin(), new_points.end());
+    points.insert(points.end(), new_points.begin(), new_points.end());
     GetFirstAngleAxis(1);
     GetSecondAngleAxis(1);
   }
@@ -283,12 +284,10 @@ class ObjectType {
    */
   Point GetFirstAngleAxis(int i = 0){
     if (AngleAxis1.size() == 2 && i == 0) {
-      vector<Point>::iterator it1 = FindByID(AngleAxis1[0], points);
-      vector<Point>::iterator it2 = FindByID(AngleAxis1[1], points);
-      if(it1->current == 0 || it2->current == 0) {
+      if(AngleAxis1[0]->current == 0 || AngleAxis1[1]->current == 0) {
         return vAngleAxis1;
       }
-      vAngleAxis1 = it2->sub(*it1).normalize();
+      vAngleAxis1 = AngleAxis1[1]->sub(*AngleAxis1[0]).normalize();
       return vAngleAxis1;
     } else {
       /* If there are not enough points then just return the 0 vector */ 
@@ -300,8 +299,8 @@ class ObjectType {
       /* Max distance Squared to compare with */
       float maxdist2 = 0;
       /* P1 and P2 are the Points that define the vector */
-      Point P1;
-      Point P2;
+      vector<Point>::iterator P1;
+      vector<Point>::iterator P2;
       /*Iterators for going throught the points that define the object*/
       vector<Point>::iterator it1;
       vector<Point>::iterator it2;
@@ -314,16 +313,16 @@ class ObjectType {
                       + pow(it1->z - it2->z, 2);
           if (dist2 > maxdist2) {
             maxdist2 = dist2;
-            P1 = *it1;
-            P2 = *it2;
+            P1 = it1;
+            P2 = it2;
           }
         }
       }
       /* If we are looking for the Axis that defines the angle
          Make sure that the id's are set so that it can be consistent */
-      AngleAxis1.push_back(P1.id);
-      AngleAxis1.push_back(P2.id);
-      OriginalAxis1 = P2.sub(P1).normalize();
+      AngleAxis1.push_back(P1);
+      AngleAxis1.push_back(P2);
+      OriginalAxis1 = P2->sub(*P1).normalize();
       vAngleAxis1 = OriginalAxis1;
       return vAngleAxis1;
     }
@@ -336,26 +335,22 @@ class ObjectType {
     }
     if (AngleAxis2.size() == 2 && i == 0) {
       /*check first axis*/
-      vector<Point>::iterator it3 = FindByID(AngleAxis1[0], points);
-      vector<Point>::iterator it4 = FindByID(AngleAxis1[1], points);
-      if(it3->current == 0 || it4->current == 0) {
+      if(AngleAxis1[0]->current == 0 || AngleAxis1[1]->current == 0) {
         return vAngleAxis2;
       }
-      /*check second axis*/
       Point u;
-      vector<Point>::iterator it1 = FindByID(AngleAxis2[0], points);
-      vector<Point>::iterator it2 = FindByID(AngleAxis2[1], points);
-      if(it1->current == 0 || it2->current == 0) {
+      /*check second axis*/
+      if(AngleAxis2[0]->current == 0 || AngleAxis2[1]->current == 0) {
         return vAngleAxis2;
       } else {
-        u = it2->sub(*it1);
+        u = AngleAxis2[1]->sub(*AngleAxis2[0]);
       }
       GetAngle();
       Point v;
-      if(it3->id == it1->id) {
-        v = it4->sub(*it3);
+      if(AngleAxis1[1] == AngleAxis2[0]) {
+        v = AngleAxis1[0]->sub(*AngleAxis1[1]);
       } else {
-        v = it3->sub(*it4);
+        v = AngleAxis1[1]->sub(*AngleAxis1[0]);
       }
       vAngleAxis2 = u.sub(v.normalize().times(u.dot(v))).normalize();
       // Now find the normal component
@@ -368,39 +363,37 @@ class ObjectType {
       }
       AngleAxis2.clear();
       /*check first axis*/
-      vector<Point>::iterator it3 = FindByID(AngleAxis1[0], points);
-      vector<Point>::iterator it4 = FindByID(AngleAxis1[1], points);
-      if(it3->current == 0 || it4->current == 0) {
+      if(AngleAxis1[0]->current == 0 || AngleAxis1[1]->current == 0) {
         vAngleAxis2.init();
         return vAngleAxis2;
       }
       /* Max distance to compare with */
       float maxdist = 0;
       /* P1 and P2 are the Points that define the vector */
-      Point P1;
-      Point P2;
+      vector<Point>::iterator P1;
+      vector<Point>::iterator P2;
       vector<Point>::iterator iter;
-      Point axis[2] = { *it3, *it4 };
+      vector<Point>::iterator axis[2] = { AngleAxis1[0], AngleAxis1[1] };
       for(int i = 0; i <= 1; ++i) {
         vector<Point> line;
-        line.push_back(axis[i]);
-        line.push_back(axis[!i]);
+        line.push_back(*axis[i]);
         for (iter = points.begin(); iter != points.end(); ++iter) {
-          if(iter->id == line[0].id || iter->id == line[1].id) continue;
+          if(iter == axis[0] || iter == axis[1]) continue;
           if(!(iter->current)) continue;
+          line.push_back(*iter);
           float dist = iter->VectorPerpendicularTo(line).magnitude();
           if (dist > maxdist) {
             maxdist = dist;
-            P1 = line[0];
-            P2 = line[1];
-            OriginalAxis2 = P2.sub(P1).normalize();
-          }
-        }
+            P1 = axis[i];
+            P2 = iter;
+            OriginalAxis2 = P2->sub(*P1).normalize();
+          } line.erase(line.end()-1, line.end());
+        } line.clear();
       }
       /* If we are looking for the Axis that defines the angle
          Make sure that the id's are set so that it can be consistent */
-      AngleAxis2.push_back(P1.id);
-      AngleAxis2.push_back(P2.id);
+      AngleAxis2.push_back(P1);
+      AngleAxis2.push_back(P2);
       vAngleAxis2 = OriginalAxis2;
       return vAngleAxis2;
     }

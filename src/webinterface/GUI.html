@@ -1,90 +1,91 @@
 <html>
-	<head>
-		<title>SHL Object Server</title>
-		<meta charset="utf-8" />
-		<link rel='stylesheet' type='text/css' href='stylesheet.css'/>
-		<link rel="stylesheet" href="resources/alertify/themes/alertify.core.css" />
-		<link rel="stylesheet" href="resources/alertify/themes/alertify.default.css" />
-		<!--Rosbridge and rosjs-->
-		<!--http://www.ros.org/wiki/roslibjs/Tutorials/BasicRosFunctionality-->
-		<script type='text/javascript' src='resources/eventemitter2.js'></script>
+  <head>
+    <title>SHL Object Server</title>
+    <meta charset="utf-8" />
+    <link rel='stylesheet' type='text/css' href='stylesheet.css'/>
+    <link rel="stylesheet" href="resources/alertify/themes/alertify.core.css" />
+    <link rel="stylesheet" href="resources/alertify/themes/alertify.default.css" />
+    <!--Rosbridge and rosjs-->
+    <!--http://www.ros.org/wiki/roslibjs/Tutorials/BasicRosFunctionality-->
+    <script type='text/javascript' src='resources/eventemitter2.js'></script>
         <script type='text/javascript' src='resources/roslib.js'></script>
         <!--JavaScript Libraries-->
-	    <script type='text/javascript' src='resources/jquery.js'></script>
-	    <!--Messaging System-->
-	    <script type='text/javascript' src='resources/alertify/alertify.min.js'></script>
-	    <!--JS script for setting up ROS bridge connections-->
-	    <script type='text/javascript' src='ros.js'></script>
-	    <!--JS script for website interface-->
-	    <script type='text/javascript' src='script.js'></script>
-	</head>
-	<body>
-		<div class='header'>
-			<div class='title'>SHL Object Interface</div>
-		</div>
+      <script type='text/javascript' src='resources/jquery.js'></script>
+      <!--Messaging System-->
+      <script type='text/javascript' src='resources/alertify/alertify.min.js'></script>
+      <!--JS script for setting up ROS bridge connections-->
+      <script type='text/javascript' src='ros.js'></script>
+      <!--JS script for website interface-->
+      <script type='text/javascript' src='script.js'></script>
+  </head>
+  <body>
+    <div class='header'>
+      <div class='title'>SHL Object Interface</div>
+    </div>
 
-		<div id='main_menu'>
-			<div id='addsection' class='mainsection'>
-				<button id='add'>
-					Add New Object
-				</button>
-				<div id='add_selection' class='submenu'>
-					<p>
-						<label>Name of Object:</label>
-						<input type='text' id='AddName' value='Name'/>
-					</p>
-					<p>
-						<label>Time for Capture</label>
-						<input type='number' id='AddTime' value='2'/>
-					</p>
-                                        </p>
-						<label>Type</label>
-						<select id='AddType'>
-							<option value="default">Default BOX </option>
-							<option value="glove">PhaseSpace Glove</option>
-						</select>
-                                        </p>
-					<button id='ADD'>
-						ADD
-					</button>
-				</div>
-			</div>
-			<div id='deletesection' class='mainsection'>
-				<button id='delete'>
-					Delete Object
-				</button>
-				<div id='delete_selection' class='submenu'>
-					<p>
-						<label>Object Index:</label>
-						<input type='number' id='index' value='0'/>
-					</p>
-					<button id='DELETE'>
-						DELETE
-					</button>
-				</div>
-			</div>
-			<div id='markerssection' class='mainsection'>
-				<button id='markers'>
-					Add Markers
-				</button>
-				<div id='markers_section' class='submenu'>
-					<p>
-						<label>Object Index:</label>
-						<input type='number' id='objectindex' value='0'/>
-					</p>
-					<p>
-						<label>Capture Time:</label>
-						<input type='number' id='time' value='2'/>
-						<label>seconds</label>
-					</p>
-					<button id='capture'>
-						Capture
-					</button>
-				</div>
-			</div>
-		</div>
-		<div id='sidebar'>
-
-		</div>
-	</body>
+    <div id='main_menu'>
+      <div id='addsection' class='mainsection'>
+        <button id='add'>
+          Add New Object
+        </button>
+        <div id='add_selection' class='submenu'>
+          <p>
+            <label>Name of Object:</label>
+            <input type='text' id='AddName' value='Name'/>
+          </p>
+          <p>
+            <label>Time for Capture</label>
+            <input type='number' id='AddTime' value='2'/>
+          </p>
+            </p>
+            <label>Type</label>
+            <select id='AddType'>
+              <option value="default">Default BOX </option>
+              <option value="glove">PhaseSpace Glove</option>
+            </select>
+            </p>
+          <button id='ADD'>
+            ADD
+          </button>
+        </div>
+      </div>
+      <div id='deletesection' class='mainsection'>
+        <button id='delete'>
+          Delete Object
+        </button>
+        <div id='delete_selection' class='submenu'>
+          <p>
+            <label>Object Index:</label>
+            <input type='number' id='index' value='0'/>
+          </p>
+          <button id='DELETE'>
+            DELETE
+          </button>
+        </div>
+      </div>
+      <div id='markerssection' class='mainsection'>
+        <button id='markers'>
+          Add Markers
+        </button>
+        <div id='markers_section' class='submenu'>
+          <p>
+            <label>Object Index:</label>
+            <input type='number' id='objectindex' value='0'/>
+          </p>
+          <p>
+            <label>Capture Time:</label>
+            <input type='number' id='time' value='2'/>
+            <label>seconds</label>
+          </p>
+          <button id='capture'>
+            Capture
+          </button>
+        </div>
+      </div>
+    </div>
+    <div id='sidebar'>
+       <div class='info'>
+       </div>
+    </div>
+  </body>
 </html>

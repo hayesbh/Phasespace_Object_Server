@@ -38,7 +38,12 @@ class ObjectClass {
   void init(int identification, string called, vector<Point> points, string t){
     name = called;
     id = identification;
-    type.init(points);
+    if(t == "glove") {
+      Glove g;
+      g.init(points);
+      type = g; 
+    }
+    else type.init(points);
   }
   /**
    * [get_id return system defined id]
