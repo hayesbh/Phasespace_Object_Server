@@ -130,7 +130,7 @@ class Point {
     (p.current && current) ? (c.current = 1) : (c.current = 0);
     c.x = y * p.z - z * p.y;
     c.y = z * p.x - x * p.z;
-    c.z = -(x * p.y - y * p.x);
+    c.z = x * p.y - y * p.x;
     return c;
   }
   /**

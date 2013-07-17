@@ -1,5 +1,5 @@
 /**
- * File: ObjectClass.h
+ * File: Object.h
  * Author: Dylan Visher
  * Date: 5/18/13
  * About: Object Class for Tracking Purposes
@@ -19,7 +19,7 @@ namespace object_server {
 using std::vector;
 using std::string;
 
-class ObjectClass {
+class Object {
  private:
   /*The user given name of the object*/
   string name;
@@ -86,11 +86,15 @@ class ObjectClass {
   void get_dimensions(float dim[3]){
     type.get_dimensions(dim);
   }
-  int CollidesWith(Point p) {
-    return type.CollidesWith(p);
-  }
   int IntersectsBox(Point C, float width) {
     return type.IntersectsBox(C, width);
+  }
+  vector<Point> GetAxes(){
+    vector<Point> axes;
+    axes.push_back(vAngleAxis1);
+    axes.push_back(vAngleAxis2);
+    axes.push_back(vAngleAxis1.cross(vAngleAxis2));
+    return axes;
   } 
   /**
    * [AddPoints adds points to this object]

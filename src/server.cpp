@@ -16,7 +16,6 @@
 #include "core_object_server/add_object.h"
 #include "core_object_server/add_points.h"
 #include "core_object_server/delete_object.h"
-#include "core_object_server/collides_with.h"
 #include "core_object_server/box_filled.h"
 
 // Set up ROS messages
@@ -27,14 +26,14 @@
 #include "core_object_server/ObjectDigest.h"
 
 // Object functionality
-#include "PhaseSpace/ObjectClass.h"
+#include "PhaseSpace/Object.h"
 #include "PhaseSpace/Point.h"
 
 // OWL (PhaseSpace System API)
 #include "owl/owl.h"
 
 using std::vector;
-using object_server::ObjectClass;
+using object_server::Object;
 using object_server::Point;
 using std::string;
 using std::stringstream;
@@ -56,7 +55,7 @@ OWLMarker markers[MARKER_COUNT];
 // This is used when finding unassigned id's to set */
 vector<int> ids_set_;
 int tracker_ = 0;
-vector<ObjectClass> object_vector_;
+vector<Object> object_vector_;
 // Camera Frame Information
 // shift is a vector that moves the PhaseSpace Origin to the left hand side of the table
 const float shift[3] = { 2.10094,0.637346,-1.24804 };
@@ -95,8 +94,8 @@ void TransformMarkers(OWLMarker markers[MARKER_COUNT], int n) {
 //FindObject finds the location (iterator) of the object with the given id in the global object_vector_]
 //id: the integer identification number for the object desired
 //return: An iterator to the object in the global object_vector_
-vector<ObjectClass>::iterator FindObject(int id) {
-  vector<ObjectClass>::iterator iter;
+vector<Object>::iterator FindObject(int id) {
+  vector<Object>::iterator iter;
   for (iter = object_vector_.begin(); iter != object_vector_.end(); ++iter)
     if (iter->get_id() == id) return iter;
   return iter;
@@ -195,7 +194,7 @@ vector<Point> get_points(int time, bool glove = false) {
 // return: bool that indicates whether the service itself failed -> ROS_ERROR
 bool delete_object(core_object_server::delete_object::Request &req,
                    core_object_server::delete_object::Response &res) {
-  vector<ObjectClass>::iterator target_iter = FindObject(req.id);
+  vector<Object>::iterator target_iter = FindObject(req.id);
   if (target_iter == object_vector_.end()) {
     ROS_INFO("delete_object: target object(%i) does not exist", req.id);
     res.success = false;
@@ -205,7 +204,7 @@ bool delete_object(core_object_server::delete_object::Request &req,
   info << "Object (" << req.id << ") " "deleted\n";
   info << "Points: ";
   // Remove the Object's Associated Marker ID's from the list of set IDs
-  ObjectClass &target = *target_iter;
+  Object &target = *target_iter;
   vector<Point> const &object_points = target.get_points();
   vector<Point>::const_iterator iter;
   for (iter = object_points.begin(); iter != object_points.end(); ++iter) {
@@ -232,7 +231,7 @@ bool delete_object(core_object_server::delete_object::Request &req,
 bool add_points(core_object_server::add_points::Request &req,
                 core_object_server::add_points::Response &res) {
   // Find target object for addition of points
-  vector<ObjectClass>::iterator target = FindObject(req.id);
+  vector<Object>::iterator target = FindObject(req.id);
   // If the object does not exist indicate a failed service
   if (target == object_vector_.end()) {
     res.success = false;
@@ -240,7 +239,7 @@ bool add_points(core_object_server::add_points::Request &req,
     res.info = "No Such Object Exists";
     return true;
   }
-  ObjectClass &object = *target;
+  Object &object = *target;
   // Gather Additional Unset Points
   vector<Point> points = get_points(req.time);
   // If there were no points indicate teh the
@@ -296,42 +295,42 @@ bool add_object(core_object_server::add_object::Request &req,
   }
   ROS_INFO("%s", info.str().c_str());
   // Initialize this New Object with the name given, new points, and the type
-  ObjectClass temp_object;
+  Object temp_object;
   temp_object.init(object_count_, req.name, points, req.type);
-  /*Add this object to the list of tracked objects*/
+  // Add this object to the list of tracked objects
   object_vector_.push_back(temp_object);
-  /*Update the universal object_count*/
+  // pdate the universal object_count
   object_count_++;
-  /*Send the service caller the information associated with their call*/
+  //Send the service caller the information associated with their call
   res.info = info.str();
   res.success = true;
   ROS_INFO("Object Added: %s\n", info.str().c_str());
   return true;
 }
-bool collision_detection(core_object_server::collides_with::Request &req,
-                         core_object_server::collides_with::Response &res) {
-  Point p;
-  p.init(req.x, req.y, req.z);
-  vector<ObjectClass>::iterator iter;
-  res.collides = false;
-  for (iter = object_vector_.begin(); iter != object_vector_.end(); ++iter)
-    if (iter->CollidesWith(p)) { 
-      res.collides = true;
-      ROS_INFO("COLLISION DETECTED");
-    }
-  return true;
-}
+// box filled checks whether a given box is filled
+//     defined by a center(X,Y,Z) and side-length
+// req: The ROS Service request for the core_object_server box_filled service
+//      x: x coordinate for the center of the cube
+//      y: y coordinate for the center of the cube
+//      z: z coordinate for the center of the cube
+//      width: the width of one side of the cube
+// res: The ROS Service response for the core_object_server box_filled service
+//      success: Answers the Question: Is there an object in the box?
+// return: bool that indicates whether the service itself failed -> ROS_ERROR
 bool box_filled(core_object_server::box_filled::Request &req,
                 core_object_server::box_filled::Response &res) {
   Point Center;
   Center.init(req.x, req.y, req.z);
-  vector<ObjectClass>::iterator iter;
+  vector<Object>::iterator iter;
   res.filled = false;
+  // If even one of the objects intersects the box then thje box is filled
   for (iter = object_vector_.begin(); iter != object_vector_.end(); ++iter)
     if( iter->IntersectsBox(Center, req.width)) res.filled = true;
   return true;
 }
-/* PRINTING OBJECT DATA */
+// print_digest takes the ObjectDigest and Transforms it into a string
+//    that can be displayed using ROS_INFO
+// &digest: A ROS ObjectDigest message containing all the objects' information
 string print_digest(core_object_server::ObjectDigest const &digest) {
   stringstream print;
   print << digest.time << "\n";
@@ -347,59 +346,54 @@ string print_digest(core_object_server::ObjectDigest const &digest) {
     print << "," << iter->rot.y << ",";
     print << iter->rot.z << "]" << "\n";
   } 
-  
   return print.str();
 }
 
-/**server: Integration into the OWL PhaseSpace System
-  *Keep track of the objects that are in the system*/
+// server: Integration into the OWL PhaseSpace System
+// Outputs object information in the 
+// ObjectDigest Message type
+// On the objects ROS topic
 int main(int argc, char **argv) {
+  // Frequency for reading information from the PhaseSpace System
+  // If frequency is increased make sure to check for lag
+  // Increase in small increments
   int frequency = 10;
-  /*** Initialize PhaseSpace OWL API ***/
-  /*Integration into the OWL PhaseSpace API*/
-  /*This section follows EXAMPLE 1 for point tracking*/
-  /*Start up the Owl Server*/
+  /////////////////////////////////////
+  /// Initialize PhaseSpace OWL API ///
+  /////////////////////////////////////
+  // This section follows the given PhaseSpace Example 1 for point tracking
+  // Start up the Owl Server and make sure that it does not fail
   if (owlInit(SERVER_NAME, INIT_FLAGS) < 0) return 0;
-  /*Assign all markers to one universal tracker*/
+  // Set up a point tracker and assign all markers to it
   owlTrackeri(tracker_, OWL_CREATE, OWL_POINT_TRACKER);
   for (int i = 0; i < MARKER_COUNT; i++)
     owlMarkeri(MARKER(tracker_, i), OWL_SET_LED, i);
-  /*Enable this Tracker for Streaming*/
+  // Enable this tracker for streaming data
   owlTracker(tracker_, OWL_ENABLE);
-  /*Throw Error if there is an Error in Tracker Set Up*/
+  // Show if at any point there was an error in setting up this tracker
   if (!owlGetStatus()) {
     owl_print_error("error in point tracker setup", owlGetError());
     return 0;
   }
-  /*Set the Default Frequency to Maximum*/
+  // Set the streaming frequency tot the frequency defined earlier
   owlSetFloat(OWL_FREQUENCY, frequency);
-  /*Start streaming from the PhaseSpace System*/
+  // Start streaming data from the PhaseSpace System
   owlSetInteger(OWL_STREAMING, OWL_ENABLE);
-  /*set Scale of OWL System*/ 
+  // Set Scale of OWL System (millimeters -> meters)
   owlScale(0.001);
-  // Rotate System
-  // pos -2106.48, -636.975, 1248.58
-  // {0.593436, 0., -0.803116, -0.0532773}
-  // 0.283318, -0.805066, -0.0316099, 0.520193
-  // q = 0.283227, 0., -0.95695, -0.0634824
-  // const float pose[7] = { -2106.48, -636.975, 1248.58, 1, 0, 0, 0};
-  // const float pose[7] = { 0, 0, 0, 0.283318, -0.805066, -0.0316099, 0.520193 };
-  // const float pose[7] = { 0, 0, 0, 0.283227, 0, -0.95695, -0.0634824};
-  // const float pose[7] = { 0, 0, 0, 0.283227, 0, -0.95695, -0.0634824};
-  
-  // owlLoadPose(pose);
-
-  /*** Initialize ROS Node ***/
-  /*Add in ROS functionality to make rosnode*/
+  ///////////////////////////
+  /// Initialize ROS Node ///
+  ///////////////////////////
+  // Initialize the rosnode server which will output this data
   ros::init(argc, argv, "server");
   ros::NodeHandle n;
-  /*publish object information on core_object_server/objects channel*/
+  // publish object information on core_object_server/objects channel
   ros::Publisher publisher =
     n.advertise<core_object_server::ObjectDigest>("objects", 0);
-  /*rviz publisher*/
+  // publish object information also to rviz
   ros::Publisher rviz_pub =
       n.advertise<visualization_msgs::Marker>("visualization_marker", 1);
-  /*Set rviz shape to be a cube*/
+  // Set rviz shape to be a rectangular prism
   uint32_t shape = visualization_msgs::Marker::CUBE;
   /*Provide ROS Services for adding objects, points, and deleting objects*/
   ros::ServiceServer add_obj =
@@ -408,78 +402,65 @@ int main(int argc, char **argv) {
       n.advertiseService("add_points", add_points);
   ros::ServiceServer rm_obj =
       n.advertiseService("delete_object", delete_object);
-  ros::ServiceServer collision =
-      n.advertiseService("collides_with", collision_detection);
   ros::ServiceServer intersect =
       n.advertiseService("box_filled", box_filled);
-  
-  ros::Rate loop_rate(frequency); //30Hz operational rate
-
+  // The rate to loop throught the ROS calls
+  // There is no need to do this at a higher rate than the PhaseSpace system
+  ros::Rate loop_rate(frequency); 
   while (ros::ok()) {
-    /*Populate the markers with new Data from the PhaseSpace System*/
+    // Populate the markers with new position information from the PhaseSpace System
     int err;
     int n = owlGetMarkers(markers, MARKER_COUNT);
+    // Transform these markers to be representative of the new coordinate system
     TransformMarkers(markers, n);
+    // Put a timestamp on the messages
     ros::Time timestamp;
     timestamp = ros::Time::now();
+    // If there was an error in getting the marker information indicate that
     if ((err = owlGetError()) != OWL_NO_ERROR) {
       owl_print_error("error", err);
     }
-    /*If there are no Objects loop back*/
-    if (n == 0) {
-      ros::spinOnce();
-      loop_rate.sleep();
-      continue;
-    }
-    /*Make a vector of points that have new data*/
-    // TODO: Do something with these new marker ids
-    vector<int> available;
-    for (int i = 0; i < n; i++) {
-      available.push_back(markers[i].id);
-    }
-
+    // Initialize the message object for giving out Object Information
     core_object_server::ObjectDigest digest;
     digest.time = timestamp.sec;
-    /*If there are no Object's set print that out*/
+    // If there are no Object's set then we are done
     if (object_vector_.size() == 0) {
       ROS_INFO("No Objects Set");
       publisher.publish(digest);
-    /*Otherwise opdate each object with the new marker information*/
+    // Otherwise opdate each object with the new marker information
     } else {
-      vector<ObjectClass>::iterator iter;
+      vector<Object>::iterator iter;
       for (iter = object_vector_.begin(); iter != object_vector_.end(); ++iter) {
-        /*TODO Break this display routine into its own function*/
-  
-        /*Update Objects and Get Info*/
+        // Update Objects and Get Info
         iter->Update(markers, n);
-        /*Get POS*/
+        // Get the positional data from the object
         Point position = iter->get_pos();
-        /*Get Rotation*/
+        // Get the rotational data from the object
         vector<float> rotation = iter->get_rotation();
-        /*Make ObjectInfo*/
+        // Make the message type to hold all of this information
         core_object_server::ObjectInfo info;
         info.id = iter->get_id();
         info.name = iter->get_name();
-        /*set position info*/
+        // Set the message's position data
         geometry_msgs::Point loc;
         loc.x = position.x;
         loc.y = position.y;
         loc.z = position.z;
         info.pos = loc;
-        /*set rotation info*/
+        // Set the message's rotation data
         geometry_msgs::Quaternion q;
         q.w = rotation[0];
         q.x = rotation[1];
         q.y = rotation[2];
         q.z = rotation[3];
         info.rot = q;
-        /*set dimensional information*/
+        // Set the message's dimensional data
         float dimensions[3] = {0, 0, 0};
         iter->get_dimensions(dimensions);
         info.dim.push_back(dimensions[0]);
         info.dim.push_back(dimensions[1]);
         info.dim.push_back(dimensions[2]);
-        /*set info for pointer finger((0,0,0) if not pointer)*/
+        // Set information for pointer
         Point point;
         point = iter->get_pointer();
         geometry_msgs::Point p;
@@ -487,44 +468,49 @@ int main(int argc, char **argv) {
         p.y = point.y;
         p.z = point.z;
         info.pointer = p;
-        /*Add Object to ObjectDigest*/
+        // Add this object to the ObjectDigest
         digest.objects.push_back(info);
-        /*Publish to RVIZ*/
+        ////////////
+        /// RVIZ ///
+        ////////////
         visualization_msgs::Marker marker;
-        /*frame of reference*/
+        // The name of the frame of reference
         marker.header.frame_id ="/tablesurface";
+        // The time for the object
         marker.header.stamp = timestamp;
-        /*Set namespace and id*/
+        // Set the NameSpoace and ID
         marker.ns = "PhaseSpace_Objects";
         marker.id = iter->get_id();
         marker.type = shape;
-        /*prepare to add object to rviz*/
+        // Indicate that the object will need to be added
         marker.action = visualization_msgs::Marker::ADD;
-        /*set rviz object position*/
+        // Set the position for the Rviz marker
         marker.pose.position.x = position.x;
         marker.pose.position.y = position.y;
         marker.pose.position.z = position.z;
-        /*set rviz object rotation*/
-        marker.pose.orientation.x = rotation[0];
-        marker.pose.orientation.y = rotation[1];
-        marker.pose.orientation.z = rotation[2];
-        marker.pose.orientation.w = rotation[3];
-        /*set the marker scale*/
+        // Set the rotation for the Rviz marker (quaternion)
+        marker.pose.orientation.w = rotation[0];
+        marker.pose.orientation.x = rotation[1];
+        marker.pose.orientation.y = rotation[2];
+        marker.pose.orientation.z = rotation[3];
+        // Set the marker's scale
         marker.scale.x = dimensions[0];
         marker.scale.y = dimensions[1];
         marker.scale.z = dimensions[2];
-        /*set color*/
+        // Set the color of the object to be green and opaque
         marker.color.r = 0.0f;
         marker.color.g = 1.0f;
         marker.color.b = 0.0f;
         marker.color.a = 1.0;
-        marker.lifetime = ros::Duration(1.0/frequency);
+        // Let the marker last just a little bit longer than the loop time
+        // This will make sure that lag won't make the objects flicker
+        marker.lifetime = ros::Duration(1.0/(frequency-4));
         rviz_pub.publish(marker);
       }
+      // Publish this Object Data
+      publisher.publish(digest);
+      ROS_INFO("%s", print_digest(digest).c_str());
     }
-    /*Publish this data and continue looping*/
-    publisher.publish(digest);
-    ROS_INFO("%s", print_digest(digest).c_str());
     ros::spinOnce();
     loop_rate.sleep();
   }

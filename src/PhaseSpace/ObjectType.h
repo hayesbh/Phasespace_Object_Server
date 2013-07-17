@@ -1,9 +1,7 @@
-/**
- * File: ObjectType.h
- * Author: Dylan Visher
- * Date: 5/18/13
- * About: ObjectType contains type specific information
- */
+// File: ObjectType.h
+// Author: Dylan Visher
+// Date: 5/18/13
+// About: ObjectType contains type specific information
 #ifndef _SHL_COREOBJECTSERVER_OBJECTTYPE_H
 #define _SHL_COREOBJECTSERVER_OBJECTTYPE_H
 
@@ -14,114 +12,102 @@
 
 namespace object_server {
 
-/*Math And Vectors*/
+// Math And Vectors
 using std::vector;
 using std::acos;
 using std::fabs;
 using std::pow;
-/* Points */
+// Points
 using object_server::Point;
 using points::PointsToPlane;
 using points::FindById;
-/* Quaternions */
+// Quaternions
 using quaternions::Qmult;
 using quaternions::Qnormalize;
 using quaternions::Qinv;
 using quaternions::QRotate;
 
-/* This class is a wrapper for object type specific information */
+// This class is the Default Object for holding type specific information
 class ObjectType {
   protected:
-    /* Location Information */
+    // Location Information
     vector<Point> points;
     Point center;
-    /* Angle Information */
+    // Angle Information
+    // Original Axis is the original vector for Axis1
     Point OriginalAxis1;
-    /* iterators pointing to the axis points in points */
+    // A vector of iterators that point to the two consituent points of Axis1
     vector<vector<Point>::iterator> AngleAxis1;
+    // The Current vector describing Axis1
     Point vAngleAxis1;
-    /* The Second Axis for Another Axis of Rotation Information */
+    // The Second Axis for Another Axis of Rotation Information
     Point OriginalAxis2;
     vector<vector<Point>::iterator> AngleAxis2;
     Point vAngleAxis2;
-    /* Quaternion Rotation Information */
+    // Quaternion for holding the rotational information
     vector<float> angle;
-    /* x, y, z, scale for global representation of dimension */
+    // x, y, and z scale for holding the dimensional information
     float x_scale;
     float y_scale;
     float z_scale;
 
   public:
-  /**
-   * [init initializes the object with the given points]
-   * @param p [points for the object]
-   */
+  // init initializes the Object to hold in it the points given
+  // p: The points that this object will track
   void init(vector<Point> p) {
     points = p;
-    /* Get the Center and the Axis for Angle information */
+    // Get the Center
     GetCenter();
-    /* Get Both Axes That Define Rotation */
-    GetFirstAngleAxis();
-    GetSecondAngleAxis();
-    /* Get Angle information */
+    // Get the Angle information
     GetAngle();
-    /* Get Dimensional information */
+    // Get Dimensional information
     GetScale();
   }
   void reset(){
-    /* Get the Center and the Axis for Angle information */
+    // Get the Center
     GetCenter();
-    /* Get Both Axes That Define Rotation */
-    GetFirstAngleAxis();
-    GetSecondAngleAxis();
-    /* Get Angle information */
-    GetAngle();
-    /* Get Dimensional information */
+    // Get Reset the Angle information so this is the new 0
+    GetAngle(1);
+    // Get Dimensional Information
     GetScale();
   }
-  /**
-   * [get_dimensions returns the global dimension information]
-   * @param dim[3] [A vector that stores the dimensional information]
-   */
+  // get_dimensions returns the dimensional information of the object
+  // dim[3]: an array for holding the x, y, z dimensions
+  //        of the object respectively
   void get_dimensions(float dim[3]) {
     dim[0] = x_scale;
     dim[1] = y_scale;
     dim[2] = z_scale;
   }
+  // get_pointer returns the pointer of the object
+  // return a Point representing 3D coordinate of the point
   Point get_pointer() {
     Point P;
     P.init(0,0,0);
     return P;
   }
-  /**
-   * [get_points return the points associated with the object]
-   * @return [these points]
-   */
+  // get_points return the points that define the object
+  // return these points in a vector
   vector<Point> get_points() {
     return points;
   }
-  /**
-   * [get_center return the stored information about the center]
-   * @return [Point describing center of object]
-   */
+  // get_center return the Point that defines the center
+  // return the center Point
   Point get_center() {
     return center;
   }
-  /**
-   * [get_angle return the stored rotation information]
-   * @return [a quaternion representing the angle]
-   */
+
+  // get_angle return the stored rotation information
+  // return an array representing the quaternion angle (w,x,y,z)
   vector<float> get_angle() {
     return angle;
   }
-
-  /**
-   * [Update updates the objects points with new marker information and update all fields]
-   * @param markers [PhaseSpace markers with new info]
-   * @param n       [number of markers in the markers array]
-   */
+  // Update updates the Objects points with new OWL marker information
+  //        then it refreshes other object information
+  //        The center, the angle, and the scale
+  // markers: An array of OWLMarkers with updated information
+  // n: the number of markers that have been updated
   void Update(OWLMarker *markers, int n) {
-    /* Update markers information */
     for (int i = 0; i < n; ++i) {
       vector<Point>::iterator iter;
       for (iter = points.begin(); iter != points.end(); ++iter) {
@@ -133,44 +119,38 @@ class ObjectType {
         }
       }
     }
-    /* Update Information about the center */
+    // Update Center information
     GetCenter();
-    /* Update Information about the Angle Axes */
-    GetFirstAngleAxis();
-    GetSecondAngleAxis();
-    /* Find the New Angle */
+    // Get the Angle Information
     GetAngle();
-    /* Get the Scaling information */
+    // Get the Dimensional Information
     GetScale();
     return;
   }
-  int CollidesWith(Point p) {
-    //Rotate point to be reflective of object at origin
-    p = QRotate(p, Qinv(angle)).sub(center);
-    if(p.x > x_scale/2 || p.x < -x_scale/2) return 0; 
-    else if(p.y > y_scale/2 || p.y < -y_scale/2) return 0; 
-    else if(p.z > z_scale/2 || p.z < -z_scale/2) return 0;
-    else return 1;
-  }
+  // IntersectsBox checks whether this object intersects a cube
+        // Uses the seperation of Axes theorem
+        // Inspired by Dynamic Collision Detection using Oriented Bounding Boxes by David Eveberly
+        // This is optomized for the seach algorithm, the general Object Collision can be seen below
+  // C: the point that describes the center of the cube
+  // width: the length of one side of the cube 
+  // return bool : Does the Object Intersect the cube
   int IntersectsBox(Point C, float width) {
-    Point A[3] = { QRotate(Point::static_init(1,0,0), angle),
-                   QRotate(Point::static_init(0,1,0), angle),
-                   QRotate(Point::static_init(0,0,1), angle) };
+    Point A[3] = { vAngleAxis1, vAngleAxis2, vAngleAxis1.cross(vAngleAxis2) };
     Point D = center.sub(C);
     float a[3] = { x_scale/2, y_scale/2, z_scale/2 };
     float b[3] = { width/2, width/2, width/2 };
     float c[3][3] = {{0,0,0},{0,0,0},{0,0,0}};
     if ((a[0] +
         b[0]*(c[0][0] = fabs(A[0].x)) + b[1]*(c[0][1] = fabs(A[0].y)) + b[2]*(c[0][2] = fabs(A[0].z)))
-        < fabs(A[0].dot(center)))
+        < fabs(A[0].dot(D)))
        return 0;
     if ((a[1] +
         b[0]*(c[1][0] = fabs(A[1].x)) + b[1]*(c[1][1] = fabs(A[1].y)) + b[2]*(c[1][2] = fabs(A[1].z)))
-        < fabs(A[1].dot(center)))
+        < fabs(A[1].dot(D)))
        return 0;
     if ((a[2] +
         b[0]*(c[2][0] = fabs(A[2].x)) + b[1]*(c[2][1] = fabs(A[2].y)) + b[2]*(c[2][2] = fabs(A[2].z)))
-        < fabs(A[2].dot(center)))
+        < fabs(A[2].dot(D)))
        return 0;
     if ((a[0] * c[0][0] + a[1] * c[1][0] + a[2] * c[2][0]) +
        b[0]
@@ -212,11 +192,80 @@ class ObjectType {
        < fabs(c[0][2] * A[1].dot(D) - c[1][2] * A[2].dot(D))) return 0;
     return 1;
   }
-  /**
-   * [MaxDimensionalDistance  Finds dimensions along given local axis]
-   * @param  dimension [0 --> x axis, 1 --> y axis, 2 --> z axis]
-   * @return           [return a float giving the largest distance from the center]
-   */
+  // IntersectsObject asks whether this object intersects another given object
+  // obj: The object that we are asking if this one intersects
+  // return bool: Does this object intersect obj?
+  int IntersectsObject(ObjectType obj) {
+    Point A[3] = { vAngleAxis1, vAngleAxis2, vAngleAxis1.cross(vAngleAxis2) };
+    // Get the dimensional and axis information of the other object
+    float dim[3] = { 0, 0, 0 };
+    obj.get_dimensions(dim);
+    vector<Point> axes = obj.GetAxes();
+    Point B[3] = { axes[0],
+                   axes[1],
+                   axes[2] };
+    Point D = center.sub(obj.get_center());
+    // The extents
+    float a[3] = { x_scale/2, y_scale/2, z_scale/2 };
+    float b[3] = { dim[0]/2, dim[1]/2, dim[2]/2 };
+    // Matrix of Dot Procducts A[i] dot B[j] -> C[i][j]
+    float c[3][3] = {{0,0,0},{0,0,0},{0,0,0}};
+    if ((a[0] +
+        b[0]*(c[0][0] = fabs(A[0].x)) + b[1]*(c[0][1] = fabs(A[0].y)) + b[2]*(c[0][2] = fabs(A[0].z)))
+        < fabs(A[0].dot(D)))
+       return 0;
+    if ((a[1] +
+        b[0]*(c[1][0] = fabs(A[1].x)) + b[1]*(c[1][1] = fabs(A[1].y)) + b[2]*(c[1][2] = fabs(A[1].z)))
+        < fabs(A[1].dot(D)))
+       return 0;
+    if ((a[2] +
+        b[0]*(c[2][0] = fabs(A[2].x)) + b[1]*(c[2][1] = fabs(A[2].y)) + b[2]*(c[2][2] = fabs(A[2].z)))
+        < fabs(A[2].dot(D)))
+       return 0;
+    if ((a[0] * c[0][0] + a[1] * c[1][0] + a[2] * c[2][0]) +
+       b[0]
+       < fabs(B[0].dot(D)))
+       return 0;
+    if ((a[0] * c[0][1] + a[1] * c[1][1] + a[2] * c[2][1]) +
+       b[1]
+       < fabs(B[1].dot(D)) return 0;
+    if ((a[0] * c[0][2] + a[1] * c[1][2] + a[2] * c[2][2]) +
+       b[2]
+       < fabs(B[2].dot(D)) return 0;
+    if ((a[1] * c[2][0] + a[2] * c[1][0]) +
+        (b[1] * c[0][2] + b[2] * c[0][1])
+       < fabs(c[1][0] * A[2].dot(D) - c[2][0] * A[1].dot(D))) return 0;
+    if ((a[1] * c[2][1] + a[2] * c[1][1]) +
+        (b[0] * c[0][2] + b[2] * c[0][1])
+       < fabs(c[1][0] * A[2].dot(D) - c[2][1] * A[1].dot(D))) return 0;
+    if ((a[1] * c[2][2] + a[2] * c[1][2]) +
+        (b[0] * c[0][1] + b[1] * c[0][0])
+       < fabs(c[1][2] * A[2].dot(D) - c[2][2] * A[1].dot(D))) return 0;
+
+    if ((a[0] * c[2][0] + a[2] * c[0][0]) +
+        (b[1] * c[1][2] + b[2] * c[1][1])
+       < fabs(c[2][0] * A[0].dot(D) - c[0][0] * A[2].dot(D))) return 0;
+    if ((a[0] * c[2][1] + a[2] * c[0][1]) +
+        (b[0] * c[1][2] + b[2] * c[1][0])
+       < fabs(c[2][1] * A[0].dot(D) - c[0][1] * A[2].dot(D))) return 0;
+    if ((a[0] * c[2][2] + a[2] * c[0][2]) +
+        (b[0] * c[1][1] + b[1] * c[1][0])
+       < fabs(c[2][2] * A[0].dot(D) - c[0][2] * A[2].dot(D))) return 0;
+
+    if ((a[0] * c[1][0] + a[1] * c[0][0]) +
+        (b[1] * c[2][2] + b[2] * c[2][1])
+       < fabs(c[0][0] * A[1].dot(D) - c[1][0] * A[2].dot(D))) return 0;
+    if ((a[0] * c[1][1] + a[1] * c[0][1]) +
+        (b[0] * c[2][2] + b[2] * c[2][0])
+       < fabs(c[0][0] * A[1].dot(D) - c[1][1] * A[2].dot(D))) return 0;
+    if ((a[0] * c[1][2] + a[1] * c[0][2]) +
+        (b[0] * c[2][1] + b[1] * c[2][0])
+       < fabs(c[0][2] * A[1].dot(D) - c[1][2] * A[2].dot(D))) return 0;
+    return 1;
+}
+  // MaxDimensionalDistance find the dimensions along the local axis
+  // dimension: int representing axis (0 --> x axis, 1 --> y axis, 2 --> z axis)
+  // return  float giving the largest distance from the center along that axis
   float MaxDimensionalDistance(int dimension) {
     float max = 0;
     Point axis;
@@ -409,7 +458,9 @@ class ObjectType {
    */
   /*http://www.vbforums.com/showthread.php?
   584390-Quaternion-from-two-3D-Position-Vectors*/
-  void GetAngle() {
+  void GetAngle(int i = 0) {
+    GetFirstAngleAxis(i);
+    GetSecondAngleAxis(i); 
     /*If the Axis is unpopulated, it was unable to find two points*/
     vector<float> default_Q;
     default_Q.push_back(1);
