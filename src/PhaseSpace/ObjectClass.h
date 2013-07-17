@@ -45,6 +45,9 @@ class ObjectClass {
     }
     else type.init(points);
   }
+  Point get_pointer() {
+    return type.get_pointer();
+  }
   /**
    * [get_id return system defined id]
    * @return [int id]

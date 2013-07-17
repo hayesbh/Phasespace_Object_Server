@@ -88,6 +88,11 @@ class ObjectType {
     dim[1] = y_scale;
     dim[2] = z_scale;
   }
+  Point get_pointer() {
+    Point P;
+    P.init(0,0,0);
+    return P;
+  }
   /**
    * [get_points return the points associated with the object]
    * @return [these points]
@@ -220,7 +225,7 @@ class ObjectType {
     else if(dimension == 1) axis.init(0, 1, 0);
     else axis.init(0, 0, 1);
     /*Rotate that axis to find the local axis*/
-    axis = QRotate(axis, Qinv(angle));
+    //axis = QRotate(axis, Qinv(angle));
     /*Find the maximum amount a vector lies along that axis*/
     vector<Point>::iterator iter;
     for(iter = points.begin(); iter != points.end(); ++iter) {
@@ -234,10 +239,10 @@ class ObjectType {
    * [GetScale finds and sets the local x, y, and z scale of the object]
    */
   void GetScale() {
-    float buffer = 1.20;
-    x_scale = .3;//2 * MaxDimensionalDistance(0) * buffer;
-    y_scale = .5;//2 * MaxDimensionalDistance(1) * buffer;
-    z_scale = .1;//2 * MaxDimensionalDistance(2) * buffer;
+    float buffer = 1.10;
+    x_scale = 2 * MaxDimensionalDistance(0) * buffer;
+    y_scale = 2 * MaxDimensionalDistance(1) * buffer;
+    z_scale = 2 * MaxDimensionalDistance(2) * buffer;
   }
   /**
    * [AddPoints adds new_points to the Object]
@@ -412,18 +417,16 @@ class ObjectType {
     default_Q.push_back(0);
     default_Q.push_back(0);
     if (AngleAxis1.size() != 2) {
-      printf("Case0");
       angle = default_Q;
       return;
     }
     if(OriginalAxis1.magnitude() == 0 || vAngleAxis1.magnitude() == 0) {
-      printf("Case1: %f\n", OriginalAxis1.magnitude());
       angle = default_Q;
       return;
     }
     vector<float> Q1;
     // Point cross1 = OriginalAxis1.cross(vAngleAxis1);
-    Point cross1 = vAngleAxis1.cross(OriginalAxis1);
+    Point cross1 = vAngleAxis1.cross(OriginalAxis1).times(.5);
     Q1.push_back(sqrt(pow(vAngleAxis1.magnitude(), 2) * pow(OriginalAxis1.magnitude(), 2)) + vAngleAxis1.dot(OriginalAxis1));
     Q1.push_back(cross1.z);
     Q1.push_back(cross1.y);
@@ -439,7 +442,7 @@ class ObjectType {
     }
     vector<float> Q2;
     Point temp = QRotate(vAngleAxis2, angle);
-    Point cross2 = temp.cross(OriginalAxis2);
+    Point cross2 = temp.cross(OriginalAxis2).times(.5);
     Q2.push_back(sqrt(pow(temp.magnitude(), 2) * pow(OriginalAxis2.magnitude(), 2)) + temp.dot(OriginalAxis2));
     Q2.push_back(cross2.z);
     Q2.push_back(cross2.y);

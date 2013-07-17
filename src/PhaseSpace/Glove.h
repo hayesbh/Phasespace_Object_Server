@@ -22,6 +22,7 @@ private:
 	vector<Point>::iterator base_right;
 public:
   void init(vector<Point> p) {
+    printf("Setting up Glove\n");
     vector<Point>::iterator iter;
     /* Push back each of the points and blank ones where they are needed */
     points.insert(points.end(), p.begin(), p.end());
@@ -40,6 +41,10 @@ public:
     GetAngle();
     GetScale();
   }
+  Point get_pointer() {
+    printf("Getting Glove Pointer/");
+    return *fore;
+  }
   Point GetFirstAxisAngle() {
     if (AngleAxis1.size() == 2) {
       if(base_right->current == 0 || base_left->current == 0) {
@@ -50,8 +55,10 @@ public:
     } else {
       AngleAxis1.push_back(base_left);
       AngleAxis1.push_back(base_right);
-      OriginalAxis1 = base_right->sub(*base_left).normalize();
-      vAngleAxis1 = OriginalAxis1;
+      Point y_axis;
+      y_axis.init(0, 1, 0);
+      OriginalAxis1 = y_axis;
+      vAngleAxis1 = AngleAxis1[1]->sub(*AngleAxis2[2]).normalize();
       return vAngleAxis1;
     }
   }
@@ -78,7 +85,9 @@ public:
       AngleAxis2.push_back(base_left);
       Point v = fore->sub(*base_left);
       vAngleAxis2 =  v.sub(vAngleAxis1.times(v.dot(vAngleAxis1))).normalize();
-      OriginalAxis2 = vAngleAxis2;
+      Point x_axis;
+      x_axis.init(1, 0, 0);
+      OriginalAxis2 = x_axis;
       return vAngleAxis2;
     }
   }

@@ -1,38 +1,36 @@
-/**
- * File: server.cpp
- * Author: Dylan Visher
- * Date: 5/18/13
- * About: ROS node for tracking objects in the PhaseSpace System
- */
+// File: server.cpp
+// Author: Dylan Visher
+// Date: 5/18/13
+// About: ROS node for tracking objects in the PhaseSpace System
 
-/*Include the ROS system*/
+// Include the ROS system
 #include <ros/ros.h>
-/*rviz integration*/
+// rviz integration
 #include <visualization_msgs/Marker.h>
-/*C++ includes*/
+// C++ includes
 #include <string>
 #include <vector>
 #include <algorithm>
 
-/*service files*/
+// service files
 #include "core_object_server/add_object.h"
 #include "core_object_server/add_points.h"
 #include "core_object_server/delete_object.h"
 #include "core_object_server/collides_with.h"
 #include "core_object_server/box_filled.h"
 
-/*Set up ROS messages*/
+// Set up ROS messages
 #include "std_msgs/String.h"
 #include "geometry_msgs/Point.h"
 #include "geometry_msgs/Quaternion.h"
 #include "core_object_server/ObjectInfo.h"
 #include "core_object_server/ObjectDigest.h"
 
-/*Object functionality*/
+// Object functionality
 #include "PhaseSpace/ObjectClass.h"
 #include "PhaseSpace/Point.h"
 
-/*OWL (PhaseSpace System API)*/
+// OWL (PhaseSpace System API)
 #include "owl/owl.h"
 
 using std::vector;
@@ -42,38 +40,61 @@ using std::string;
 using std::stringstream;
 using object::FindById;
 
+// MARKER_COUNT is the maximum number of markers that will ever be used 
 #define MARKER_COUNT 200
+// SERVER_NAME is the IP Address for the PhaseSpace System
 #define SERVER_NAME "192.168.2.123"
+// This flag will set the OWL system up to be in not slave mode;
 #define INIT_FLAGS 0
 
+// object_count is the number of objects set so far (deletions are not counted)
+// It is used for assigning new identification numbers to objects
 int object_count_ = 0;
+// markers is the gloval array of OWLMarkers that are taken from the PhaseSpace System */
 OWLMarker markers[MARKER_COUNT];
+// ids_set_ is a vector of Marker/Point ID's that have been set
+// This is used when finding unassigned id's to set */
 vector<int> ids_set_;
 int tracker_ = 0;
 vector<ObjectClass> object_vector_;
-/*Camera Frame Information*/
+// Camera Frame Information
+// shift is a vector that moves the PhaseSpace Origin to the left hand side of the table
 const float shift[3] = { 2.10094,0.637346,-1.24804 };
-const float rotate[3][3] = {{0.802454, 0.0236066, -0.599659},
+// rotate is a 3x3 matrix that defines the rotational transformation of from the Camera Origin
+// to the local origin: It is in the form of {X, Y, Z}^-1
+// Where X, Y, and Z are the desired axes in the coordinate system of the already shifted camera system
+const float rotate[3][3] = {{-0.802454, -0.0236066, 0.599659},
                             {0.529394, 0.213418, 0.823575},
                             {-0.14712, 0.976347, -0.158438}};
 
-/* SECTION 1 CHANGING FRAME OF REFERENCES */
+////////////////////////////////////
+//// CHANGING COORDINATE SYSTEM ////
+////////////////////////////////////
+
+// Transform Takes in an Owl Marker and changes its position to be relative to the new origin
+//   mark: A PhaseSpace OWL API marker
+// This shifts it using the globally defined shift vector
+// This rotates it using the globally defined rotation matrix
 void Transform(OWLMarker *mark) {
   float x = mark->x - shift[0];
   float y = mark->y - shift[1];
   float z = mark->z - shift[2];
-  /* TODO REDO THE ROTATION MATRIX TO TAKE THIS X INTO ACCOUNT */
-  mark->x = -1*(rotate[0][0]*x + rotate[0][1]*y + rotate[0][2]*z);
+  mark->x = rotate[0][0]*x + rotate[0][1]*y + rotate[0][2]*z;
   mark->y = rotate[1][0]*x + rotate[1][1]*y + rotate[1][2]*z;
   mark->z = rotate[2][0]*x + rotate[2][1]*y + rotate[2][2]*z;
   return;
 }
+// TransformMarkers transforms the position of n-many OWLMarkers in an Array]
+// markers[]: An array of owl markers of length MARKER_COUNT]
+// n: The number of markers to change
 void TransformMarkers(OWLMarker markers[MARKER_COUNT], int n) {
   for (int i = 0; i < n; i++) {
     Transform(&markers[i]);
   } return;
 }
-
+//FindObject finds the location (iterator) of the object with the given id in the global object_vector_]
+//id: the integer identification number for the object desired
+//return: An iterator to the object in the global object_vector_
 vector<ObjectClass>::iterator FindObject(int id) {
   vector<ObjectClass>::iterator iter;
   for (iter = object_vector_.begin(); iter != object_vector_.end(); ++iter)
@@ -81,71 +102,73 @@ vector<ObjectClass>::iterator FindObject(int id) {
   return iter;
 }
 
-/* SERVICE AUXILLARY PROGRAMS */
-/**
- * [get_unadded_points returns the points that are available but have not been set]
- * @return        [Points that have not been assigned]
- */
+////////////////////////////////////////
+//// ROS SERVICE AUXILLARY PROGRAMS ////
+////////////////////////////////////////
+//// get_unadded_points, get_points ////
+////////////////////////////////////////
+
+// get_unadded_points finds the valid points that have not been assigned yet
+// return a vector of points that have not been assigned]
 vector<Point> get_unadded_points() {
   int err;
-  /*Recieve Updated Information about the Markers*/
+  // Recieve Updated Information about the Markers
   int num_markers = owlGetMarkers(markers, MARKER_COUNT);
+  // Transform these Markers to be reflective of the new Coordinate System
   TransformMarkers(markers, num_markers);
-  /*Catch errors in the OWL System*/
+  // Catch errors in the OWL System: If there is an error shut the system down
   if ((err = owlGetError()) != OWL_NO_ERROR) {
     ROS_ERROR("get_unadded_points: owlGetError %d", err);
     owl_print_error("error", err);
     owlDone();
     exit(1);
   }
-
-  /*Make a vector of Point that have not been added*/
+  
+  // Make a vector of points that have not been added
   vector<Point> points;
-  if (num_markers == 0) {
-    /*
-     * If the OWL System has not been able to gather Data on Any Points
-     * The OWL System is not working properly
-     */
-    //  ROS_WARN("get_unadded_points: no markers found\n");
-    return points;
-  }
   for (int i = 0; i < num_markers; i++) {
-    /*Only Add to Points if the Marker has data and that data is good*/
+    // Only Add to Points if the valid marker has not been set and the data is good/reliable
     if (std::find(ids_set_.begin(), ids_set_.end(), markers[i].id) == ids_set_.end() && markers[i].cond > 0) {
       Point point;
-      /*Push the information from the OWLMarker into the Point*/
+      // Update the Point object to be reflective of the OWLMarker
       point.Update(markers[i]);
       points.push_back(point);
-      /*Add this to the id's that have been set already*/
+      // Record the id that has been set
       ids_set_.push_back(point.id);
     }
   }
   return points;
 }
 
-/**
- * [get_points finds and returns a list of the unassigned but now available points for a set time]
- * @param  time [Time in Seconds the System will look for new points]
- * @return      [A vector of Points that are unassigned but available]
- */
+// get_points gathers all unassigned points for a given time
+//            If there is an Object that needs a set amount of points (glove)
+//            Assign the set of 7 points to be art of that object
+//              [the PS LED Driver assignes 7 leds to each wired connection]
+// time: The time in seconds the system will look for new points
+// glove: A boolean that says whether to assign the whole 7 LED set to the object
+// return a vector of unassigned points
 vector<Point> get_points(int time, bool glove = false) {
   ROS_ASSERT(time >= 0);
 
-  int rate = 10;
-  time *= rate; // break time into 100ms blocks
+  float rate = 10.0;  // frequency for looking for new unadded points (HZ)
+  time *= rate;  // break time into blocks dependent on rate
   vector<Point> points;
   while (time > 0) {
     vector <Point> new_points = get_unadded_points();
     points.insert(points.end(), new_points.begin(), new_points.end());
-    /*TODO make this abstracted out dependent on rate*/
-    ros::Duration(0.1).sleep();
+    ros::Duration(1.0/rate).sleep();
     time--;
   }
+  // If this is an object that takes up one whole connection
+  // If at least one point has been gathered
+  // And not all of them have been gathered
+  // TODO: PERHAPS MAKE SURE THAT THIS DOESN'T ASSIGN LEDS FROM MORE THAN 1 WIRED CONNECTION
   if (glove && points.size() > 0 && points.size() < 7) {
     int mult = points[0].id / 7;
     vector<Point>::iterator iter;
     for (int i = 0; i < 7; i++) {
-      /* if the id was not found push it back the glove will handle the rest */
+      // if the id was not found Initialize the point with that id
+      // indicate that the associated id is now set
       if (points::FindById(i + mult * 7, points) == points.end()) {
         ids_set_.push_back(i + mult * 7);
         Point p;
@@ -158,29 +181,30 @@ vector<Point> get_points(int time, bool glove = false) {
   return points;
 }
 
-/* ROS SERVICES */
+/////////////////////
+//// ROS SERVICES////
+//////////////////////////////////////////////////////////////////////////////// 
+//// delete_object, add_object, add_points, collision_detection, box_filled ////
+////////////////////////////////////////////////////////////////////////////////
 
-/**
- * [delete_object deletes an Object from the list of Tracked Objects]
- * @param  req [ROS delete_object service request]
- *             [id: the id of the object to be deleted]
- * @param  res [ROS delete_object service response]
- * @return     [success: To show success]
- */
+// delete_object deletes the Object with the Given ID from the list of Tracked Objects
+// req: The ROS Service request for the core_object_server delete_object service
+//      (int32) id: the id of the object to be deleted
+// res: The ROS Service response fo the core_object_server delete_object service
+//      (bool) success: Answers the question: Was the deletion successful?
+// return: bool that indicates whether the service itself failed -> ROS_ERROR
 bool delete_object(core_object_server::delete_object::Request &req,
                    core_object_server::delete_object::Response &res) {
-  ROS_INFO("delete_object: Object Deletion: ID: %ld", req.id);
   vector<ObjectClass>::iterator target_iter = FindObject(req.id);
   if (target_iter == object_vector_.end()) {
-    ROS_INFO("delete_object: target object does not exist");
+    ROS_INFO("delete_object: target object(%i) does not exist", req.id);
     res.success = false;
     return true;
   }
   stringstream info;
   info << "Object (" << req.id << ") " "deleted\n";
   info << "Points: ";
-
-  /*Remove the Object's Associated Marker ID's from the list of set IDs*/
+  // Remove the Object's Associated Marker ID's from the list of set IDs
   ObjectClass &target = *target_iter;
   vector<Point> const &object_points = target.get_points();
   vector<Point>::const_iterator iter;
@@ -197,44 +221,42 @@ bool delete_object(core_object_server::delete_object::Request &req,
   return true;
 }
 
-/**
- * [add_points ROS Service to add points to a given object for a set time]
- * @param  req [ROS add_points service request]
- *             [id: ID of the Object to Add points to]
- *             [time: time in seconds to search for points]
- * @param  res [ROS add_points service response]
- *             [success: indicate whether this was successful]
- *             [info: send back information on the Points Added]
- * @return     [Show whether this service call has failed or succeeded]
- */
+// add_points add points to a given object for a given time
+// req: The ROS Service request for the core_object_server add_points service
+//       (int32) id: The ID of the object to add points to
+//       (int32) time: The time to be looking for new pointers
+// res:  The ROS Service response for the core_object_server add_points service
+//       (bool) success: Answers the question : Were Points successfully added?
+//       (string) info: Information on how the program succeeded or failed
+// return: bool that indeicates whether the service itself failed -> ROS_ERROR
 bool add_points(core_object_server::add_points::Request &req,
                 core_object_server::add_points::Response &res) {
-  ROS_INFO("Add Points to Object: %ld for %ld seconds", req.id, req.time);
-  /*locate target object*/
+  // Find target object for addition of points
   vector<ObjectClass>::iterator target = FindObject(req.id);
+  // If the object does not exist indicate a failed service
   if (target == object_vector_.end()) {
+    res.success = false;
     ROS_INFO("add_points: no such target object exists\n");
     res.info = "No Such Object Exists";
     return true;
   }
   ObjectClass &object = *target;
-  /*Gather points*/
+  // Gather Additional Unset Points
   vector<Point> points = get_points(req.time);
+  // If there were no points indicate teh the
   if (points.size() == 0) {
     ROS_WARN("add_points: No Additional Points Recieved");
     res.success = false;
     res.info.append("No Points Recieved");
     return true;
   }
-  ROS_INFO("There are %ld additional points\n", points.size());
-  vector<Point>::const_iterator i;
-  /*Add the Points To this Object*/
+  // Add the Points To this Object
   object.AddPoints(points);
-  /*info string to eventually return*/
+  // Indicate a successfull points addition
   stringstream info;
   info << "Object: " << req.id << " has added the points: ";
   res.success = true;
-  /*create a new vector of ids to add*/
+  // Indicate which ID's were added to this object
   vector<Point>::const_iterator iter;
   for (iter = points.begin(); iter != points.end(); ++iter) {
     info << iter->id << " ";
@@ -244,32 +266,28 @@ bool add_points(core_object_server::add_points::Request &req,
   return true;
 }
 
-/**
- * [add_object ROS service to track a new object
- *             Make sure that the Long axis is visible in the End]
- * @param  req [ROS add_object service request]
- *             [name: Name for the new object]
- *             [time: Time to look for markers]
- * @param  res [ROS add_object service response]
- *             [info: Details of name and points added]
- * @return     [Return whether the addition was successful] 
- */
+// add_object adds an object to be tracked
+//            needs the axes to be visible when the alloted time is up
+// req: The ROS Service request for the core_object_server add_object service
+//       (string) name: User given name for the object
+//       (int32)  time: User given time to be searching for new points
+//       (string) type: Type of Object to be added
+// res: The ROS Service response for the core_object_server add_object service
+//       (bool) success: Answers the Question: Was an object successfully added
+//       (string)  info: Information as to how the program succeeded or failed
+// return: bool that indicates whether the service itself failed -> ROS_ERROR
 bool add_object(core_object_server::add_object::Request &req,
                 core_object_server::add_object::Response &res) {
-  ROS_INFO("Adding Object: Name: %s, Given %i time",
-                    req.name.c_str(), req.time);
-  /*make a new object Object*/
-  ObjectClass temp_object;
-  /*Find the unassigned markers*/
+  // Find all the unassigned markers 
   vector<Point> points = get_points(req.time, (req.type == "glove"));
-  /*If no points were found reveal that adding this object was unsuccessful*/
+  // If no points were found indicate an unsuccessful addition
   if (points.size() == 0) {
     ROS_WARN("No Points Recieved");
     res.success = false;
     res.info.append("No Points Recieved");
     return true;
   }
-  /*Print out which points are being added to this new object*/
+  // Add to the information which points are being added to the object
   stringstream info;
   info << "Object " << req.name << " using points: ";
   vector<Point>::const_iterator iter;
@@ -277,7 +295,8 @@ bool add_object(core_object_server::add_object::Request &req,
     info << iter->id << " ";
   }
   ROS_INFO("%s", info.str().c_str());
-  /*Initialize this New Object with the name given and the new points*/
+  // Initialize this New Object with the name given, new points, and the type
+  ObjectClass temp_object;
   temp_object.init(object_count_, req.name, points, req.type);
   /*Add this object to the list of tracked objects*/
   object_vector_.push_back(temp_object);
@@ -454,11 +473,20 @@ int main(int argc, char **argv) {
         q.y = rotation[2];
         q.z = rotation[3];
         info.rot = q;
+        /*set dimensional information*/
         float dimensions[3] = {0, 0, 0};
         iter->get_dimensions(dimensions);
         info.dim.push_back(dimensions[0]);
         info.dim.push_back(dimensions[1]);
         info.dim.push_back(dimensions[2]);
+        /*set info for pointer finger((0,0,0) if not pointer)*/
+        Point point;
+        point = iter->get_pointer();
+        geometry_msgs::Point p;
+        p.x = point.x;
+        p.y = point.y;
+        p.z = point.z;
+        info.pointer = p;
         /*Add Object to ObjectDigest*/
         digest.objects.push_back(info);
         /*Publish to RVIZ*/

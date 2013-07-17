@@ -156,7 +156,6 @@ class Point {
     Point p;
     float mag = magnitude();
     if (mag == 0) {
-      printf("normalize failed: mag = 0");
       p.init();
       return p;
     }

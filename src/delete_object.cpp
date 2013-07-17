@@ -26,7 +26,7 @@ int main(int argc, char **argv) {
   if (client.call(srv)) {
     ROS_INFO("Request Sent");
     if (!(static_cast<int>(srv.response.success)))
-      ROS_WARN("Delete Object: %ld failed", srv.request.id);
+      ROS_WARN("Delete Object: %i failed", srv.request.id);
     else
       ROS_INFO("Object Successfully Deleted");
   } else {
