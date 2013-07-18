@@ -27,6 +27,8 @@
 
 // Object functionality
 #include "PhaseSpace/Object.h"
+#include "PhaseSpace/PSObject.h"
+#include "PhaseSpace/ManualObject.h"
 #include "PhaseSpace/Point.h"
 
 // OWL (PhaseSpace System API)
@@ -37,7 +39,7 @@ using object_server::Object;
 using object_server::Point;
 using std::string;
 using std::stringstream;
-using object::FindById;
+using object::FindPointById;
 
 // MARKER_COUNT is the maximum number of markers that will ever be used 
 #define MARKER_COUNT 200
@@ -168,7 +170,7 @@ vector<Point> get_points(int time, bool glove = false) {
     for (int i = 0; i < 7; i++) {
       // if the id was not found Initialize the point with that id
       // indicate that the associated id is now set
-      if (points::FindById(i + mult * 7, points) == points.end()) {
+      if (points::FindPointById(i + mult * 7, points) == points.end()) {
         ids_set_.push_back(i + mult * 7);
         Point p;
         p.init();
@@ -295,7 +297,7 @@ bool add_object(core_object_server::add_object::Request &req,
   }
   ROS_INFO("%s", info.str().c_str());
   // Initialize this New Object with the name given, new points, and the type
-  Object temp_object;
+  PSObject::Object temp_object;
   temp_object.init(object_count_, req.name, points, req.type);
   // Add this object to the list of tracked objects
   object_vector_.push_back(temp_object);
@@ -321,6 +323,7 @@ bool box_filled(core_object_server::box_filled::Request &req,
                 core_object_server::box_filled::Response &res) {
   Point Center;
   Center.init(req.x, req.y, req.z);
+  
   vector<Object>::iterator iter;
   res.filled = false;
   // If even one of the objects intersects the box then thje box is filled
@@ -434,7 +437,7 @@ int main(int argc, char **argv) {
         // Update Objects and Get Info
         iter->Update(markers, n);
         // Get the positional data from the object
-        Point position = iter->get_pos();
+        Point position = iter->get_center();
         // Get the rotational data from the object
         vector<float> rotation = iter->get_rotation();
         // Make the message type to hold all of this information

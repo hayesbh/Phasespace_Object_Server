@@ -1,142 +1,75 @@
-/**
- * File: Object.h
- * Author: Dylan Visher
- * Date: 5/18/13
- * About: Object Class for Tracking Purposes
- */
+// File: Object.h
+// Author: Dylan Visher
+// Date: 7/18/13
+// About: General Object Class
 
-#ifndef _SHL_COREOBJECTSERVER_OBJECTCLASS_H
-#define _SHL_COREOBJECTSERVER_OBJECTCLASS_H
-
-#include <vector>
+#ifndef _SHL_COREOBJECTSERVER_OBJECT_H
+#define _SHL_COREOBJECTSERVER_OBJECT_H
 #include <string>
-/*Including the owl standard library and error messages*/
-#include "./ObjectType.h"
-#include "./Glove.h"
+#include <vector>
+#include "./Point.h"
 
 namespace object_server {
 
-using std::vector;
+using object_server::Point;
 using std::string;
 
 class Object {
- private:
-  /*The user given name of the object*/
-  string name;
-  /*The ID assigned by the system*/
-  int id;
-  /*ObjectType for storing object type specific information*/
-  ObjectType type;
+  protected:
+    // Tracking Information
+    int id;  // For the system to keep track of the Object
+    string name;  // For the user to keep track of the Object
+    string ext;  // To determing what type of Object extension it is PS or Manual
+    // State Information
+    Point center;  // The center location (X, Y, Z)
+    vector<float> angle;  // The rotation from its original position
+    vector<Point> axes; // The axes of the object
+    vector<float> dim; // The extents of the object
 
- public:
-  /**
-   * [init initializes the Object with the given information]
-   * @param identification [System generated ID for the Object]
-   * @param called         [User given name]
-   * @param points         [Vector of Points that define Object]
-   */
-  void init(int identification, string called, vector<Point> points, string t){
-    name = called;
-    id = identification;
-    if(t == "glove") {
-      Glove g;
-      g.init(points);
-      type = g; 
+  public:
+    virtual void init();
+    // get_id returns the id of the object
+    // return int representing the identification number
+    int get_id() {
+      return id;
     }
-    else type.init(points);
-  }
-  Point get_pointer() {
-    return type.get_pointer();
-  }
-  /**
-   * [get_id return system defined id]
-   * @return [int id]
-   */
-  int get_id() {
-    return id;
-  }
-  /**
-   * [GetInfo provides return name]
-   * @return           [name of object]
-   */
-  string get_name() {
-    return name;
-  }
-  /**
-   * [get_pos finds the position of this object]
-   * @return [a point describing location rel to camera 0]
-   */
-  Point get_pos() {
-    return type.get_center();
-  }
-  /**
-   * [get_rotation finds the rotation of this object]
-   * @return [a quaternion describing rotation]
-   */
-  vector<float> get_rotation() {
-    return type.get_angle();
-  }
-  /**
-   * [get_points returns the points in Object]
-   * @return [a vector of these points]
-   */
-  vector<Point> get_points() {
-    return type.get_points();
-  }
-  void get_dimensions(float dim[3]){
-    type.get_dimensions(dim);
-  }
-  int IntersectsBox(Point C, float width) {
-    return type.IntersectsBox(C, width);
-  }
-  vector<Point> GetAxes(){
-    vector<Point> axes;
-    axes.push_back(vAngleAxis1);
-    axes.push_back(vAngleAxis2);
-    axes.push_back(vAngleAxis1.cross(vAngleAxis2));
-    return axes;
-  } 
-  /**
-   * [AddPoints adds points to this object]
-   * @param  new_points [new points to also be in this object]
-   * @return            [whether this addition was successful]
-   */
-  void AddPoints(vector<Point> new_points) {
-    type.AddPoints(new_points);
-  }
-  /**
-   * [update updates the objects points with new marker information]
-   * @param markers [PhaseSpace markers with new info]
-   * @param n       [number of markers in the markers array]
-   */
-  void Update(OWLMarker *markers, int n) {
-    type.Update(markers, n);
-  }
-
-  void PrintPoints() {
-    type.PrintPoints();
-  }
+    // get_name returns the name of the object
+    // return a string representing the user given name
+    string get_name(){
+      return name;
+    }
+    // get_object type returns the type of the object
+    // return a string representing describing type
+    string get_object_ext() {
+      return ext;
+    }
+    // get_pointer returns a Point that represents where this object is pointing
+    virtual Point get_pointer();
+    // CollidesWith determines whether this object collides with another object
+    virtual bool CollidesWith(Object obj);
+    // get_center returns the center of the object
+    // return a Point
+    Point get_center() {
+      return center;
+    }
+    // get_rotation returns the rotation of the object
+    // return a quaternion representing rotation
+    vector<float> get_rotation() {
+      return angle;
+    }
+    // get_axes returns the axes of the object
+    // return a vector of floats representing the unit axes
+    vector<Point> get_axes() {
+      return axes;
+    }
+    // get_dimensions returns the dimension (extents) of the object
+    // return a 3D array of floats
+    vector<float> get_dimensions() {
+      return dim;
+    }
+    // Update Updates the information inside the Object
+    virtual bool Update();
 };
+
 }  // namespace object_server
-
-namespace object {
-using std::vector;
-using object_server::Point;
-/**
- * [FindById finds the point with the id given]
- * @param  id     [id of the point desired]
- * @param  points [vector of points to look in]
- * @return        [the index of the point with this id]
- */
-const vector<Point>::iterator FindById(int id, vector<Point> &points) {
-  vector<Point>::iterator iter;
-  for (iter = points.begin(); iter != points.end(); ++iter) {
-    if (iter->id == id)
-      return iter;
-  }
-  return points.end();
-}
-
-}  // namespace object
-
-#endif
+#endif      
