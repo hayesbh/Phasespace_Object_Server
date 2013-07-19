@@ -3,14 +3,14 @@
 // Date: 5/18/13
 // About: Logic for Default Type
 
+#include "./DefaultType.h"
+
+namespace object_server {
+
 // Math And Vectors
 using std::vector;
 
 using std::pow;
-// Points
-using object_server::Point;
-using points::PointsToPlane;
-using points::FindById;
 // Quaternions
 using quaternions::Qmult;
 using quaternions::Qnormalize;
@@ -18,7 +18,19 @@ using quaternions::Qinv;
 using quaternions::QRotate;
 
 void DefaultType::init (vector<Point> p) {
+  ext = "DefaultType";
   points = p;
+  Axis1.init(1, 0, 0);
+  Axis2.init(0, 1, 0);
+  angle.push_back(1);
+  angle.push_back(0);
+  angle.push_back(0);
+  angle.push_back(0);
+  center.init(0, 0, 0);
+  dim.push_back(.1);
+  dim.push_back(.1);
+  dim.push_back(.1);
+
   // Get the Center
   GetCenter();
   // Get the Angle information
@@ -28,7 +40,7 @@ void DefaultType::init (vector<Point> p) {
 }
 // GetFirstAxis finds (and sets if first time of i == 1) the local x_axis
 // default first angle axis is defined by the furthest two points
-Point GetFirstAxis(int i = 0){
+Point DefaultType::GetFirstAxis(int i = 0){
   if (AxisPoints1.size() == 2 && i == 0) {
     if(AxisPoints1[0]->current == 0 || AxisPoints1[1]->current == 0) {
       return Axis1;
@@ -73,7 +85,7 @@ Point GetFirstAxis(int i = 0){
   }
 }
 // GetSecondAxis gets the y_axis in the local object's frame of reference
-Point GetSecondAxis(int i = 0){
+Point DefaultType::GetSecondAxis(int i = 0){
   if(AxisPoints1.size() != 2) {
     Point p;
     p.init();
@@ -143,3 +155,4 @@ Point GetSecondAxis(int i = 0){
     return Axis2;
   }
 }
+}  // namespace object_server

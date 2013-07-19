@@ -5,9 +5,31 @@
 
 #include "ObjectType.h"
 
-using object_server::Point;
-using object_server::ObjectType;
-using points::FindByID;
+namespace object_server {
+
+using std::vector;
+using quaternions::Qnormalize;
+using quaternions::QRotate;
+using quaternions::Qmult;
+//default init just sets all the variables
+void ObjectType::init (vector<Point> p) {
+   points = p;
+   Axis1.init(1, 0, 0);
+   Axis2.init(0, 1, 0);
+   angle.push_back(1);
+   angle.push_back(0);
+   angle.push_back(0);
+   angle.push_back(0);
+   center.init(0, 0, 0);
+   dim.push_back(.1);
+   dim.push_back(.1);
+   dim.push_back(.1);
+   GetCenter();
+   GetAngle();
+   GetScale();
+   ext = "ObjectType";
+}
+
 
 // Reset resets all the stored information and finds it again
 void ObjectType::reset(){
@@ -18,9 +40,9 @@ void ObjectType::reset(){
 // GetAxes default is the right handed coordinate system defined by the first and second Axes
 vector<Point> ObjectType::GetAxes() {
   vector<Point> axes;
-  axes.push_back(vAngleAxis1);
-  axes.push_back(vAngleAxis2);
-  axes.push_back(vAngleAxis1.cross(vAngleAxis2).normalize());
+  axes.push_back(Axis1);
+  axes.push_back(Axis2);
+  axes.push_back(Axis1.cross(Axis2).normalize());
   return axes;
 }
 // Defualt get_pointer returns the position (0,0,0) out of range
@@ -73,7 +95,7 @@ float ObjectType::MaxDimensionalDistance(int dimension) {
   } return max;
 }
 // GetScale finds and sets the dimensions of the object
-void ObjectType::GetScale(int i = 0);
+void ObjectType::GetScale(int i){
   float buffer = 1.10;
   dim.clear();
   dim.push_back(2 * MaxDimensionalDistance(0) * buffer);
@@ -83,15 +105,16 @@ void ObjectType::GetScale(int i = 0);
 // AddPoints adds new_points to the object
 // new_points is a list of Points that are to be added to the Object
 // The default is to also reset the AngleAxes to this new set of points
-void AddPoints(vector<Point> new_points) {
+bool ObjectType::AddPoints(vector<Point> new_points) {
   vector<Point>::iterator i;
   points.insert(points.end(), new_points.begin(), new_points.end());
-  GetFirstAngleAxis(1);
-  GetSecondAngleAxis(1);
+  GetFirstAxis(1);
+  GetSecondAxis(1);
+  return true;
 }
 // GetCenter is finds the center of the object
 // The standard is just to find the average
-virtual void GetCenter(int i = 0) {
+void ObjectType::GetCenter(int i) {
   Point p;
   p.init();
   int pointsUsed = 0;
@@ -119,54 +142,61 @@ virtual void GetCenter(int i = 0) {
 // GetAngle sets the angle Quaterion to represent this Object's rotation from its original position
 // This angle is the rotation required to turn the current vector of the x-axis to the original x-axis vector
 // And the rotation to turn the y-axis to the original y-axis vector
-void GetAngle(int i = 0) {
-  GetFirstAngleAxis(i);
-  GetSecondAngleAxis(i);
+void ObjectType::GetAngle(int i) {
+  GetFirstAxis(i);
+  GetSecondAxis(i);
   // If the Axis is unpopulated, it was unable to find two points
   vector<float> default_Q;
   default_Q.push_back(1);
   default_Q.push_back(0);
   default_Q.push_back(0);
   default_Q.push_back(0);
-  if (AngleAxis1.size() != 2) {
+  if (AxisPoints1.size() != 2) {
     angle = default_Q;
     return;
   }
-  if(OriginalAxis1.magnitude() == 0 || vAngleAxis1.magnitude() == 0) {
+  if(OriginalAxis1.magnitude() == 0 || Axis1.magnitude() == 0) {
     angle = default_Q;
     return;
   }
   vector<float> Q1;
-  // Point cross1 = OriginalAxis1.cross(vAngleAxis1);
-  Point cross1 = vAngleAxis1.cross(OriginalAxis1).times(.5);
-  Q1.push_back(sqrt(pow(vAngleAxis1.magnitude(), 2) * pow(OriginalAxis1.magnitude(), 2)) + vAngleAxis1.dot(OriginalAxis1));
-  Q1.push_back(cross1.z);
-  Q1.push_back(cross1.y);
+  // Point cross1 = OriginalAxis1.cross(Axis1);
+  Point cross1 = Axis1.cross(OriginalAxis1).times(.5);
+  Q1.push_back(sqrt(pow(Axis1.magnitude(), 2) * pow(OriginalAxis1.magnitude(), 2)) + Axis1.dot(OriginalAxis1));
   Q1.push_back(cross1.x);
+  Q1.push_back(cross1.y);
+  Q1.push_back(cross1.z);
   angle = Qnormalize(Q1);
   // If the Second Axis is unpopulated it was unable to find two points
-  if (AngleAxis2.size() != 2) {
+  if (AxisPoints2.size() != 2) {
     return;
   }
-  if(OriginalAxis2.magnitude() == 0 || vAngleAxis2.magnitude() == 0) {
+  if(OriginalAxis2.magnitude() == 0 || Axis2.magnitude() == 0) {
     return;
   }
   vector<float> Q2;
-  Point temp = QRotate(vAngleAxis2, angle);
+  Point temp = QRotate(Axis2, angle);
   Point cross2 = temp.cross(OriginalAxis2).times(.5);
   Q2.push_back(sqrt(pow(temp.magnitude(), 2) * pow(OriginalAxis2.magnitude(), 2)) + temp.dot(OriginalAxis2));
-  Q2.push_back(cross2.z);
-  Q2.push_back(cross2.y);
   Q2.push_back(cross2.x);
+  Q2.push_back(cross2.y);
+  Q2.push_back(cross2.z);
   // angle = Q;
+  Q2 = Qnormalize(Q2);
   printf("final\n");
   angle = Qnormalize(Qmult(Q1, Q2));
   return;
 }
-void PrintPoints() {
-  vector<Point>::iterator i;
-  for (i = points.begin(); i != points.end(); ++i) {
-    printf("%s\n",i->print().c_str());
-  }
+Point ObjectType::GetFirstAxis (int i) {
+  Point p;
+  p.init(1,0,0);
+  Axis1 = p;
+  return p;
 }
-
+Point ObjectType::GetSecondAxis (int i) {
+  Point p;
+  p.init(0,1,0);
+  Axis2 = p;
+  return p;
+}
+}  // namespace object_server

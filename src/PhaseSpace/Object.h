@@ -8,10 +8,10 @@
 #include <string>
 #include <vector>
 #include "./Point.h"
+#include <math.h>
 
 namespace object_server {
 
-using object_server::Point;
 using std::string;
 
 class Object {
@@ -27,6 +27,9 @@ class Object {
     vector<float> dim; // The extents of the object
 
   public:
+    virtual string get_type() {
+      return ext;
+    }
     virtual void init();
     // get_id returns the id of the object
     // return int representing the identification number
@@ -68,7 +71,14 @@ class Object {
       return dim;
     }
     // Update Updates the information inside the Object
-    virtual bool Update();
+    virtual void Update(OWLMarker *new_points, int i);
+    vector<Point> get_points() {
+      vector<Point> p;
+      return p;
+    }
+    virtual bool AddPoints(vector<Point> new_points) {
+      return false;
+    }
 };
 
 }  // namespace object_server

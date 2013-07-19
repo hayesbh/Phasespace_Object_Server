@@ -5,13 +5,27 @@
 
 #include "./GloveType.h"
 
+namespace object_server {
+
 // init sets initializes the points of the glove, finds all of the finges' specific Points
 // Finds the center, the angle and the scale
 void GloveType::init(vector<Point> p) {
   printf("Setting up Glove\n");
+  ext = "GloveType";
   vector<Point>::iterator iter;
   /* Push back each of the points and blank ones where they are needed */
-  points.insert(points.end(), p.begin(), p.end());
+  points = p;
+  Axis1.init(1, 0, 0);
+  Axis2.init(0, 1, 0);
+  angle.push_back(1);
+  angle.push_back(0);
+  angle.push_back(0);
+  angle.push_back(0);
+  center.init(0, 0, 0);
+  dim.push_back(.1);
+  dim.push_back(.1);
+  dim.push_back(.1);
+
   /* Set up finger specific pointers */
   for (iter = points.begin(); iter != points.end(); ++iter) {
     if ( iter->id % 7 == 1 ) thumb = iter;
@@ -33,7 +47,7 @@ Point GloveType::get_pointer() {
 // GetFirstAxisAngle for a glove is defined by the two leds
 // That are located on the base of the hand
 Point GloveType::GetFirstAxis() {
-  if (Axis1.size() == 2) {
+  if (AxisPoints1.size() == 2) {
     if(base_right->current == 0 || base_left->current == 0) {
       return Axis1;
     }
@@ -67,7 +81,7 @@ Point GloveType::GetSecondAxis() {
   Point v = fore->sub(*base_left);
   Axis2 = u.sub(v.normalize().times(u.dot(v))).normalize();
   // Now find the normal component
-  return vAngleAxis2;
+  return Axis2;
   }
   else {
     AxisPoints2.push_back(fore);
@@ -80,4 +94,4 @@ Point GloveType::GetSecondAxis() {
     return Axis2;
   }
 }
-
+} // namespace object_server

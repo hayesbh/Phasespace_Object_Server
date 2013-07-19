@@ -9,7 +9,8 @@
 #include <vector>
 #include <sstream>
 #include <string>
-#include "./owlAux.h"
+#include <cmath>
+#include "owl/owl.h"
 
 namespace object_server {
 
@@ -31,10 +32,6 @@ class Point {
   // init with x,y,z initializes the point at (x, y, z)
   // x, y, z: floats describing location
   void init(float X, float Y, float Z);
-  // static_init initializes with X, Y, Z
-  // X, Y, Z: floats describing the location
-  // return the point
-  static Point static_init(float X, float Y, float Z);
   // init without arguments initializes the point with at (0,0,0)
   void  init();
   // Update updates the point with marker information
@@ -89,6 +86,9 @@ class Point {
   // return this string "(x, y, z)"
   string print();
 };
+
+const vector<Point>::iterator FindPointById (int id, vector<Point> &points);
+
 }  // namespace object_server
 
 #endif

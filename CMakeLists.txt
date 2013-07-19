@@ -29,7 +29,7 @@ rosbuild_gensrv()
 #rosbuild_add_executable(example examples/example.cpp)
 #target_link_libraries(example ${PROJECT_NAME})
 
-rosbuild_add_executable(server src/server.cpp)
+rosbuild_add_executable(server src/server.cpp src/PhaseSpace/Object.cpp src/PhaseSpace/ObjectType.cpp src/PhaseSpace/ManualObject.cpp src/PhaseSpace/PSObject.cpp src/PhaseSpace/DefaultType.cpp src/PhaseSpace/GloveType.cpp src/PhaseSpace/Point.cpp src/PhaseSpace/quaternion.cpp)
 target_link_libraries(server owlsock)
 
 rosbuild_add_executable(add_object src/add_object.cpp)
@@ -40,3 +40,4 @@ target_link_libraries(add_points)
 
 rosbuild_add_executable(delete_object src/delete_object.cpp)
 target_link_libraries(delete_object)
+

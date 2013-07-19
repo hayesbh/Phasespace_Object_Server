@@ -5,10 +5,12 @@
 
 #include "./Object.h"
 
-void init() {
+namespace object_server {
+
+void Object::init() {
   id = -1;
   name = "default";
-  ext = "pure";
+  ext = "Object";
   Point p;
   p.init();
   center = p;
@@ -134,6 +136,8 @@ bool Object::CollidesWith(Object obj) {
 }
 
 //Default Update just return true
-bool Object::Update() {
-  return true;
+void Object::Update(OWLMarker *new_points, int i) {
+  return;
 }
+
+}  // namespace object_server

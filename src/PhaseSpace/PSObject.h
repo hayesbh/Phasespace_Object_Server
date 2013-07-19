@@ -38,12 +38,6 @@ class PSObject : public Object {
   Point get_pointer() {
     return type.get_pointer();
   }
-  // Collides with asks whether this object intersect (collides with)
-  //   the given object (collision is type dependent)
-  // obj : the object that might collide with this one
-  bool CollidesWith(Object obj) {
-    return type.CollidesWith(obj.get_type());
-  }
   // get_points returns the points that define the PhaseSpace Object
   // return a vector of these points
   vector<Point> get_points() {
@@ -52,18 +46,13 @@ class PSObject : public Object {
   
   // AddPoints adds points to this object
   // new_points : a vector of new Point s to add to this object
-  void AddPoints(vector<Point> new_points) {
-    type.AddPoints(new_points);
+  virtual bool AddPoints(vector<Point> new_points) {
+    return type.AddPoints(new_points);
   }
   // Update updates the PhaseSpace Object
   // Uses updated PhaseSpace OWLMarker s to update points
   // n : the number of markers that have been updated
   void Update(OWLMarker *markers, int n);
-  // PrintPoints just prints out the points that define the object
-  // used for debugging purposes
-  void PrintPoints() {
-    type.PrintPoints();
-  }
 };
 }  // namespace object_server
 

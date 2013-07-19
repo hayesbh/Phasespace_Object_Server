@@ -8,7 +8,8 @@
 
 #include <vector>
 #include <string>
-#include "./Object.h"
+#include "Object.h"
+#include "quaternion.h"
 
 namespace object_server {
 
@@ -23,6 +24,9 @@ class ManualObject : public Object {
   bool SetAngle (vector<float> angle);
   bool SetAngle (float w, float x, float y, float z);
   bool SetDim (float x, float y, float z);
+  void update();
+  void Update (OWLMarker *marks, int n);
 };
 
+}  // namespace object_server
 #endif

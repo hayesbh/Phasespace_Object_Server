@@ -3,12 +3,22 @@
 // Date: 5/18/13
 // About: Logic for ManualObject class, extension of Object
 
-#include "ManualObject.h"
+#include "./ManualObject.h"
+
+namespace object_server {
+
+using quaternions::QRotate;
+using quaternions::Qinv;
+using std::vector;
 
 void ManualObject::init(int ident, string called) {
   id = ident;
   name = called;
-  ext = "manual";
+  ext = "ManualObject";
+  SetCenter(0, 0, 0);
+  SetAngle(1, 0, 0, 0);
+  SetDim(.01, .01, .01);
+  update();
 }  
 bool ManualObject::SetCenter (Point c) {
   center = c;
@@ -20,21 +30,23 @@ bool ManualObject::SetCenter (float x, float y, float z) {
   center.z = z;
   return true;
 }
-bool ManualObject::SetAngle (float angle[4]) {
+bool ManualObject::SetAngle (float ang[4]) {
   angle.clear();
-  angle.push_back(angle[0]);
-  angle.push_back(angle[1]);
-  angle.push_back(angle[2]);
-  angle.push_back(angle[3]);
+  angle.push_back(ang[0]);
+  angle.push_back(ang[1]);
+  angle.push_back(ang[2]);
+  angle.push_back(ang[3]);
+  update();
   return true;
 }
-bool ManualObject::SetAngle (vector<float> angle) {
+bool ManualObject::SetAngle (vector<float> ang) {
   if (angle.size() != 4) return false;
   angle.clear();
-  angle.push_back(angle[0]);
-  angle.push_back(angle[1]);
-  angle.push_back(angle[2]);
-  angle.push_back(angle[3]);
+  angle.push_back(ang[0]);
+  angle.push_back(ang[1]);
+  angle.push_back(ang[2]);
+  angle.push_back(ang[3]);
+  update();
   return true;
 }
 
@@ -44,6 +56,7 @@ bool ManualObject::SetAngle (float w, float x, float y, float z) {
   angle.push_back(x);
   angle.push_back(y);
   angle.push_back(z);
+  update();
   return true;
 }
 bool ManualObject::SetDim (float x, float y, float z) {
@@ -53,4 +66,21 @@ bool ManualObject::SetDim (float x, float y, float z) {
   dim.push_back(z);
   return true;
 }
+void ManualObject::Update(OWLMarker *marks, int i) {
+  update();
+}
+void ManualObject::update() {
+  Point x_axis;
+  x_axis.init(1, 0, 0);
+  Point y_axis;
+  y_axis.init(0, 1, 0);
+  x_axis = QRotate(x_axis, Qinv(angle));
+  y_axis = QRotate(y_axis, Qinv(angle));
+  Point z_axis = x_axis.cross(y_axis);
+  axes.clear();
+  axes.push_back(x_axis);
+  axes.push_back(y_axis);
+  axes.push_back(z_axis);
+}
 
+} // namespace object_server

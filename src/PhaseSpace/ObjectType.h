@@ -7,6 +7,7 @@
 #define _SHL_COREOBJECTSERVER_H
 
 #include <vector>
+#include <cstdio>
 #include <math.h>
 #include "./Point.h"
 #include "./quaternion.h"
@@ -17,6 +18,8 @@ using object_server::Point;
 
 class ObjectType {
   protected:
+    // ext is the type exension
+    string ext;
     // Location Information
     vector<Point> points;
     Point center;
@@ -36,13 +39,18 @@ class ObjectType {
     // x, y, and z scale for holding the dimensional information
     vector<float> dim;
   public:
-    // init initializes the Object
-    virtual void init()=0;
+    virtual string get_type() {
+      return ext;
+    }
+    virtual void init(vector<Point> p);
     // Reset the object from the start
     virtual void reset();
     // get_dimensions returns the dimensional information of the object
     virtual vector<float> get_dimensions() {
       return dim;
+    }
+    virtual vector<float> get_angle() {
+      return angle;
     }
     // get_axes returns the axis information of the object
     virtual vector<Point> GetAxes();
@@ -66,18 +74,18 @@ class ObjectType {
     // return  float giving the largest distance from the center along that axis
     virtual float MaxDimensionalDistance(int dimension);
     // GetScale finds the dimensions of the object
-    virtual void GetScale(int i = 0);
+    virtual void GetScale(int i=0);
     // AddPoints adds new_points to the object
     // new_points is a list of Points that are to be added to the Object
-    virtual void AddPoints(vector<Point> new_points);
+    virtual bool AddPoints(vector<Point> new_points);
     // GetCenter sets the center based off of the information 
-    virtual void GetCenter(int i = 0);
+    virtual void GetCenter(int i=0);
     // GetFirstAngleAxis defines the x_axis of the object specific frame of reference
-    virtual Point GetFirstAxis(int i = 0) = 0;
+    virtual Point GetFirstAxis(int i=0);
     // GetSecondAngleAxis defines the y_axis of the object specific frame of reference
-    virtual Point GetSecondAxis(int i = 0) = 0;
+    virtual Point GetSecondAxis(int i=0);
     // GetAngle defines the angle of the Object from its OriginalAxes
-    virtual void GetAngle(int i = 0);
+    virtual void GetAngle(int i=0);
 };
 }  // namespace object_server
 #endif

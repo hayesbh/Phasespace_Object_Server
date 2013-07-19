@@ -6,8 +6,13 @@
 #ifndef _SHL_COREOBJECTSERVER_GLOVETYPE_H
 #define _SHL_COREOBJECTSERVER_GLOVETYPE_H
 
+#include <vector>
+#include "ObjectType.h"
+#include "Point.h"
+
 namespace object_server {
 
+using std::vector;
 using object_server::ObjectType;
 
 class GloveType : public ObjectType {

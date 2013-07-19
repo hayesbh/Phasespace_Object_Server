@@ -6,9 +6,10 @@
 #define _SHL_COREOBJECTSERVER_DEFAULTTYPE_H
 
 #include <vector>
-#include <math.h>
-#include "./Point.h"
-#include "./quaternion.h"
+#include <cmath>
+#include "Point.h"
+#include "quaternion.h"
+#include "ObjectType.h"
 
 namespace object_server {
 
@@ -25,15 +26,15 @@ using quaternions::Qinv;
 using quaternions::QRotate;
 
 // This class is the Default Object for holding type specific information
-class DefaultType : ObjectType {
+class DefaultType : public ObjectType {
   public:
   // init initializes the Object to hold in it the points given
   // p: The points that this object will track
   void init(vector<Point> p);
   // GetFirstAngleAxis finds (and sets if first time of i == 1) the local x_axis
   // default first angle axis is defined by the furthest two points
-  Point GetFirstAngleAxis(int i = 0);
-  Point GetSecondAngleAxis(int i = 0);
+  Point GetFirstAxis(int i);
+  Point GetSecondAxis(int i);
 };
 
 }  // namespace object_server

@@ -5,6 +5,8 @@
 
 #include "./Point.h"
 
+namespace object_server {
+
 // Initialize the point with the given x, y and z coordinates
 // x, y, z: floats describing location
 void Point::init(float X, float Y, float Z) {
@@ -15,12 +17,6 @@ void Point::init(float X, float Y, float Z) {
   return;
 }
 
-// Static initializer for the point
-static Point Point::static_init(float X, float Y, float Z) {
-  Point p;
-  p.init(X, Y, Z);
-  return p;
-}
 
 // init without arguments initializes the point with at (0,0,0)
 void  Point::init() {
@@ -145,7 +141,7 @@ float Point::DistanceToPlane(float plane[4]) {
 }
 // print returns the string representation of a point
 // return this string "(x, y, z)"
-string Point::print() const {
+string Point::print() {
   stringstream s;
   s << "(" << x << "," << y << "," << z << ")";
   return s.str();
@@ -164,7 +160,7 @@ float* PointsToPlane (Point p1, Point p2, Point p3, float plane[4]) {
 // id: the id of the point desired
 // points: a vector of points to look in
 // return an iterator to that point
-const vector<Point>::iterator FindById(int id, vector<Point> &points) {
+const vector<Point>::iterator FindPointById(int id, vector<Point> &points) {
   vector<Point>::iterator iter;
   for (iter = points.begin(); iter != points.end(); ++iter) {
     if (iter->id == id)
@@ -173,5 +169,4 @@ const vector<Point>::iterator FindById(int id, vector<Point> &points) {
   return points.end();
 }
 
-
-
+}  //  namespace object_server

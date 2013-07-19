@@ -39,7 +39,9 @@ using object_server::Object;
 using object_server::Point;
 using std::string;
 using std::stringstream;
-using object::FindPointById;
+using object_server::FindPointById;
+using object_server::ManualObject;
+using object_server::PSObject;
 
 // MARKER_COUNT is the maximum number of markers that will ever be used 
 #define MARKER_COUNT 200
@@ -57,6 +59,11 @@ OWLMarker markers[MARKER_COUNT];
 // This is used when finding unassigned id's to set */
 vector<int> ids_set_;
 int tracker_ = 0;
+
+// TODO: POINTERS TO OBJECTS
+// Make Pure Virtual Classes (Object and Object Type)
+// Pass only pointers to Objects
+// new PSObject *glove -> set the information -> cast as Object -> delete glove when done
 vector<Object> object_vector_;
 // Camera Frame Information
 // shift is a vector that moves the PhaseSpace Origin to the left hand side of the table
@@ -67,6 +74,18 @@ const float shift[3] = { 2.10094,0.637346,-1.24804 };
 const float rotate[3][3] = {{-0.802454, -0.0236066, 0.599659},
                             {0.529394, 0.213418, 0.823575},
                             {-0.14712, 0.976347, -0.158438}};
+/////////////////////////////
+/// OWL PHASESPACE ERRROR ///
+/////////////////////////////
+void owl_print_error(const char *s, int n)
+{
+  if(n < 0) printf("%s: %d\n", s, n);
+  else if(n == OWL_NO_ERROR) printf("%s: No Error\n", s);
+  else if(n == OWL_INVALID_VALUE) printf("%s: Invalid Value\n", s);
+  else if(n == OWL_INVALID_ENUM) printf("%s: Invalid Enum\n", s);
+  else if(n == OWL_INVALID_OPERATION) printf("%s: Invalid Operation\n", s);
+  else printf("%s: 0x%x\n", s, n);
+}
 
 ////////////////////////////////////
 //// CHANGING COORDINATE SYSTEM ////
@@ -170,7 +189,7 @@ vector<Point> get_points(int time, bool glove = false) {
     for (int i = 0; i < 7; i++) {
       // if the id was not found Initialize the point with that id
       // indicate that the associated id is now set
-      if (points::FindPointById(i + mult * 7, points) == points.end()) {
+      if (FindPointById(i + mult * 7, points) == points.end()) {
         ids_set_.push_back(i + mult * 7);
         Point p;
         p.init();
@@ -233,7 +252,7 @@ bool delete_object(core_object_server::delete_object::Request &req,
 bool add_points(core_object_server::add_points::Request &req,
                 core_object_server::add_points::Response &res) {
   // Find target object for addition of points
-  vector<Object>::iterator target = FindObject(req.id);
+  vector<Object>::iterator target= FindObject(req.id);
   // If the object does not exist indicate a failed service
   if (target == object_vector_.end()) {
     res.success = false;
@@ -252,19 +271,31 @@ bool add_points(core_object_server::add_points::Request &req,
     return true;
   }
   // Add the Points To this Object
-  object.AddPoints(points);
-  // Indicate a successfull points addition
-  stringstream info;
-  info << "Object: " << req.id << " has added the points: ";
-  res.success = true;
-  // Indicate which ID's were added to this object
-  vector<Point>::const_iterator iter;
-  for (iter = points.begin(); iter != points.end(); ++iter) {
-    info << iter->id << " ";
+  if (object.AddPoints(points)) {
+    // Indicate a successfull points addition
+    stringstream info;
+    info << "Object: " << req.id << " has added the points: ";
+    res.success = true;
+    // Indicate which ID's were added to this object
+    vector<Point>::const_iterator iter;
+    for (iter = points.begin(); iter != points.end(); ++iter) {
+      info << iter->id << " ";
+    }
+    ROS_INFO("%s", info.str().c_str());
+    res.info = info.str();
+    return true;
+  } else {
+    stringstream info;
+    info << "Object: " << req.id << " is not a PhaseSpace Object";
+    res.success = false;
+    ROS_INFO("%s", info.str().c_str());
+    res.info = info.str();
+    vector<Point>::iterator iter;
+    for (iter = points.begin(); iter != points.end(); ++iter) {
+      std::remove(ids_set_.begin(), ids_set_.end(), iter->id);
+    }
+    return true;
   }
-  ROS_INFO("%s", info.str().c_str());
-  res.info = info.str();
-  return true;
 }
 
 // add_object adds an object to be tracked
@@ -297,7 +328,7 @@ bool add_object(core_object_server::add_object::Request &req,
   }
   ROS_INFO("%s", info.str().c_str());
   // Initialize this New Object with the name given, new points, and the type
-  PSObject::Object temp_object;
+  PSObject temp_object;
   temp_object.init(object_count_, req.name, points, req.type);
   // Add this object to the list of tracked objects
   object_vector_.push_back(temp_object);
@@ -321,14 +352,16 @@ bool add_object(core_object_server::add_object::Request &req,
 // return: bool that indicates whether the service itself failed -> ROS_ERROR
 bool box_filled(core_object_server::box_filled::Request &req,
                 core_object_server::box_filled::Response &res) {
-  Point Center;
-  Center.init(req.x, req.y, req.z);
-  
+  ManualObject box;
+  box.init(-1, "cube");
+  box.SetCenter( req.x, req.y, req.z );
+  box.SetAngle(1, 0, 0, 0);
+  box.SetDim(req.width, req.width, req.width);
   vector<Object>::iterator iter;
   res.filled = false;
   // If even one of the objects intersects the box then thje box is filled
   for (iter = object_vector_.begin(); iter != object_vector_.end(); ++iter)
-    if( iter->IntersectsBox(Center, req.width)) res.filled = true;
+    if( iter->CollidesWith(box)) res.filled = true;
   return true;
 }
 // print_digest takes the ObjectDigest and Transforms it into a string
@@ -434,6 +467,7 @@ int main(int argc, char **argv) {
     } else {
       vector<Object>::iterator iter;
       for (iter = object_vector_.begin(); iter != object_vector_.end(); ++iter) {
+        type = iter->get_type();
         // Update Objects and Get Info
         iter->Update(markers, n);
         // Get the positional data from the object
@@ -458,8 +492,7 @@ int main(int argc, char **argv) {
         q.z = rotation[3];
         info.rot = q;
         // Set the message's dimensional data
-        float dimensions[3] = {0, 0, 0};
-        iter->get_dimensions(dimensions);
+        vector<float> dimensions = iter->get_dimensions();
         info.dim.push_back(dimensions[0]);
         info.dim.push_back(dimensions[1]);
         info.dim.push_back(dimensions[2]);
