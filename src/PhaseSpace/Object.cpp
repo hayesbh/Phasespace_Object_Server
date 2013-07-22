@@ -7,36 +7,6 @@
 
 namespace object_server {
 
-void Object::init() {
-  id = -1;
-  name = "default";
-  ext = "Object";
-  Point p;
-  p.init();
-  center = p;
-  angle.push_back(1);
-  angle.push_back(0);
-  angle.push_back(0);
-  angle.push_back(0);
-  Point x_axis;
-  x_axis.init(1, 0, 0);
-  Point y_axis;
-  y_axis.init(0, 1, 0);
-  Point z_axis;
-  z_axis.init(0, 0, 1);
-  axes.push_back(x_axis);
-  axes.push_back(y_axis);
-  axes.push_back(z_axis);
-  dim.push_back(.1);
-  dim.push_back(.1);
-  dim.push_back(.1);
-}
-//Default Pointer is nothing
-Point Object::get_pointer(){
-  Point p;
-  p.init();
-  return p;
-}
 //Default CollidesWith(Object obj)
 
 // IntersectsObject asks whether this object intersects another given object
@@ -57,22 +27,22 @@ Point Object::get_pointer(){
 // 
 // obj: The Object that this one might intersect this one
 // return bool: Does this object intersect obj?
-bool Object::CollidesWith(Object obj) {
+bool Object::CollidesWith(Object* obj) {
   // Unit Axes of First Object Stored in A
   Point A[3] = { axes[0], axes[1], axes[0].cross(axes[1]).normalize() };
   // Unit Axes of the Second Object Stored in B
-  vector<Point> ax = obj.get_axes();
+  vector<Point> ax = obj->get_axes();
   Point B[3] = { ax[0],
                  ax[1],
                  ax[2] };
   // D is the vector from First Object to Second Object
-  Point D = center.sub(obj.get_center());
+  Point D = center.sub(obj->get_center());
   // The extents of object 1 : 
   // How far does it extend from the center to the edges in the local x, y, and z axis
   // Half the total width, length, and height of the object
   float a[3] = { dim[0]/2, dim[1]/2, dim[2]/2 };
   // The extents for object 2 :
-  vector<float> dim2 = obj.get_dimensions();
+  vector<float> dim2 = obj->get_dimensions();
   float b[3] = { dim2[0]/2, dim2[1]/2, dim2[2]/2 };
   // Matrix c is a 3x3 Matrix of Dot Procducts s.t. c[i][j] = A[i] dot B[j]
   // These are set as the if statements are evaluated to prevent unneeded computation
@@ -133,11 +103,6 @@ bool Object::CollidesWith(Object obj) {
       (b[0] * c[2][1] + b[1] * c[2][0])
      < fabs(c[0][2] * A[1].dot(D) - c[1][2] * A[0].dot(D))) return 0;
   return 1;
-}
-
-//Default Update just return true
-void Object::Update(OWLMarker *new_points, int i) {
-  return;
 }
 
 }  // namespace object_server

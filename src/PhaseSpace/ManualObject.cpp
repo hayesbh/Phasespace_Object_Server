@@ -66,10 +66,11 @@ bool ManualObject::SetDim (float x, float y, float z) {
   dim.push_back(z);
   return true;
 }
-void ManualObject::Update(OWLMarker *marks, int i) {
+bool ManualObject::Update(OWLMarker *marks, int i) {
   update();
+  return true;
 }
-void ManualObject::update() {
+bool ManualObject::update() {
   Point x_axis;
   x_axis.init(1, 0, 0);
   Point y_axis;
@@ -81,6 +82,7 @@ void ManualObject::update() {
   axes.push_back(x_axis);
   axes.push_back(y_axis);
   axes.push_back(z_axis);
+  return true;
 }
 
 } // namespace object_server

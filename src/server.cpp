@@ -64,7 +64,7 @@ int tracker_ = 0;
 // Make Pure Virtual Classes (Object and Object Type)
 // Pass only pointers to Objects
 // new PSObject *glove -> set the information -> cast as Object -> delete glove when done
-vector<Object> object_vector_;
+vector<Object*> object_vector_;
 // Camera Frame Information
 // shift is a vector that moves the PhaseSpace Origin to the left hand side of the table
 const float shift[3] = { 2.10094,0.637346,-1.24804 };
@@ -115,10 +115,10 @@ void TransformMarkers(OWLMarker markers[MARKER_COUNT], int n) {
 //FindObject finds the location (iterator) of the object with the given id in the global object_vector_]
 //id: the integer identification number for the object desired
 //return: An iterator to the object in the global object_vector_
-vector<Object>::iterator FindObject(int id) {
-  vector<Object>::iterator iter;
+vector<Object*>::iterator FindObject(int id) {
+  vector<Object*>::iterator iter;
   for (iter = object_vector_.begin(); iter != object_vector_.end(); ++iter)
-    if (iter->get_id() == id) return iter;
+    if ((*iter)->get_id() == id) return iter;
   return iter;
 }
 
@@ -215,7 +215,7 @@ vector<Point> get_points(int time, bool glove = false) {
 // return: bool that indicates whether the service itself failed -> ROS_ERROR
 bool delete_object(core_object_server::delete_object::Request &req,
                    core_object_server::delete_object::Response &res) {
-  vector<Object>::iterator target_iter = FindObject(req.id);
+  vector<Object*>::iterator target_iter = FindObject(req.id);
   if (target_iter == object_vector_.end()) {
     ROS_INFO("delete_object: target object(%i) does not exist", req.id);
     res.success = false;
@@ -225,14 +225,15 @@ bool delete_object(core_object_server::delete_object::Request &req,
   info << "Object (" << req.id << ") " "deleted\n";
   info << "Points: ";
   // Remove the Object's Associated Marker ID's from the list of set IDs
-  Object &target = *target_iter;
-  vector<Point> const &object_points = target.get_points();
+  Object* target = *target_iter;
+  vector<Point> const &object_points = target->get_points();
   vector<Point>::const_iterator iter;
   for (iter = object_points.begin(); iter != object_points.end(); ++iter) {
     std::remove(ids_set_.begin(), ids_set_.end(), iter->id);
     info << iter->id << " ";
   }
   /*Remove the Object from the Tracked Objects List*/
+  delete target;
   object_vector_.erase(target_iter, target_iter+1);
   /*Print out that this Object was successfully Removed*/
   info << "removed";
@@ -252,7 +253,7 @@ bool delete_object(core_object_server::delete_object::Request &req,
 bool add_points(core_object_server::add_points::Request &req,
                 core_object_server::add_points::Response &res) {
   // Find target object for addition of points
-  vector<Object>::iterator target= FindObject(req.id);
+  vector<Object*>::iterator target= FindObject(req.id);
   // If the object does not exist indicate a failed service
   if (target == object_vector_.end()) {
     res.success = false;
@@ -260,7 +261,7 @@ bool add_points(core_object_server::add_points::Request &req,
     res.info = "No Such Object Exists";
     return true;
   }
-  Object &object = *target;
+  Object* object = *target;
   // Gather Additional Unset Points
   vector<Point> points = get_points(req.time);
   // If there were no points indicate teh the
@@ -271,7 +272,7 @@ bool add_points(core_object_server::add_points::Request &req,
     return true;
   }
   // Add the Points To this Object
-  if (object.AddPoints(points)) {
+  if (object->AddPoints(points)) {
     // Indicate a successfull points addition
     stringstream info;
     info << "Object: " << req.id << " has added the points: ";
@@ -328,10 +329,12 @@ bool add_object(core_object_server::add_object::Request &req,
   }
   ROS_INFO("%s", info.str().c_str());
   // Initialize this New Object with the name given, new points, and the type
-  PSObject temp_object;
-  temp_object.init(object_count_, req.name, points, req.type);
+  PSObject* temp_object = new PSObject;
+  temp_object->init(object_count_, req.name, points, req.type);
   // Add this object to the list of tracked objects
-  object_vector_.push_back(temp_object);
+  Object* obj;
+  obj = dynamic_cast<Object*>(temp_object);
+  object_vector_.push_back(obj);
   // pdate the universal object_count
   object_count_++;
   //Send the service caller the information associated with their call
@@ -352,16 +355,17 @@ bool add_object(core_object_server::add_object::Request &req,
 // return: bool that indicates whether the service itself failed -> ROS_ERROR
 bool box_filled(core_object_server::box_filled::Request &req,
                 core_object_server::box_filled::Response &res) {
-  ManualObject box;
-  box.init(-1, "cube");
-  box.SetCenter( req.x, req.y, req.z );
-  box.SetAngle(1, 0, 0, 0);
-  box.SetDim(req.width, req.width, req.width);
-  vector<Object>::iterator iter;
+  ManualObject* box = new ManualObject;
+  box->init(-1, "cube");
+  box->SetCenter( req.x, req.y, req.z );
+  box->SetAngle(1, 0, 0, 0);
+  box->SetDim(req.width, req.width, req.width);
+  Object* obj = dynamic_cast<Object*>(box);
+  vector<Object*>::iterator iter;
   res.filled = false;
   // If even one of the objects intersects the box then thje box is filled
   for (iter = object_vector_.begin(); iter != object_vector_.end(); ++iter)
-    if( iter->CollidesWith(box)) res.filled = true;
+    if( (*iter)->CollidesWith(obj)) res.filled = true;
   return true;
 }
 // print_digest takes the ObjectDigest and Transforms it into a string
@@ -465,19 +469,18 @@ int main(int argc, char **argv) {
       publisher.publish(digest);
     // Otherwise opdate each object with the new marker information
     } else {
-      vector<Object>::iterator iter;
+      vector<Object*>::iterator iter;
       for (iter = object_vector_.begin(); iter != object_vector_.end(); ++iter) {
-        type = iter->get_type();
         // Update Objects and Get Info
-        iter->Update(markers, n);
+        (*iter)->Update(markers, n);
         // Get the positional data from the object
-        Point position = iter->get_center();
+        Point position = (*iter)->get_center();
         // Get the rotational data from the object
-        vector<float> rotation = iter->get_rotation();
+        vector<float> rotation = (*iter)->get_rotation();
         // Make the message type to hold all of this information
         core_object_server::ObjectInfo info;
-        info.id = iter->get_id();
-        info.name = iter->get_name();
+        info.id = (*iter)->get_id();
+        info.name = (*iter)->get_name();
         // Set the message's position data
         geometry_msgs::Point loc;
         loc.x = position.x;
@@ -492,13 +495,13 @@ int main(int argc, char **argv) {
         q.z = rotation[3];
         info.rot = q;
         // Set the message's dimensional data
-        vector<float> dimensions = iter->get_dimensions();
+        vector<float> dimensions = (*iter)->get_dimensions();
         info.dim.push_back(dimensions[0]);
         info.dim.push_back(dimensions[1]);
         info.dim.push_back(dimensions[2]);
         // Set information for pointer
         Point point;
-        point = iter->get_pointer();
+        point = (*iter)->get_pointer();
         geometry_msgs::Point p;
         p.x = point.x;
         p.y = point.y;
@@ -516,7 +519,7 @@ int main(int argc, char **argv) {
         marker.header.stamp = timestamp;
         // Set the NameSpoace and ID
         marker.ns = "PhaseSpace_Objects";
-        marker.id = iter->get_id();
+        marker.id = (*iter)->get_id();
         marker.type = shape;
         // Indicate that the object will need to be added
         marker.action = visualization_msgs::Marker::ADD;

@@ -1,7 +1,7 @@
 // File: Object.h
 // Author: Dylan Visher
 // Date: 7/18/13
-// About: General Object Class
+// About: Virtual General Object Class
 
 #ifndef _SHL_COREOBJECTSERVER_OBJECT_H
 #define _SHL_COREOBJECTSERVER_OBJECT_H
@@ -30,7 +30,7 @@ class Object {
     virtual string get_type() {
       return ext;
     }
-    virtual void init();
+    //virtual void init()=0;
     // get_id returns the id of the object
     // return int representing the identification number
     int get_id() {
@@ -47,9 +47,9 @@ class Object {
       return ext;
     }
     // get_pointer returns a Point that represents where this object is pointing
-    virtual Point get_pointer();
+    virtual Point get_pointer()=0;
     // CollidesWith determines whether this object collides with another object
-    virtual bool CollidesWith(Object obj);
+    virtual bool CollidesWith(Object* obj);
     // get_center returns the center of the object
     // return a Point
     Point get_center() {
@@ -70,15 +70,12 @@ class Object {
     vector<float> get_dimensions() {
       return dim;
     }
-    // Update Updates the information inside the Object
-    virtual void Update(OWLMarker *new_points, int i);
-    vector<Point> get_points() {
+    virtual vector<Point> get_points() {
       vector<Point> p;
       return p;
     }
-    virtual bool AddPoints(vector<Point> new_points) {
-      return false;
-    }
+    virtual bool AddPoints(vector<Point> new_points)=0;
+    virtual bool Update(OWLMarker* marks, int n)=0;
 };
 
 }  // namespace object_server

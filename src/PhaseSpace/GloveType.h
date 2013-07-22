@@ -28,8 +28,8 @@ public:
   // Initialize the glove and all the finger Points
   void init(vector<Point> p);
   Point get_pointer();
-  Point GetFirstAxis();
-  Point GetSecondAxis();
+  Point GetFirstAxis(int i=0);
+  Point GetSecondAxis(int i=0);
 };
 
 } //object_server

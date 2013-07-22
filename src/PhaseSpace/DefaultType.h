@@ -35,6 +35,7 @@ class DefaultType : public ObjectType {
   // default first angle axis is defined by the furthest two points
   Point GetFirstAxis(int i);
   Point GetSecondAxis(int i);
+  Point get_pointer();
 };
 
 }  // namespace object_server

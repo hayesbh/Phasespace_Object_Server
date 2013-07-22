@@ -24,8 +24,14 @@ class ManualObject : public Object {
   bool SetAngle (vector<float> angle);
   bool SetAngle (float w, float x, float y, float z);
   bool SetDim (float x, float y, float z);
-  void update();
-  void Update (OWLMarker *marks, int n);
+  bool update();
+  bool Update (OWLMarker *marks, int n);
+  bool AddPoints(vector<Point> new_points){
+    return false;
+  }
+  virtual Point get_pointer() {
+    return center;
+  }
 };
 
 }  // namespace object_server

@@ -23,7 +23,7 @@ using object_server::Object;
 class PSObject : public Object {
  protected:
   /*ObjectType for storing object type specific information*/
-  ObjectType type;
+  ObjectType* type;
 
  public:
   // init initializes the PSObject with the given information
@@ -36,23 +36,23 @@ class PSObject : public Object {
   //   in this case that information is stored
   //    within the object type specific information
   Point get_pointer() {
-    return type.get_pointer();
+    return type->get_pointer();
   }
   // get_points returns the points that define the PhaseSpace Object
   // return a vector of these points
   vector<Point> get_points() {
-    return type.get_points();
+    return type->get_points();
   }
   
   // AddPoints adds points to this object
   // new_points : a vector of new Point s to add to this object
   virtual bool AddPoints(vector<Point> new_points) {
-    return type.AddPoints(new_points);
+    return type->AddPoints(new_points);
   }
   // Update updates the PhaseSpace Object
   // Uses updated PhaseSpace OWLMarker s to update points
   // n : the number of markers that have been updated
-  void Update(OWLMarker *markers, int n);
+  bool Update(OWLMarker *markers, int n);
 };
 }  // namespace object_server
 

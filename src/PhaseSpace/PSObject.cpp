@@ -37,30 +37,31 @@ void PSObject::init(int identification, string called, vector<Point> points, str
   name = called;
   id = identification;
   if(t == "glove") {
-    GloveType g;
-    g.init(points);
-    type = g;
+    GloveType* g = new GloveType;
+    g->init(points);
+    type = dynamic_cast<ObjectType*>(g);
   }
   else {
-    DefaultType d;
-    d.init(points);
-    type = d;
+    DefaultType* d = new DefaultType;
+    d->init(points);
+    type = dynamic_cast<ObjectType*>(d);
   }
-  center = type.get_center();
-  angle = type.get_angle();
-  axes = type.GetAxes();
+  center = type->get_center();
+  angle = type->get_angle();
+  axes = type->GetAxes();
 }
 
 // Update updates the PhaseSpace Object
 // Uses updated PhaseSpace OWLMarker s to update points
 // n : the number of markers that have been updated
-void PSObject::Update(OWLMarker *markers, int n) {
+bool PSObject::Update(OWLMarker *markers, int n) {
   printf("Updating PSObject\n");
-  type.Update(markers, n);
-  center = type.get_center();
-  angle = type.get_angle();
-  axes = type.GetAxes();
-  
+  type->Update(markers, n);
+  center = type->get_center();
+  angle = type->get_angle();
+  axes = type->GetAxes();
+  dim = type->get_dimensions();
+  return true;
 }
 
 }  // namespace object_server

@@ -11,26 +11,6 @@ using std::vector;
 using quaternions::Qnormalize;
 using quaternions::QRotate;
 using quaternions::Qmult;
-//default init just sets all the variables
-void ObjectType::init (vector<Point> p) {
-   points = p;
-   Axis1.init(1, 0, 0);
-   Axis2.init(0, 1, 0);
-   angle.push_back(1);
-   angle.push_back(0);
-   angle.push_back(0);
-   angle.push_back(0);
-   center.init(0, 0, 0);
-   dim.push_back(.1);
-   dim.push_back(.1);
-   dim.push_back(.1);
-   GetCenter();
-   GetAngle();
-   GetScale();
-   ext = "ObjectType";
-}
-
-
 // Reset resets all the stored information and finds it again
 void ObjectType::reset(){
   GetCenter(1);
@@ -44,12 +24,6 @@ vector<Point> ObjectType::GetAxes() {
   axes.push_back(Axis2);
   axes.push_back(Axis1.cross(Axis2).normalize());
   return axes;
-}
-// Defualt get_pointer returns the position (0,0,0) out of range
-Point ObjectType::get_pointer() {
-  Point P;
-  P.init(0, 0, 0);
-  return P;
 }
 // Update the points with new marker information
 void ObjectType::Update(OWLMarker *markers, int n) {
@@ -98,9 +72,9 @@ float ObjectType::MaxDimensionalDistance(int dimension) {
 void ObjectType::GetScale(int i){
   float buffer = 1.10;
   dim.clear();
-  dim.push_back(2 * MaxDimensionalDistance(0) * buffer);
-  dim.push_back(2 * MaxDimensionalDistance(1) * buffer);
-  dim.push_back(2 * MaxDimensionalDistance(2) * buffer);
+  dim.push_back(.2); //2 * MaxDimensionalDistance(0) * buffer);
+  dim.push_back(.4); //2 * MaxDimensionalDistance(1) * buffer);
+  dim.push_back(.05); //2 * MaxDimensionalDistance(2) * buffer);
 }
 // AddPoints adds new_points to the object
 // new_points is a list of Points that are to be added to the Object
@@ -152,21 +126,24 @@ void ObjectType::GetAngle(int i) {
   default_Q.push_back(0);
   default_Q.push_back(0);
   if (AxisPoints1.size() != 2) {
+    printf("case 1");
     angle = default_Q;
     return;
   }
   if(OriginalAxis1.magnitude() == 0 || Axis1.magnitude() == 0) {
+    printf("case 2");
     angle = default_Q;
     return;
   }
   vector<float> Q1;
-  // Point cross1 = OriginalAxis1.cross(Axis1);
-  Point cross1 = Axis1.cross(OriginalAxis1).times(.5);
+  Point cross1 = OriginalAxis1.cross(Axis1);
+  //Point cross1 = Axis1.cross(OriginalAxis1);
   Q1.push_back(sqrt(pow(Axis1.magnitude(), 2) * pow(OriginalAxis1.magnitude(), 2)) + Axis1.dot(OriginalAxis1));
   Q1.push_back(cross1.x);
-  Q1.push_back(cross1.y);
+  Q1.push_back(0);
   Q1.push_back(cross1.z);
   angle = Qnormalize(Q1);
+  return;
   // If the Second Axis is unpopulated it was unable to find two points
   if (AxisPoints2.size() != 2) {
     return;
@@ -186,17 +163,5 @@ void ObjectType::GetAngle(int i) {
   printf("final\n");
   angle = Qnormalize(Qmult(Q1, Q2));
   return;
-}
-Point ObjectType::GetFirstAxis (int i) {
-  Point p;
-  p.init(1,0,0);
-  Axis1 = p;
-  return p;
-}
-Point ObjectType::GetSecondAxis (int i) {
-  Point p;
-  p.init(0,1,0);
-  Axis2 = p;
-  return p;
 }
 }  // namespace object_server

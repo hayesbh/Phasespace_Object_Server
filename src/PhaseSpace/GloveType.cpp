@@ -46,7 +46,7 @@ Point GloveType::get_pointer() {
 }
 // GetFirstAxisAngle for a glove is defined by the two leds
 // That are located on the base of the hand
-Point GloveType::GetFirstAxis() {
+Point GloveType::GetFirstAxis(int i) {
   if (AxisPoints1.size() == 2) {
     if(base_right->current == 0 || base_left->current == 0) {
       return Axis1;
@@ -65,7 +65,7 @@ Point GloveType::GetFirstAxis() {
 }
 // GetSecondAngleAxis looks for the axis defined by the pointer finger
 // And the left base
-Point GloveType::GetSecondAxis() {
+Point GloveType::GetSecondAxis(int i) {
   if (AxisPoints2.size() == 2) {
   // Check the first Axis' validity
   if(base_left->current == 0 || base_right->current == 0) {

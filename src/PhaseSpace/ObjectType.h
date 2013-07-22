@@ -42,7 +42,7 @@ class ObjectType {
     virtual string get_type() {
       return ext;
     }
-    virtual void init(vector<Point> p);
+    virtual void init(vector<Point> p)=0;
     // Reset the object from the start
     virtual void reset();
     // get_dimensions returns the dimensional information of the object
@@ -56,7 +56,7 @@ class ObjectType {
     virtual vector<Point> GetAxes();
     // get_pointer returns the pointer of the object
     // return a Point representing 3D coordinate of the point
-    virtual Point get_pointer();
+    virtual Point get_pointer()=0;
     // get_points return the points that define the object
     // return these points in a vector
     virtual vector<Point> get_points() {
@@ -81,9 +81,9 @@ class ObjectType {
     // GetCenter sets the center based off of the information 
     virtual void GetCenter(int i=0);
     // GetFirstAngleAxis defines the x_axis of the object specific frame of reference
-    virtual Point GetFirstAxis(int i=0);
+    virtual Point GetFirstAxis(int i=0)=0;
     // GetSecondAngleAxis defines the y_axis of the object specific frame of reference
-    virtual Point GetSecondAxis(int i=0);
+    virtual Point GetSecondAxis(int i=0)=0;
     // GetAngle defines the angle of the Object from its OriginalAxes
     virtual void GetAngle(int i=0);
 };

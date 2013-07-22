@@ -38,6 +38,9 @@ void DefaultType::init (vector<Point> p) {
   // Get the Dimensional information
   GetScale();
 }
+Point DefaultType::get_pointer() {
+  return center;
+}
 // GetFirstAxis finds (and sets if first time of i == 1) the local x_axis
 // default first angle axis is defined by the furthest two points
 Point DefaultType::GetFirstAxis(int i = 0){
