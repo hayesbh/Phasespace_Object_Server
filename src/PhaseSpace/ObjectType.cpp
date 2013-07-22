@@ -11,6 +11,7 @@ using std::vector;
 using quaternions::Qnormalize;
 using quaternions::QRotate;
 using quaternions::Qmult;
+using quaternions::Qinv;
 // Reset resets all the stored information and finds it again
 void ObjectType::reset(){
   GetCenter(1);
@@ -58,7 +59,7 @@ float ObjectType::MaxDimensionalDistance(int dimension) {
   else if(dimension == 1) axis.init(0, 1, 0);
   else axis.init(0, 0, 1);
   /*Rotate that axis to find the local axis*/
-  //axis = QRotate(axis, Qinv(angle));
+  axis = QRotate(axis, angle);
   /*Find the maximum amount a vector lies along that axis*/
   vector<Point>::iterator iter;
   for(iter = points.begin(); iter != points.end(); ++iter) {
@@ -72,9 +73,9 @@ float ObjectType::MaxDimensionalDistance(int dimension) {
 void ObjectType::GetScale(int i){
   float buffer = 1.10;
   dim.clear();
-  dim.push_back(.2); //2 * MaxDimensionalDistance(0) * buffer);
-  dim.push_back(.4); //2 * MaxDimensionalDistance(1) * buffer);
-  dim.push_back(.05); //2 * MaxDimensionalDistance(2) * buffer);
+  dim.push_back(2 * MaxDimensionalDistance(0) * buffer);
+  dim.push_back(2 * MaxDimensionalDistance(1) * buffer);
+  dim.push_back(2 * MaxDimensionalDistance(2) * buffer);
 }
 // AddPoints adds new_points to the object
 // new_points is a list of Points that are to be added to the Object
@@ -82,8 +83,7 @@ void ObjectType::GetScale(int i){
 bool ObjectType::AddPoints(vector<Point> new_points) {
   vector<Point>::iterator i;
   points.insert(points.end(), new_points.begin(), new_points.end());
-  GetFirstAxis(1);
-  GetSecondAxis(1);
+  GetAngle();
   return true;
 }
 // GetCenter is finds the center of the object
@@ -117,14 +117,16 @@ void ObjectType::GetCenter(int i) {
 // This angle is the rotation required to turn the current vector of the x-axis to the original x-axis vector
 // And the rotation to turn the y-axis to the original y-axis vector
 void ObjectType::GetAngle(int i) {
-  GetFirstAxis(i);
-  GetSecondAxis(i);
   // If the Axis is unpopulated, it was unable to find two points
   vector<float> default_Q;
   default_Q.push_back(1);
   default_Q.push_back(0);
   default_Q.push_back(0);
   default_Q.push_back(0);
+  if (!GetBothAxes(i)) {
+    printf("case 0");
+    angle = default_Q;
+  }
   if (AxisPoints1.size() != 2) {
     printf("case 1");
     angle = default_Q;
@@ -137,13 +139,12 @@ void ObjectType::GetAngle(int i) {
   }
   vector<float> Q1;
   Point cross1 = OriginalAxis1.cross(Axis1);
-  //Point cross1 = Axis1.cross(OriginalAxis1);
   Q1.push_back(sqrt(pow(Axis1.magnitude(), 2) * pow(OriginalAxis1.magnitude(), 2)) + Axis1.dot(OriginalAxis1));
   Q1.push_back(cross1.x);
-  Q1.push_back(0);
+  Q1.push_back(cross1.y);
   Q1.push_back(cross1.z);
   angle = Qnormalize(Q1);
-  return;
+  //return;
   // If the Second Axis is unpopulated it was unable to find two points
   if (AxisPoints2.size() != 2) {
     return;
@@ -152,8 +153,9 @@ void ObjectType::GetAngle(int i) {
     return;
   }
   vector<float> Q2;
-  Point temp = QRotate(Axis2, angle);
-  Point cross2 = temp.cross(OriginalAxis2).times(.5);
+  Point temp = QRotate(Axis2, Qinv(angle));
+  Point cross2 = OriginalAxis2.cross(temp);
+  // Point cross2 = temp.cross(OriginalAxis2).times(.5);
   Q2.push_back(sqrt(pow(temp.magnitude(), 2) * pow(OriginalAxis2.magnitude(), 2)) + temp.dot(OriginalAxis2));
   Q2.push_back(cross2.x);
   Q2.push_back(cross2.y);

@@ -30,11 +30,11 @@ class DefaultType : public ObjectType {
   public:
   // init initializes the Object to hold in it the points given
   // p: The points that this object will track
-  void init(vector<Point> p);
+  void init(vector<Point> p, bool rig);
   // GetFirstAngleAxis finds (and sets if first time of i == 1) the local x_axis
   // default first angle axis is defined by the furthest two points
-  Point GetFirstAxis(int i);
-  Point GetSecondAxis(int i);
+  bool GetFirstAxis(int i);
+  bool GetBothAxes(int i);
   Point get_pointer();
 };
 

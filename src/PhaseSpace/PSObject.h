@@ -31,7 +31,7 @@ class PSObject : public Object {
   // called : the name of the object
   // points : a vector of Points that define the PhaseSpace Object
   // t : the type of object
-  void init(int identification, string called, vector<Point> points, string t);
+  void init(int identification, string called, vector<Point> points, string t, bool rigid);
   // get_pointer returns a Point that represents where this object is pointing
   //   in this case that information is stored
   //    within the object type specific information

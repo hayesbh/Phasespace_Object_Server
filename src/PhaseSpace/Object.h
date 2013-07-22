@@ -19,7 +19,6 @@ class Object {
     // Tracking Information
     int id;  // For the system to keep track of the Object
     string name;  // For the user to keep track of the Object
-    string ext;  // To determing what type of Object extension it is PS or Manual
     // State Information
     Point center;  // The center location (X, Y, Z)
     vector<float> angle;  // The rotation from its original position
@@ -27,9 +26,6 @@ class Object {
     vector<float> dim; // The extents of the object
 
   public:
-    virtual string get_type() {
-      return ext;
-    }
     //virtual void init()=0;
     // get_id returns the id of the object
     // return int representing the identification number
@@ -40,11 +36,6 @@ class Object {
     // return a string representing the user given name
     string get_name(){
       return name;
-    }
-    // get_object type returns the type of the object
-    // return a string representing describing type
-    string get_object_ext() {
-      return ext;
     }
     // get_pointer returns a Point that represents where this object is pointing
     virtual Point get_pointer()=0;

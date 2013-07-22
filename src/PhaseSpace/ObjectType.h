@@ -18,11 +18,10 @@ using object_server::Point;
 
 class ObjectType {
   protected:
-    // ext is the type exension
-    string ext;
     // Location Information
     vector<Point> points;
     Point center;
+    bool rigid;
     // Angle Information
     // Original Axis is the original vector for Axis1
     Point OriginalAxis1;
@@ -39,10 +38,7 @@ class ObjectType {
     // x, y, and z scale for holding the dimensional information
     vector<float> dim;
   public:
-    virtual string get_type() {
-      return ext;
-    }
-    virtual void init(vector<Point> p)=0;
+    virtual void init(vector<Point> p, bool rig)=0;
     // Reset the object from the start
     virtual void reset();
     // get_dimensions returns the dimensional information of the object
@@ -50,6 +46,12 @@ class ObjectType {
       return dim;
     }
     virtual vector<float> get_angle() {
+      vector<float> default_angle;
+      default_angle.push_back(1);
+      default_angle.push_back(0);
+      default_angle.push_back(0);
+      default_angle.push_back(0);
+      if(angle.size() == 0) return default_angle;
       return angle;
     }
     // get_axes returns the axis information of the object
@@ -81,9 +83,9 @@ class ObjectType {
     // GetCenter sets the center based off of the information 
     virtual void GetCenter(int i=0);
     // GetFirstAngleAxis defines the x_axis of the object specific frame of reference
-    virtual Point GetFirstAxis(int i=0)=0;
+    virtual bool GetFirstAxis(int i=0)=0;
     // GetSecondAngleAxis defines the y_axis of the object specific frame of reference
-    virtual Point GetSecondAxis(int i=0)=0;
+    virtual bool GetBothAxes(int i=0)=0;
     // GetAngle defines the angle of the Object from its OriginalAxes
     virtual void GetAngle(int i=0);
 };

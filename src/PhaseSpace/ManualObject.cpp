@@ -14,7 +14,6 @@ using std::vector;
 void ManualObject::init(int ident, string called) {
   id = ident;
   name = called;
-  ext = "ManualObject";
   SetCenter(0, 0, 0);
   SetAngle(1, 0, 0, 0);
   SetDim(.01, .01, .01);

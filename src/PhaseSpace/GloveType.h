@@ -26,10 +26,10 @@ private:
 	vector<Point>::iterator base_right;
 public:
   // Initialize the glove and all the finger Points
-  void init(vector<Point> p);
+  void init(vector<Point> p, bool rig);
   Point get_pointer();
-  Point GetFirstAxis(int i=0);
-  Point GetSecondAxis(int i=0);
+  bool GetFirstAxis(int i=0);
+  bool GetBothAxes(int i=0);
 };
 
 } //object_server

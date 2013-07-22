@@ -330,7 +330,7 @@ bool add_object(core_object_server::add_object::Request &req,
   ROS_INFO("%s", info.str().c_str());
   // Initialize this New Object with the name given, new points, and the type
   PSObject* temp_object = new PSObject;
-  temp_object->init(object_count_, req.name, points, req.type);
+  temp_object->init(object_count_, req.name, points, req.type, req.rigid);
   // Add this object to the list of tracked objects
   Object* obj;
   obj = dynamic_cast<Object*>(temp_object);

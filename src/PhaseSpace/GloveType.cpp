@@ -9,9 +9,8 @@ namespace object_server {
 
 // init sets initializes the points of the glove, finds all of the finges' specific Points
 // Finds the center, the angle and the scale
-void GloveType::init(vector<Point> p) {
+void GloveType::init(vector<Point> p, bool rig) {
   printf("Setting up Glove\n");
-  ext = "GloveType";
   vector<Point>::iterator iter;
   /* Push back each of the points and blank ones where they are needed */
   points = p;
@@ -39,6 +38,7 @@ void GloveType::init(vector<Point> p) {
   GetCenter(1);
   GetAngle(1);
   GetScale(1);
+  rigid = rig;
 }
 
 Point GloveType::get_pointer() {
@@ -46,52 +46,55 @@ Point GloveType::get_pointer() {
 }
 // GetFirstAxisAngle for a glove is defined by the two leds
 // That are located on the base of the hand
-Point GloveType::GetFirstAxis(int i) {
+bool GloveType::GetFirstAxis(int i) {
   if (AxisPoints1.size() == 2) {
     if(base_right->current == 0 || base_left->current == 0) {
-      return Axis1;
+      return false;
     }
     Axis1 = base_right->sub(*base_left).normalize();
-    return Axis1;
+    return true;
   } else {
+    if(base_right->current == 0 || base_left->current == 0) return false;
     AxisPoints1.push_back(base_left);
     AxisPoints1.push_back(base_right);
-    Point y_axis;
-    y_axis.init(0, 1, 0);
-    OriginalAxis1 = y_axis;
+    Point x_axis;
+    x_axis.init(1, 0, 0);
+    OriginalAxis1 = x_axis;
     Axis1 = AxisPoints1[1]->sub(*AxisPoints1[0]).normalize();
-    return Axis1;
+    return true;
   }
 }
 // GetSecondAngleAxis looks for the axis defined by the pointer finger
 // And the left base
-Point GloveType::GetSecondAxis(int i) {
+bool GloveType::GetBothAxes(int i) {
+  if(!GetFirstAxis(i)) return false;
   if (AxisPoints2.size() == 2) {
   // Check the first Axis' validity
   if(base_left->current == 0 || base_right->current == 0) {
-    return Axis2;
+    return false;
   }
   /*check second axis*/
   Point u;
   if(fore->current == 0) {
-    return Axis2;
+    return false;
   } else {
     u = fore->sub(*base_left);
   }
   Point v = fore->sub(*base_left);
   Axis2 = u.sub(v.normalize().times(u.dot(v))).normalize();
   // Now find the normal component
-  return Axis2;
+  return true;
   }
   else {
+    if(base_left->current == 0 || fore->current == 0) return false;
     AxisPoints2.push_back(fore);
     AxisPoints2.push_back(base_left);
     Point v = fore->sub(*base_left);
     Axis2 =  v.sub(Axis1.times(v.dot(Axis1))).normalize();
-    Point x_axis;
-    x_axis.init(1, 0, 0);
-    OriginalAxis2 = x_axis;
-    return Axis2;
+    Point y_axis;
+    y_axis.init(0, 1, 0);
+    OriginalAxis2 = y_axis;
+    return true;
   }
 }
 } // namespace object_server
