@@ -69,5 +69,7 @@ class Object {
     virtual bool Update(OWLMarker* marks, int n)=0;
 };
 
+const vector<Object*>::iterator FindObjectByName(string name, vector<Object*> &objects);
+
 }  // namespace object_server
 #endif      

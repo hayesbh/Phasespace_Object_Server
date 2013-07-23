@@ -4,3 +4,4 @@ float64 z
 float64 width
 ---
 bool filled
+string[] objects

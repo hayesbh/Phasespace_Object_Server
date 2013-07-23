@@ -17,6 +17,7 @@
 #include "core_object_server/add_points.h"
 #include "core_object_server/delete_object.h"
 #include "core_object_server/box_filled.h"
+#include "core_object_server/collides.h"
 
 // Set up ROS messages
 #include "std_msgs/String.h"
@@ -35,6 +36,7 @@
 #include "owl/owl.h"
 
 using std::vector;
+using std::map;
 using object_server::Object;
 using object_server::Point;
 using std::string;
@@ -42,6 +44,7 @@ using std::stringstream;
 using object_server::FindPointById;
 using object_server::ManualObject;
 using object_server::PSObject;
+using object_server::FindObjectByName;
 
 // MARKER_COUNT is the maximum number of markers that will ever be used 
 #define MARKER_COUNT 200
@@ -204,7 +207,7 @@ vector<Point> get_points(int time, bool glove = false) {
 /////////////////////
 //// ROS SERVICES////
 //////////////////////////////////////////////////////////////////////////////// 
-//// delete_object, add_object, add_points, collision_detection, box_filled ////
+//// delete_object, add_object, add_points, collides, box_filled ////
 ////////////////////////////////////////////////////////////////////////////////
 
 // delete_object deletes the Object with the Given ID from the list of Tracked Objects
@@ -343,6 +346,23 @@ bool add_object(core_object_server::add_object::Request &req,
   ROS_INFO("Object Added: %s\n", info.str().c_str());
   return true;
 }
+// collides checks whether two objects with the given names collide
+// req: The ROS Service request for the core_object_server collide service
+//      name1: the string representing the first object in the questionable collision
+//      name2: the string representing the second object in the collision
+// res: The ROS service response for the core_object_server colled service
+//      collides: bool that answers the question: The two objects are colliding?
+// return: bool that indicates whether the service itself has failed -> ROS_ERROR
+bool collides(core_object_server::collides::Request &req,
+              core_object_server::collides::Response &res) {
+  const vector<Object*>::iterator object1 = FindObjectByName(req.name1, object_vector_);
+  const vector<Object*>::iterator object2 = FindObjectByName(req.name2, object_vector_);
+  if (object1 == object_vector_.end() || object2 == object_vector_.end()) {
+    res.collides = false;
+    return true;
+  } else res.collides = (*object1)->CollidesWith(*object2);
+  return true;
+}
 // box filled checks whether a given box is filled
 //     defined by a center(X,Y,Z) and side-length
 // req: The ROS Service request for the core_object_server box_filled service
@@ -363,11 +383,24 @@ bool box_filled(core_object_server::box_filled::Request &req,
   Object* obj = dynamic_cast<Object*>(box);
   vector<Object*>::iterator iter;
   res.filled = false;
+  vector<string> objects_in;
   // If even one of the objects intersects the box then thje box is filled
-  for (iter = object_vector_.begin(); iter != object_vector_.end(); ++iter)
-    if( (*iter)->CollidesWith(obj)) res.filled = true;
+  for (iter = object_vector_.begin(); iter != object_vector_.end(); ++iter) {
+    if( (*iter)->CollidesWith(obj)) {
+      res.filled = true;
+      objects_in.push_back((*iter)->get_name());
+    } 
+  }
+  res.objects = objects_in;
   return true;
 }
+// store_object stores the object into disk memory for later recall
+// req: The ROS Service request for the core_object_server store_object service
+//      name: the name of the object to be stored
+//            it will be stored under this name for later recall
+//            this name must be unique
+// res: The ROS Service response for the core_object_server store_object service
+//      success: Answers whether this object has been correctly stored with this name
 // print_digest takes the ObjectDigest and Transforms it into a string
 //    that can be displayed using ROS_INFO
 // &digest: A ROS ObjectDigest message containing all the objects' information
@@ -444,6 +477,8 @@ int main(int argc, char **argv) {
       n.advertiseService("delete_object", delete_object);
   ros::ServiceServer intersect =
       n.advertiseService("box_filled", box_filled);
+  ros::ServiceServer collide = 
+      n.advertiseService("collides", collides);
   // The rate to loop throught the ROS calls
   // There is no need to do this at a higher rate than the PhaseSpace system
   ros::Rate loop_rate(frequency); 

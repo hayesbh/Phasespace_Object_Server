@@ -105,4 +105,12 @@ bool Object::CollidesWith(Object* obj) {
   return 1;
 }
 
+const vector<Object*>::iterator FindObjectByName(string name, vector<Object*> &objects) {
+  vector<Object*>::iterator iter;
+  for (iter = objects.begin(); iter != objects.end(); ++iter) {
+    if ((*iter)->get_name() == name) return iter;
+  }
+  return objects.end();
+}
+
 }  // namespace object_server

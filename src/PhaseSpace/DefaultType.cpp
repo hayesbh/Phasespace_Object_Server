@@ -30,11 +30,11 @@ void DefaultType::init (vector<Point> p, bool rig) {
   dim.push_back(.1);
   dim.push_back(.1);
   // Get the Center
-  GetCenter();
+  GetCenter(1);
   // Get the Angle information
-  GetAngle();
+  GetAngle(1);
   // Get the Dimensional information
-  GetScale();
+  GetScale(1);
   rigid = rig;
 }
 Point DefaultType::get_pointer() {

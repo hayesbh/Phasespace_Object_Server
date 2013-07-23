@@ -71,6 +71,7 @@ float ObjectType::MaxDimensionalDistance(int dimension) {
 }
 // GetScale finds and sets the dimensions of the object
 void ObjectType::GetScale(int i){
+  if (!i || rigid) return;
   float buffer = 1.10;
   dim.clear();
   dim.push_back(2 * MaxDimensionalDistance(0) * buffer);
