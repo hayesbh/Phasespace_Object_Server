@@ -18,6 +18,12 @@ using object_server::Object;
 class ManualObject : public Object {
   public:
   void init(int ident, string called);
+  string get_type() {
+    return "manual";
+  }
+  bool get_rigidity() {
+    return true;
+  }
   bool SetCenter (Point c);
   bool SetCenter (float x, float y, float z);
   bool SetAngle (float angle[4]);

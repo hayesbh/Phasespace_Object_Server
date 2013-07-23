@@ -24,7 +24,7 @@ class PSObject : public Object {
  protected:
   /*ObjectType for storing object type specific information*/
   ObjectType* type;
-
+  string ext;
  public:
   // init initializes the PSObject with the given information
   // identification : the id of the object
@@ -43,7 +43,14 @@ class PSObject : public Object {
   vector<Point> get_points() {
     return type->get_points();
   }
-  
+  // get_type grabs the type of PSobject
+  string get_type() {
+    return ext;
+  }
+  // get_rigidity returns whether the type of object is rigid
+  bool get_rigidity() {
+    return type->get_rigidity();
+  }
   // AddPoints adds points to this object
   // new_points : a vector of new Point s to add to this object
   virtual bool AddPoints(vector<Point> new_points) {

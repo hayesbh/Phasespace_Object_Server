@@ -41,6 +41,9 @@ class ObjectType {
     virtual void init(vector<Point> p, bool rig)=0;
     // Reset the object from the start
     virtual void reset();
+    virtual bool get_rigidity() {
+      return rigid;
+    }
     // get_dimensions returns the dimensional information of the object
     virtual vector<float> get_dimensions() {
       return dim;

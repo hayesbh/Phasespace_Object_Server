@@ -11,6 +11,14 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <fstream>
+
+// JSON rapidjson
+#include <rapidjson/writer.h>
+#include <rapidjson/prettywriter.h>
+#include <rapidjson/filestream.h>
+#include <rapidjson/document.h>
+#include <rapidjson/stringbuffer.h>
 
 // service files
 #include "core_object_server/add_object.h"
@@ -18,6 +26,8 @@
 #include "core_object_server/delete_object.h"
 #include "core_object_server/box_filled.h"
 #include "core_object_server/collides.h"
+#include "core_object_server/save_object.h"
+#include "core_object_server/load_object.h"
 
 // Set up ROS messages
 #include "std_msgs/String.h"
@@ -52,7 +62,8 @@ using object_server::FindObjectByName;
 #define SERVER_NAME "192.168.2.123"
 // This flag will set the OWL system up to be in not slave mode;
 #define INIT_FLAGS 0
-
+// OBJECT_FILE_EXT is the relative path of the saved object information
+#define OBJECT_FILE_EXT "object_files"
 // object_count is the number of objects set so far (deletions are not counted)
 // It is used for assigning new identification numbers to objects
 int object_count_ = 0;
@@ -394,13 +405,129 @@ bool box_filled(core_object_server::box_filled::Request &req,
   res.objects = objects_in;
   return true;
 }
-// store_object stores the object into disk memory for later recall
-// req: The ROS Service request for the core_object_server store_object service
-//      name: the name of the object to be stored
+// save_object stores the object into disk memory for later recall in a JSON file
+// req: The ROS Service request for the core_object_server save_object service
+//      name: the name of the object to be saved
 //            it will be stored under this name for later recall
 //            this name must be unique
-// res: The ROS Service response for the core_object_server store_object service
-//      success: Answers whether this object has been correctly stored with this name
+// res: The ROS Service response for the core_object_server save_object service
+//      success: Answers whether this object has been correctly saved with this name
+//      info: information on the running of this service
+// return: bool that indicates whether the service itself failed -> ROS_ERROR
+bool save_object(core_object_server::save_object::Request &req,
+                 core_object_server::save_object::Response &res) {
+  string file = OBJECT_FILE_EXT;
+  file += req.name;
+  vector<Object*>::iterator obj = FindObjectByName(req.name, object_vector_);
+  vector<Point> points = (*obj)->get_points();
+  // Set up the JSON doc
+  rapidjson::Document doc;
+  rapidjson::Value json;
+  json.SetObject();
+  FILE *fp = fopen(file.c_str(), "w");
+  rapidjson::FileStream fs(fp);
+  rapidjson::PrettyWriter<rapidjson::FileStream> writer(fs);
+  writer.StartObject();
+  // Set up the object_name
+  rapidjson::Value object_name;
+  object_name.SetString(req.name.c_str());
+  json.AddMember("object_name", object_name, doc.GetAllocator());
+  // Set up the object_type
+  rapidjson::Value object_type;
+  object_type.SetString((*obj)->get_type().c_str());
+  json.AddMember("object_type", object_type, doc.GetAllocator());
+  // Set up the object_rigidity
+  rapidjson::Value rigidity((*obj)->get_rigidity());
+  json.AddMember("object_rigidity", rigidity, doc.GetAllocator());
+  // Set up array of points
+  rapidjson::Value point_id_array;
+  point_id_array.SetArray();
+  vector<Point>::iterator iter;
+  for (iter = points.begin(); iter != points.end(); ++iter) {
+    rapidjson::Value id;
+    id.SetInt(iter->id);
+    point_id_array.PushBack(id, doc.GetAllocator());
+  }
+  json.AddMember("object_points", point_id_array, doc.GetAllocator());
+  json.Accept(writer);
+  writer.EndObject();
+  fclose(fp);  
+  return true;
+}
+// load_object loads the object from the JSON file where the objects are stored
+// req: The ROS Service request for the core_object_server load_object service
+//      name: the name of the object to be loaded from memory
+// res: The ROS Service response for the core_object_server load_object service
+//      success: Answers whether this object has been correctly loaded with this name
+//      info: information of the running of this service
+// return: bool that indicates whether the service itself failed -> ROS_ERROR
+bool load_object(core_object_server::load_object::Request &req,
+                 core_object_server::load_object::Response &res) {
+  string file = OBJECT_FILE_EXT;
+  file += req.name;
+  FILE *fp = fopen(file.c_str(), "r");
+  rapidjson::FileStream fs(fp);
+  rapidjson::Document p;
+  if (p.ParseStream<0>(fs).HasParseError()) {
+    ROS_ERROR("Parse error on filestream from load_object(%s).", file.c_str());
+    fclose(fp);
+    return false;
+  }
+  if (!p.IsObject()) {
+    ROS_ERROR("Couldn't load object from file: %s. Not a JSON object.", file.c_str());
+    fclose(fp);
+    return false;
+  }
+  if (!p.HasMember("object_name")) {
+    ROS_ERROR("Object in (%s) has no name field.", file.c_str());
+    fclose(fp);
+    return false;
+  }
+  if (!p.HasMember("object_type")) {
+    ROS_ERROR("Object in (%s) has no type associated with it.", file.c_str());
+    fclose(fp);
+    return false;
+  }
+  if (!p.HasMember("object_rigidity")) {
+    ROS_ERROR("Object in (%s) has an undefined rigidity.", file.c_str());
+    fclose(fp);
+    return false;
+  }
+  if (!p.HasMember("object_points")) {
+    ROS_ERROR("Object in (%s) has no points associated with it.", file.c_str());
+    fclose(fp);
+    return false;
+  }
+  string object_name = p["object_name"].GetString();
+  string t = p["type"].GetString();
+  bool rigid = p["rigid"].GetBool();
+  rapidjson::Value &points = p["points"];
+  if (!points.IsArray()) {
+    ROS_ERROR("Object points in (%s) is not an array.", file.c_str());
+    fclose(fp);
+    return false;
+  } else {
+    vector<Point> object_points;
+    for(rapidjson::SizeType i = 0; i < points.Size(); ++i) {
+      Point point;
+      point.init();
+      point.id = points[i].GetInt();
+      if (std::find(ids_set_.begin(), ids_set_.end(), point.id) != ids_set_.end()) {
+        ROS_ERROR("Point id (%i) has already been set.  Load Object (%s) failed", point.id, file.c_str());
+        fclose(fp);
+        return false;
+      }
+    }
+    PSObject* obj = new PSObject;
+    obj->init(object_count_, req.name, object_points, t, rigid);
+    object_count_++;
+    Object* casted = dynamic_cast<Object*>(obj);
+    object_vector_.push_back(casted);
+  }
+  fclose(fp);
+  return true;
+}
+
 // print_digest takes the ObjectDigest and Transforms it into a string
 //    that can be displayed using ROS_INFO
 // &digest: A ROS ObjectDigest message containing all the objects' information
@@ -479,6 +606,10 @@ int main(int argc, char **argv) {
       n.advertiseService("box_filled", box_filled);
   ros::ServiceServer collide = 
       n.advertiseService("collides", collides);
+  ros::ServiceServer save =
+      n.advertiseService("save_object", save_object);
+  ros::ServiceServer load =
+      n.advertiseService("load_object", load_object);
   // The rate to loop throught the ROS calls
   // There is no need to do this at a higher rate than the PhaseSpace system
   ros::Rate loop_rate(frequency); 

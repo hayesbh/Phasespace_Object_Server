@@ -32,6 +32,8 @@ class Object {
     int get_id() {
       return id;
     }
+    virtual string get_type()=0;
+    virtual bool get_rigidity()=0;
     // get_name returns the name of the object
     // return a string representing the user given name
     string get_name(){

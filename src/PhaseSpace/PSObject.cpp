@@ -39,11 +39,13 @@ void PSObject::init(int identification, string called, vector<Point> points, str
     GloveType* g = new GloveType;
     g->init(points, rigid);
     type = dynamic_cast<ObjectType*>(g);
+    ext = "glove";
   }
   else {
     DefaultType* d = new DefaultType;
     d->init(points, rigid);
     type = dynamic_cast<ObjectType*>(d);
+    ext = "default";
   }
   center = type->get_center();
   angle = type->get_angle();

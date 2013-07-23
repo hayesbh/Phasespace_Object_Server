@@ -21,6 +21,8 @@ rosbuild_genmsg()
 #uncomment if you have defined services
 rosbuild_gensrv()
 
+
+include_directories(${PROJECT_SOURCE_DIR}/ext/rapidjson/include)
 #common commands for building c++ executables and libraries
 #rosbuild_add_library(${PROJECT_NAME} src/example.cpp)
 #target_link_libraries(${PROJECT_NAME} another_library)
