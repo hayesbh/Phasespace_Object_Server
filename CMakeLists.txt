@@ -43,3 +43,4 @@ target_link_libraries(add_points)
 rosbuild_add_executable(delete_object src/delete_object.cpp)
 target_link_libraries(delete_object)
 
+rosbuild_add_gtest(test/PointTest src/gtests/PointTest.cpp src/PhaseSpace/Point.cpp)
