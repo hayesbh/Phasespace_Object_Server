@@ -3,8 +3,8 @@
 // Date: 5/18/13
 // About: Point Class for describing 3D points and vectors
 
-#ifndef _SHL_COREOBJECTSERVER_POINT_H
-#define _SHL_COREOBJECTSERVER_POINT_H
+#ifndef _SHL__OBJECT_SERVER_SRC_PHASESPACE_POINT_H_
+#define _SHL__OBJECT_SERVER_SRC_PHASESPACE_POINT_H_
 
 #include <vector>
 #include <sstream>
@@ -76,19 +76,13 @@ class Point {
   // line: a vector of two points that define a line in R3
   // return: the shortest distance from this point to that line
   Point VectorPerpendicularTo(vector<Point> line);
-  // DistanceToPlane finds the distance between a Point and a plane
-  // plane: an array holding 4 elements representing
-  //   A, B, C, D in the standard plane equation
-  // One can convert three points to a plane by using the 
-  //   PointsToPlane Function
-  float DistanceToPlane(float plane[4]);
   // print returns the string representation of a point
   // return this string "(x, y, z)"
   string print();
 };
 
-const vector<Point>::iterator FindPointById (int id, vector<Point> &points);
-
+const vector<Point>::iterator FindPointById(int id, vector<Point> &points);
+::std::ostream& operator<<(::std::ostream& os, const Point& point);
 }  // namespace object_server
 
-#endif
+#endif  // _SHL__OBJECT_SERVER_SRC_PHASESPACE_POINT_H_

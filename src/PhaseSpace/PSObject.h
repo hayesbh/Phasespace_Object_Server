@@ -3,8 +3,8 @@
 // Date: 5/18/13
 // About: Object Extension for PhaseSpace Objects
 
-#ifndef _SHL_COREOBJECTSERVER_PSOBJECT_H
-#define _SHL_COREOBJECTSERVER_PSOBJECT_H
+#ifndef _SHL__OBJECT_SERVER_SRC_PHASESPACE_PSOBJECT_H_
+#define _SHL__OBJECT_SERVER_SRC_PHASESPACE_PSOBJECT_H_
 
 #include <vector>
 #include <string>
@@ -25,13 +25,15 @@ class PSObject : public Object {
   /*ObjectType for storing object type specific information*/
   ObjectType* type;
   string ext;
+
  public:
   // init initializes the PSObject with the given information
-  // identification : the id of the object
-  // called : the name of the object
+  // ident : the id of the object
+  // call : the name of the object
   // points : a vector of Points that define the PhaseSpace Object
   // t : the type of object
-  void init(int identification, string called, vector<Point> points, string t, bool rigid);
+  // rig : boolean that indicates that the object is rigid
+  void init(int ident, string call, vector<Point> points, string t, bool rig);
   // get_pointer returns a Point that represents where this object is pointing
   //   in this case that information is stored
   //    within the object type specific information
@@ -44,23 +46,27 @@ class PSObject : public Object {
     return type->get_points();
   }
   // get_type grabs the type of PSobject
+  // return a string representing the type
   string get_type() {
     return ext;
   }
   // get_rigidity returns whether the type of object is rigid
+  // retrun a bool indicating rigidity
   bool get_rigidity() {
     return type->get_rigidity();
   }
   // AddPoints adds points to this object
   // new_points : a vector of new Point s to add to this object
+  // return bool indicating whether this addition was successful
   virtual bool AddPoints(vector<Point> new_points) {
     return type->AddPoints(new_points);
   }
   // Update updates the PhaseSpace Object
   // Uses updated PhaseSpace OWLMarker s to update points
   // n : the number of markers that have been updated
+  // return bool indicating whether this update was successful
   bool Update(OWLMarker *markers, int n);
 };
 }  // namespace object_server
 
-#endif
+#endif  // _SHL__OBJECT_SERVER_SRC_PHASESPACE_PSOBJECT_H_

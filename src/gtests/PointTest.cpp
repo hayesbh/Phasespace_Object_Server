@@ -1,28 +1,70 @@
+#include <algorithm>
+#include <vector>
 #include "gtest/gtest.h"
 #include "../PhaseSpace/Point.h"
 
 using object_server::Point;
+using object_server::FindPointById;
+using std::vector;
+using std::next_permutation;
 
 class PointTest : public ::testing::Test {
   protected:
     Point ZeroMag_;
     Point NearZeroMag_;
+    vector<Point> points;
     virtual void SetUp() {
-      ZeroMag_.init(0,0,0);
-      NearZeroMag_.init(0.00000000001, 0.00000000001, 0.00000000001);
+      ZeroMag_.init(0, 0, 0);
+      NearZeroMag_.init(0.000000000000000000001,
+                        0.000000000000000000001,
+                        0.000000000000000000001);
+      for (int i = 19; i >= 0; --i) {
+        Point p;
+        p.init(i*173, i/79, i*1.735);
+        p.id = i;
+        points.push_back(p);
+      }
     }
 };
+
+
+// Normalization Tests
+// Vector normalization can handle a Zero Magnitude
 TEST_F(PointTest, NormZeroMag) {
   Point p = ZeroMag_;
-  ASSERT_TRUE(p.equals(ZeroMag_));
+  p = p.normalize();
+  ASSERT_TRUE(p.equals(ZeroMag_)) << "Normalize 0 vector !=  0 vector";
+  ASSERT_EQ(p.magnitude(), 0)  << "Normalize 0 vector: Mag != 0";
 }
 
+// Vector normalization can handle a Near-Zero Magnitude
 TEST_F(PointTest, NormNearZeroMag) {
   Point p = NearZeroMag_; 
-  EXPECT_FALSE(p.x == 0 && p.y == 0 && p.z == 0) << p.x << "," << p.y << "," << p.z;
+  p = p.normalize();
+  EXPECT_FALSE(p.equals(ZeroMag_)) << "Normalize near 0 vector == 0 vector";
+  ASSERT_EQ(p.magnitude(), 1)  << "Normalize near 0 vector: Mag != 1";
 }
 
+// FindById works if item is in the list
+TEST_F(PointTest, FindPointByIdSuccess) {
+  for (int j = 0; j < 20; ++j) {
+    for (int i = 0; i < 20; ++i) {
+      ASSERT_EQ(FindPointById(i, points)->id, i) 
+                  << "FindPointById not returning right iterator";
+    }
+  std::random_shuffle(points.begin(), points.end());
+  }
+}
+
+// FindById works if the item is not in the list
+TEST_F(PointTest, FindPointByIdFail) {
+  ASSERT_EQ(FindPointById(20, points),  points.end()) 
+             << "FindPointById not failing gracefully";
+}
+
+// Run the tests on the point class
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
+

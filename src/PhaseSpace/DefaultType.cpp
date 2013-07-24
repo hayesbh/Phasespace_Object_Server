@@ -17,7 +17,7 @@ using quaternions::Qnormalize;
 using quaternions::Qinv;
 using quaternions::QRotate;
 
-void DefaultType::init (vector<Point> p, bool rig) {
+bool DefaultType::init (vector<Point> p, bool rig) {
   points = p;
   Axis1.init(1, 0, 0);
   Axis2.init(0, 1, 0);
@@ -36,6 +36,7 @@ void DefaultType::init (vector<Point> p, bool rig) {
   // Get the Dimensional information
   GetScale(1);
   rigid = rig;
+  return true;
 }
 Point DefaultType::get_pointer() {
   return center;

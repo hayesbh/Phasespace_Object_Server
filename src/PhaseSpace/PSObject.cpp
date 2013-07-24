@@ -3,7 +3,9 @@
 // Date: 5/18/13
 // About: Logic for PhaseSpace Objects
 
-#include "PSObject.h"
+#include <string>
+#include <vector>
+#include "./PSObject.h"
 
 namespace object_server {
 
@@ -12,7 +14,8 @@ namespace object_server {
 // called : the name of the object
 // points : a vector of Points that define the PhaseSpace Object
 // t : the type of object
-void PSObject::init(int identification, string called, vector<Point> points, string t, bool rigid){
+void PSObject::init(int ident, string call,
+                    vector<Point> points, string t, bool rigid) {
   Point p;
   p.init();
   center = p;
@@ -33,18 +36,17 @@ void PSObject::init(int identification, string called, vector<Point> points, str
   dim.push_back(.1);
   dim.push_back(.1);
   
-  name = called;
-  id = identification;
-  if(t == "glove") {
+  name = call;
+  id = ident;
+  if (t == "glove") {
     GloveType* g = new GloveType;
     g->init(points, rigid);
-    type = dynamic_cast<ObjectType*>(g);
+    type = static_cast<ObjectType*>(g);
     ext = "glove";
-  }
-  else {
+  } else {
     DefaultType* d = new DefaultType;
     d->init(points, rigid);
-    type = dynamic_cast<ObjectType*>(d);
+    type = static_cast<ObjectType*>(d);
     ext = "default";
   }
   center = type->get_center();

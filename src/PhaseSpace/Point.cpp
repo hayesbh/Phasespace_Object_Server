@@ -2,7 +2,8 @@
 // Author: Dylan Visher
 // Date: 5/18/13
 // About: Logic for Points
-
+#include <string>
+#include <vector>
 #include "./Point.h"
 
 namespace object_server {
@@ -10,6 +11,7 @@ namespace object_server {
 // Initialize the point with the given x, y and z coordinates
 // x, y, z: floats describing location
 void Point::init(float X, float Y, float Z) {
+  id = -1;
   current = 1;
   x = X;
   y = Y;
@@ -20,6 +22,7 @@ void Point::init(float X, float Y, float Z) {
 
 // init without arguments initializes the point with at (0,0,0)
 void  Point::init() {
+  id = -1;
   current = 0;
   x = y = z = 0;
   return;
@@ -39,7 +42,10 @@ void Point::Update(OWLMarker mark) {
 // p: a Point to compare against this one
 // return bool indicating "Is that point at the same place as this one?"
 bool Point::equals(Point p) {
-  return (p.x == x && p.y == y && p.z == z);
+  float epsilon = .00001;
+  return (fabs(p.x - x) < epsilon) &&
+         (fabs(p.y - y) < epsilon) &&
+         (fabs(p.z - z) < epsilon);
 }
 
 
@@ -130,31 +136,12 @@ Point Point::VectorPerpendicularTo(vector<Point> line) {
   Point u = this->sub(line[0]);
   return u.sub(v.normalize().times(v.dot(u)));
 }
-// DistanceToPlane finds the distance between a Point and a plane
-// plane: an array holding 4 elements representing
-//   A, B, C, D in the standard plane equation
-// One can convert three points to a plane by using the 
-//   PointsToPlane Function
-float Point::DistanceToPlane(float plane[4]) {
-  return std::fabs(plane[0] * x + plane[1] * y + plane[2] * z + plane[3]) /
-             sqrt(pow(plane[0], 2) + pow(plane[1], 2) + pow(plane[2], 2));
-}
 // print returns the string representation of a point
 // return this string "(x, y, z)"
 string Point::print() {
   stringstream s;
   s << "(" << x << "," << y << "," << z << ")";
   return s.str();
-}
-// PointsToPlane takes in three points and converts it into a plane
-// it finds the A, B, C, D of the standard plane equation
-// and stores those in the plane array
-// return a pointer to this plane array
-float* PointsToPlane (Point p1, Point p2, Point p3, float plane[4]) {
-  Point n = (p1.sub(p2)).cross(p2.sub(p3));
-  float d = n.x * p1.x + n.y * p1.y + n.z * p1.z;
-  plane[0] = n.x; plane[1] = n.y; plane[2] = n.z; plane[3] = d;
-  return plane;
 }
 // FindById Finds a Point by its ID from a vector of points
 // id: the id of the point desired
@@ -167,6 +154,10 @@ const vector<Point>::iterator FindPointById(int id, vector<Point> &points) {
       return iter;
   }
   return points.end();
+}
+::std::ostream& operator<<(::std::ostream& os, const Point& p) {
+  return os << "[" << p.id << "," << p.current << "]:("
+            << p.x << "," << p.y << "," << p.z << ")";
 }
 
 }  //  namespace object_server

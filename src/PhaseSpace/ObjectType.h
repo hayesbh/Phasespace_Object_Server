@@ -38,7 +38,7 @@ class ObjectType {
     // x, y, and z scale for holding the dimensional information
     vector<float> dim;
   public:
-    virtual void init(vector<Point> p, bool rig)=0;
+    virtual bool init(vector<Point> p, bool rig)=0;
     // Reset the object from the start
     virtual void reset();
     virtual bool get_rigidity() {
