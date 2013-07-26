@@ -39,6 +39,52 @@ class ObjectType {
     vector<float> dim;
   public:
     virtual bool init(vector<Point> p, bool rig)=0;
+    vector<int> get_axis1_ids() {
+      vector<int> ids;
+      if (AxisPoint1.size() != 2) return ids;
+      ids.push_back(AxisPoints1[0]->id);
+      ids.push_back(AxisPoints1[1]->id);
+      return ids;
+    }
+    vector<int> get_axis2_ids() {
+      vector<int> ids;
+      if (AxisPoint2.size() != 2) return ids;
+      ids.push_back(AxisPoints2[0]->id);
+      ids.push_back(AxisPoints2[1]->id);
+      return ids;
+    }
+    bool SetAxis1IDs(vector<int> ids) {
+      vector<Point>::iterator p1;
+      if((p1 = FindById(ids[0], points)) == points.end())
+        return false;
+      vector<Point>::iterator p2;
+      if((p2 = FindById(ids[1], points)) == points.end())
+        return false;
+      AxisPoints1.clear();
+      AxisPoints1.push_back(p1);
+      AxisPoints1.push_back(p2);
+      return true;
+    }
+    bool SetAxis2IDs(vector<int> ids) {
+      vector<Point>::iterator p1;
+      if((p1 = FindById(ids[0], points)) == points.end())
+        return false;
+      vector<Point>::iterator p2;
+      if((p2 = FindById(ids[1], points)) == points.end())
+        return false;
+      AxisPoints2.clear();
+      AxisPoints2.push_back(p1);
+      AxisPoints2.push_back(p2);
+      return true;
+    }
+    bool SetOriginalAxis1(Point p) {
+      OriginalAxis1 = p;
+      return true;
+    }
+    bool SetOriginalAxis2(Point p) {
+      OriginalAxis2 = p;
+      return true;
+    }
     // Reset the object from the start
     virtual void reset();
     virtual bool get_rigidity() {

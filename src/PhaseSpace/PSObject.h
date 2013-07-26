@@ -55,6 +55,24 @@ class PSObject : public Object {
   bool get_rigidity() {
     return type->get_rigidity();
   }
+  vector<int> get_axis1_ids() {
+    return type->get_axis1_ids();
+  }
+  vector<int> get_axis2_ids() {
+    return type->get_axis2_ids();
+  }
+  bool SetAxis1IDs(vector<int> ids) {
+    return type->SetAxis1IDs(ids);
+  }
+  bool SetAxis2IDs(vector<int> ids) {
+    return type->SetAxis2IDs(ids);
+  }
+  bool SetOriginalAxis1(Point p) {
+    return type->SetOriginalAxis1(p);
+  }
+  bool SetOriginalAxis2(Point p) {
+    return type->SetOriginalAxis2(p);
+  }
   // AddPoints adds points to this object
   // new_points : a vector of new Point s to add to this object
   // return bool indicating whether this addition was successful
