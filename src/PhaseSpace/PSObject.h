@@ -58,6 +58,12 @@ class PSObject : public Object {
   vector<int> get_axis1_ids() {
     return type->get_axis1_ids();
   }
+  Point get_OriginalAxis1() {
+    return type->get_OriginalAxis1();
+  }
+  Point get_OriginalAxis2() {
+    return type->get_OriginalAxis2();
+  }
   vector<int> get_axis2_ids() {
     return type->get_axis2_ids();
   }
@@ -72,6 +78,12 @@ class PSObject : public Object {
   }
   bool SetOriginalAxis2(Point p) {
     return type->SetOriginalAxis2(p);
+  }
+  bool SetDimensions(float x, float y, float z) {
+    return type->SetDimensions(x, y, z);
+  }
+  bool SetRigid(bool rigid) {
+    return type->SetRigid(rigid);
   }
   // AddPoints adds points to this object
   // new_points : a vector of new Point s to add to this object

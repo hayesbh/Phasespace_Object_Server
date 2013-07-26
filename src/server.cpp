@@ -288,7 +288,7 @@ bool store_object(Object* obj, string filename){
   } else {
     // Set up the object_rigidity
     rapidjson::Value rigidity(obj->get_rigidity());
-    json.AddMember("object_rigidity", rigidity, doc.GetAllocator());
+    json.AddMember("rigid", rigidity, doc.GetAllocator());
     // Set up array of points
     rapidjson::Value point_id_array;
     point_id_array.SetArray();
@@ -298,7 +298,55 @@ bool store_object(Object* obj, string filename){
       id.SetInt(iter->id);
       point_id_array.PushBack(id, doc.GetAllocator());
     }
-    json.AddMember("object_points", point_id_array, doc.GetAllocator());
+    json.AddMember("points", point_id_array, doc.GetAllocator());
+    // Store Axis1 Points
+    vector<int> axis1 = obj->get_axis1_ids();
+    rapidjson::Value axis1_ids;
+    axis1_ids.SetArray();
+    if(axis1.size() == 2) {
+      axis1_ids.PushBack(axis1[0]);
+      axis1_ids.PushBack(axis1[0]);
+    }
+    json.AddMember("axis1_ids", axis1_ids, doc.GetAllocator());
+    // Store Original Axis1 vector
+    Point o_axis1 = obj->get_OriginalAxis1();
+    rapidjson::Value original_axis1;
+    original_axis1.SetArray();
+    original_axis1.push_back(o_axis1.x);
+    original_axis1.push_back(o_axis1.y);
+    original_axis1.push_back(o_axis1.z);
+    json.AddMember("original_axis", original_axis2, doc.GetAllocator());
+    // Store Axis2 Points
+    vector<int> axis2 = obj->get_axis2_ids();
+    rapidjson::Value axis2_ids;
+    axis2_ids.SetArray();
+    if(axis2.size() == 2) {
+      axis2_ids.PushBack(axis2[0]);
+      axis2_ids.PushBack(axis2[0]);
+    }
+    json.AddMember("axis2_ids", axis2_ids, doc.GetAllocator());
+    // Store Original Axis1 vector
+    Point o_axis2 = obj->get_OriginalAxis2();
+    rapidjson::Value original_axis2;
+    original_axis2.SetArray();
+    original_axis2.push_back(o_axis2.x);
+    original_axis2.push_back(o_axis2.y);
+    original_axis2.push_back(o_axis2.z);
+    json.AddMember("original_axis2", original_axis2, doc.GetAllocator());
+    // Store Dimensional Information
+    vector<float> my_dim = obj->get_dimensions();
+    rapidjson::Value dim;
+    dim.SetArray();
+    rapidjson::Value x_scale;
+    x_scale.SetDouble((double)my_dim[0]);
+    rapidjson::Value y_scale;
+    x_scale.SetDouble((double)my_dim[1]);
+    rapidjson::Value z_scale;
+    z_scale.SetDouble((double)my_dim[2]);
+    dim.PushBack(x_scale, doc.GetAllocator());
+    dim.PushBack(y_scale, doc.GetAllocator());
+    dim.PushBack(z_scale, doc.GetAllocator());
+    json.AddMember("dimensions", dim, doc.GetAllocator());
   }
   json.Accept(writer);
   writer.EndObject();
@@ -320,7 +368,7 @@ bool store_env(string env_name){
   rapidjson::Document doc;
   rapidjson::Value json;
   json.SetObject();
-  FILE *fp = fopen(folder_name.append("objects").c_str(), "w");
+  FILE *fp = fopen(folder_name.append(env_name).c_str(), "w");
   rapidjson::FileStream fs(fp);
   rapidjson::PrettyWriter<rapidjson::FileStream> writer(fs);
   writer.StartObject();
@@ -411,6 +459,19 @@ bool revive_object(string filename){
         }
       }
     }
+    // recover Axis 1 ids
+    rapidjson::Value &ids1 = p["axis1_ids"];
+    vector<float> axis1_ids;
+    if (!axis1_ids.IsArray()) {
+      ROS_ERROR("Axis was was not stored in a proper array");
+      fclose(fp);
+      return false;
+    } else {
+      axis1_ids.PushBack(ids1[(rapidjson::SizeType)0]);
+      axis1_ids.PushBack(ids1[(rapidjson::SizeType)1]);
+    }
+    // recover original Axis 1
+    rapidjson::Value &o_ax1 = p["original_axis1"];
     PSObject* obj = new PSObject;
     obj->init(object_count_, object_name, object_points, t, rigid);
     object_count_++;
@@ -429,14 +490,17 @@ bool restore_env(string env_name) {
   rapidjson::Document p;
   if (!p.HasMember("objects")) {
     ROS_ERROR("Environment file improperly stored");
+    fclose(fp);
     return false;
   } else {
     rapidjson::Value &objects = p["objects"];
     for(rapidjson::SizeType i = 0; i < objects.Size(); ++i){
       string object_file = ENV_EXT;
       object_file.append("objects/").append(objects[i].GetString());
+      if(!revive_object(object_file)) ROS_WARN("Object File (%s) Improperly Loaded", object_file.c_str());
     }
   }
+  fclose(fp);
   return true; 
 }
 

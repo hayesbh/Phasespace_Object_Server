@@ -14,7 +14,6 @@
 
 namespace object_server {
 
-using object_server::Point;
 
 class ObjectType {
   protected:
@@ -41,24 +40,30 @@ class ObjectType {
     virtual bool init(vector<Point> p, bool rig)=0;
     vector<int> get_axis1_ids() {
       vector<int> ids;
-      if (AxisPoint1.size() != 2) return ids;
+      if (AxisPoints1.size() != 2) return ids;
       ids.push_back(AxisPoints1[0]->id);
       ids.push_back(AxisPoints1[1]->id);
       return ids;
     }
+    Point get_OriginalAxis1(){
+      return OriginalAxis1;
+    }
     vector<int> get_axis2_ids() {
       vector<int> ids;
-      if (AxisPoint2.size() != 2) return ids;
+      if (AxisPoints2.size() != 2) return ids;
       ids.push_back(AxisPoints2[0]->id);
       ids.push_back(AxisPoints2[1]->id);
       return ids;
     }
+    Point get_OriginalAxis2() {
+      return OriginalAxis2;
+    }
     bool SetAxis1IDs(vector<int> ids) {
       vector<Point>::iterator p1;
-      if((p1 = FindById(ids[0], points)) == points.end())
+      if((p1 = FindPointById(ids[0], points)) == points.end())
         return false;
       vector<Point>::iterator p2;
-      if((p2 = FindById(ids[1], points)) == points.end())
+      if((p2 = FindPointById(ids[1], points)) == points.end())
         return false;
       AxisPoints1.clear();
       AxisPoints1.push_back(p1);
@@ -67,10 +72,10 @@ class ObjectType {
     }
     bool SetAxis2IDs(vector<int> ids) {
       vector<Point>::iterator p1;
-      if((p1 = FindById(ids[0], points)) == points.end())
+      if((p1 = FindPointById(ids[0], points)) == points.end())
         return false;
       vector<Point>::iterator p2;
-      if((p2 = FindById(ids[1], points)) == points.end())
+      if((p2 = FindPointById(ids[1], points)) == points.end())
         return false;
       AxisPoints2.clear();
       AxisPoints2.push_back(p1);
@@ -83,6 +88,17 @@ class ObjectType {
     }
     bool SetOriginalAxis2(Point p) {
       OriginalAxis2 = p;
+      return true;
+    }
+    bool SetDimensions(float x, float y, float z) {
+      dim.clear();
+      dim.push_back(x);
+      dim.push_back(y);
+      dim.push_back(z);
+      return true;
+    }
+    bool SetRigid(bool rig) {
+      rigid = rig;
       return true;
     }
     // Reset the object from the start
