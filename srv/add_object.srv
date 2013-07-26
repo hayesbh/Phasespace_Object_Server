@@ -3,5 +3,4 @@ int32 time
 string type
 bool rigid
 ---
-bool success
 string info

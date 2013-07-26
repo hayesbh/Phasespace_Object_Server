@@ -23,14 +23,11 @@ int main(int argc, char **argv) {
     n.serviceClient<core_object_server::delete_object>("delete_object");
   core_object_server::delete_object srv;
   srv.request.id = atol(argv[1]);
+  ROS_INFO("Request Sent");
   if (client.call(srv)) {
-    ROS_INFO("Request Sent");
-    if (!(static_cast<int>(srv.response.success)))
-      ROS_WARN("Delete Object: %i failed", srv.request.id);
-    else
-      ROS_INFO("Object Successfully Deleted");
+    ROS_INFO("Object Successfully Deleted");
   } else {
-    ROS_ERROR("Failed to call service");
+    ROS_WARN("%s", srv.response.info.c_str());
     return 1;
   }
   return 0;

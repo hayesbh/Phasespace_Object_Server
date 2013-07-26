@@ -7,15 +7,18 @@
  */
 
 #include <cstdlib>
+#include <vector>
 #include "ros/ros.h"
 #include "core_object_server/add_object.h"
+
+using std::vector;
 
 int main(int argc, char **argv) {
   /*itintialize the ROS client*/
   ros::init(argc, argv, "add_object");
   /*Check for inproper number of arguments*/
-  if (argc != 5) {
-    ROS_WARN("usage: rosrun test add_object name time type rigid");
+  if (argc != 12) {
+    ROS_WARN("usage: rosrun core_object_server add_manual name x y z x_scale y_scale z_scale w x y z");
     return 1;
   }
   /*Initialize the service client Node on the add_object service*/
@@ -24,13 +27,18 @@ int main(int argc, char **argv) {
     n.serviceClient<core_object_server::add_object>("add_object");
   core_object_server::add_object srv;
   srv.request.name = argv[1];
-  /*Otherwise set it to the time the user gives*/
-  int t = atoi(argv[2]);
-  srv.request.time = t;
-  srv.request.type = argv[3];
-  if(atoi(argv[4]))
-    srv.request.rigid = 1;
-  else srv.request.rigid = 0;
+  vector<float> pos;
+  for(int i = 2; i < 5; ++i) {
+     pos.push_back(atof(argv[i]));
+  }
+  vector<float> dim;
+  for(int i = 5; i < 8; ++i) {
+     dim.push_back(atof(argv[i]));
+  }
+  vector<float> rot;
+  for(int i = 8; i < 12; ++i) {
+     rot.push_back(atof(argv[i]));
+  }
   /*If the call was successful*/
   ROS_INFO("Request Sent");
   if (client.call(srv)) {

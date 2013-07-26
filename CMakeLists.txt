@@ -43,6 +43,10 @@ target_link_libraries(add_points)
 rosbuild_add_executable(delete_object src/delete_object.cpp)
 target_link_libraries(delete_object)
 
+rosbuild_add_executable(add_manual src/add_manual.cpp)
+target_link_libraries(add_manual)
+
+rosbuild_add_gtest(test/ObjectTest src/gtests/ObjectTest.cpp src/PhaseSpace/Point.cpp src/PhaseSpace/quaternion.cpp src/PhaseSpace/GloveType.cpp src/PhaseSpace/DefaultType.cpp src/PhaseSpace/ManualObject.cpp src/PhaseSpace/ObjectType.cpp src/PhaseSpace/Object.cpp)
 rosbuild_add_gtest(test/GloveTest src/gtests/GloveTest.cpp src/PhaseSpace/Point.cpp src/PhaseSpace/GloveType.cpp src/PhaseSpace/ObjectType.cpp src/PhaseSpace/quaternion.cpp)
 rosbuild_add_gtest(test/QuatTest src/gtests/QuatTest.cpp src/PhaseSpace/Point.cpp src/PhaseSpace/quaternion.cpp)
 rosbuild_add_gtest(test/PointTest src/gtests/PointTest.cpp src/PhaseSpace/Point.cpp)

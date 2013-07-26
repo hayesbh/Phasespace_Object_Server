@@ -27,17 +27,12 @@ int main(int argc, char **argv) {
   if (argc == 3)
     t = atol(argv[2]);
   srv.request.time = t;
+  ROS_INFO("Request Sent");
   /*call the service and print out response*/
   if (client.call(srv)) {
-    ROS_INFO("Request Sent");
-    /*If the adding failed show why*/
-    if (!(static_cast<int>(srv.response.success)))
-      ROS_WARN("%s", srv.response.info.c_str());
-    else
-      ROS_INFO("%s", srv.response.info.c_str());
+    ROS_INFO("%s", srv.response.info.c_str());
   } else {
-    /*If the service call fails entirely show why*/
-    ROS_ERROR("Failed to call service");
+    ROS_WARN("%s", srv.response.info.c_str());
     return 1;
   }
   return 0;

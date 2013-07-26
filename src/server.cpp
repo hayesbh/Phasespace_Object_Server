@@ -28,6 +28,14 @@
 #include "core_object_server/collides.h"
 #include "core_object_server/save_object.h"
 #include "core_object_server/load_object.h"
+#include "core_object_server/add_manual.h"
+// need to add add_manual_object
+//             delete_manual_object
+//             functionality for save and load manual object
+//             store and entire environment
+//             load an entire environment
+// maybe each object should emit vector of object id's it is colliding with
+
 
 // Set up ROS messages
 #include "std_msgs/String.h"
@@ -63,7 +71,8 @@ using object_server::FindObjectByName;
 // This flag will set the OWL system up to be in not slave mode;
 #define INIT_FLAGS 0
 // OBJECT_FILE_EXT is the relative path of the saved object information
-#define OBJECT_FILE_EXT "object_files"
+#define OBJECT_FILE_EXT "object_files/"
+#define ENV_EXT "environments/"
 // object_count is the number of objects set so far (deletions are not counted)
 // It is used for assigning new identification numbers to objects
 int object_count_ = 0;
@@ -214,7 +223,72 @@ vector<Point> get_points(int time, bool glove = false) {
   }
   return points;
 }
-
+bool store_object(Object* obj, string filename){
+  vector<Point> points = (*obj)->get_points();
+  // Set up the JSON doc
+  rapidjson::Document doc;
+  rapidjson::Value json;
+  json.SetObject();
+  FILE *fp = fopen(filename.c_str(), "w");
+  rapidjson::FileStream fs(fp);
+  rapidjson::PrettyWriter<rapidjson::FileStream> writer(fs);
+  writer.StartObject();
+  // Set up the object_name
+  rapidjson::Value object_name;
+  object_name.SetString(req.name.c_str());
+  json.AddMember("object_name", object_name, doc.GetAllocator());
+  // Set up the object_type
+  rapidjson::Value object_type;
+  object_type.SetString((*obj)->get_type().c_str());
+  json.AddMember("object_type", object_type, doc.GetAllocator());
+  // Set up the object_rigidity
+  rapidjson::Value rigidity((*obj)->get_rigidity());
+  json.AddMember("object_rigidity", rigidity, doc.GetAllocator());
+  // Set up array of points
+  rapidjson::Value point_id_array;
+  point_id_array.SetArray();
+  vector<Point>::iterator iter;
+  for (iter = points.begin(); iter != points.end(); ++iter) {
+    rapidjson::Value id;
+    id.SetInt(iter->id);
+    point_id_array.PushBack(id, doc.GetAllocator());
+  }
+  json.AddMember("object_points", point_id_array, doc.GetAllocator());
+  json.Accept(writer);
+  writer.EndObject();
+  fclose(fp);
+  return true;
+}
+bool store_env(vector<Object*> objects, string env_name){
+  string folder_name;
+  folder_name.append(ENV_EXT).append(env_name);
+  if(!mkdir(folder_name.c_str())) return false;
+  if(!mkdir(folder_name.append("objects/").c_str())) return false;
+  vector<Object*>::iterator iter;
+  vector<string> names;
+  for (int i = 0; i < object_vector_.size(); ++i) {
+    string filename = folder_name.append("objects/").append(iter->get_name());
+    store_object(*(*obj), filename);
+    names.push_back(obj->get_name());
+  }
+  
+  FILE *fp = fopen(folder_name.append("object_names").c_str(), "w");
+  rapidjson::FileStream fs(fp);
+  rapidjson::PrettyWriter<rapidjson::FileStream> writer(fs);
+  writer.StartObject();
+  rapidjson::Value objects;
+  objects.SetArray();
+  vector<string>::iterator iter;
+  for (iter = names.begin(); iter != names.end(); ++iter) {
+    rapidjson::Value name;
+    name = *iter;
+    objects.PushBack(name, doc.GetAllocator());
+  }
+  json.AddMember("objects", objects, doc.GetAllocator());
+  json.Accept(writer);
+  writer.EndObject();
+  fclose(fp);
+}
 /////////////////////
 //// ROS SERVICES////
 //////////////////////////////////////////////////////////////////////////////// 
@@ -225,14 +299,12 @@ vector<Point> get_points(int time, bool glove = false) {
 // req: The ROS Service request for the core_object_server delete_object service
 //      (int32) id: the id of the object to be deleted
 // res: The ROS Service response fo the core_object_server delete_object service
-//      (bool) success: Answers the question: Was the deletion successful?
 // return: bool that indicates whether the service itself failed -> ROS_ERROR
 bool delete_object(core_object_server::delete_object::Request &req,
                    core_object_server::delete_object::Response &res) {
   vector<Object*>::iterator target_iter = FindObject(req.id);
   if (target_iter == object_vector_.end()) {
     ROS_INFO("delete_object: target object(%i) does not exist", req.id);
-    res.success = false;
     return true;
   }
   stringstream info;
@@ -252,7 +324,6 @@ bool delete_object(core_object_server::delete_object::Request &req,
   /*Print out that this Object was successfully Removed*/
   info << "removed";
   ROS_INFO("%s", info.str().c_str());
-  res.success = true;
   return true;
 }
 
@@ -261,7 +332,6 @@ bool delete_object(core_object_server::delete_object::Request &req,
 //       (int32) id: The ID of the object to add points to
 //       (int32) time: The time to be looking for new pointers
 // res:  The ROS Service response for the core_object_server add_points service
-//       (bool) success: Answers the question : Were Points successfully added?
 //       (string) info: Information on how the program succeeded or failed
 // return: bool that indeicates whether the service itself failed -> ROS_ERROR
 bool add_points(core_object_server::add_points::Request &req,
@@ -270,7 +340,6 @@ bool add_points(core_object_server::add_points::Request &req,
   vector<Object*>::iterator target= FindObject(req.id);
   // If the object does not exist indicate a failed service
   if (target == object_vector_.end()) {
-    res.success = false;
     ROS_INFO("add_points: no such target object exists\n");
     res.info = "No Such Object Exists";
     return true;
@@ -281,7 +350,6 @@ bool add_points(core_object_server::add_points::Request &req,
   // If there were no points indicate teh the
   if (points.size() == 0) {
     ROS_WARN("add_points: No Additional Points Recieved");
-    res.success = false;
     res.info.append("No Points Recieved");
     return true;
   }
@@ -290,7 +358,6 @@ bool add_points(core_object_server::add_points::Request &req,
     // Indicate a successfull points addition
     stringstream info;
     info << "Object: " << req.id << " has added the points: ";
-    res.success = true;
     // Indicate which ID's were added to this object
     vector<Point>::const_iterator iter;
     for (iter = points.begin(); iter != points.end(); ++iter) {
@@ -302,7 +369,6 @@ bool add_points(core_object_server::add_points::Request &req,
   } else {
     stringstream info;
     info << "Object: " << req.id << " is not a PhaseSpace Object";
-    res.success = false;
     ROS_INFO("%s", info.str().c_str());
     res.info = info.str();
     vector<Point>::iterator iter;
@@ -320,22 +386,23 @@ bool add_points(core_object_server::add_points::Request &req,
 //       (int32)  time: User given time to be searching for new points
 //       (string) type: Type of Object to be added
 // res: The ROS Service response for the core_object_server add_object service
-//       (bool) success: Answers the Question: Was an object successfully added
 //       (string)  info: Information as to how the program succeeded or failed
 // return: bool that indicates whether the service itself failed -> ROS_ERROR
 bool add_object(core_object_server::add_object::Request &req,
                 core_object_server::add_object::Response &res) {
+  stringstream info;
+  if (FindObjectByName(req.name, object_vector_) != object_vector_.end()) {
+    info << "Name " << req.name << " is already in use";
+    res.info = info.str();
+  }
   // Find all the unassigned markers 
   vector<Point> points = get_points(req.time, (req.type == "glove"));
   // If no points were found indicate an unsuccessful addition
   if (points.size() == 0) {
     ROS_WARN("No Points Recieved");
-    res.success = false;
     res.info.append("No Points Recieved");
-    return true;
+    return false;
   }
-  // Add to the information which points are being added to the object
-  stringstream info;
   info << "Object " << req.name << " using points: ";
   vector<Point>::const_iterator iter;
   for (iter = points.begin(); iter != points.end(); ++iter) {
@@ -347,13 +414,42 @@ bool add_object(core_object_server::add_object::Request &req,
   temp_object->init(object_count_, req.name, points, req.type, req.rigid);
   // Add this object to the list of tracked objects
   Object* obj;
-  obj = dynamic_cast<Object*>(temp_object);
+  obj = static_cast<Object*>(temp_object);
   object_vector_.push_back(obj);
   // pdate the universal object_count
   object_count_++;
   //Send the service caller the information associated with their call
   res.info = info.str();
-  res.success = true;
+  ROS_INFO("Object Added: %s\n", info.str().c_str());
+  return true;
+}
+// add_manual adds a manual object to the environment
+// req: The ROS Service requiest for the core_object_server add_manual service
+//      (string) name: Unique user given name for object
+//      (float[3]) center: Center for the new object
+//      (float[3]) dim: Local dimensions for the object
+//      (float[4]) rot: Rotation of Object (quaternion)
+// res: The ROS Service response for the core_object_server add_manual service
+//      (string) info: Information on how the service succeeded or failed
+// return: bool that indicates whether the service succeeded
+bool add_manual(core_object_server::add_manual::Request &req,
+                       core_object_server::add_manual::Response &res) {
+  stringstream info;
+  if (FindObjectByName(req.name, object_vector_) != object_vector_.end()) {
+    info << "Name " << req.name << " is already in use";
+    res.info = info.str();
+    return false;
+  }
+  ManualObject* obj = new ManualObject;
+  obj->init(object_count_, req.name);
+  info << object_count_ << ", " << req.name;
+  obj->SetCenter(req.center[0], req.center[1], req.center[2]);
+  obj->SetDim(req.dim[0], req.dim[1], req.dim[2]);
+  obj->SetAngle(req.rot[0], req.rot[1], req.rot[2], req.rot[3]);
+  object_count_++;
+  Object* Obj = static_cast<Object*>(obj);
+  object_vector_.push_back(Obj);
+  res.info = info.str();
   ROS_INFO("Object Added: %s\n", info.str().c_str());
   return true;
 }
@@ -382,7 +478,6 @@ bool collides(core_object_server::collides::Request &req,
 //      z: z coordinate for the center of the cube
 //      width: the width of one side of the cube
 // res: The ROS Service response for the core_object_server box_filled service
-//      success: Answers the Question: Is there an object in the box?
 // return: bool that indicates whether the service itself failed -> ROS_ERROR
 bool box_filled(core_object_server::box_filled::Request &req,
                 core_object_server::box_filled::Response &res) {
@@ -411,7 +506,6 @@ bool box_filled(core_object_server::box_filled::Request &req,
 //            it will be stored under this name for later recall
 //            this name must be unique
 // res: The ROS Service response for the core_object_server save_object service
-//      success: Answers whether this object has been correctly saved with this name
 //      info: information on the running of this service
 // return: bool that indicates whether the service itself failed -> ROS_ERROR
 bool save_object(core_object_server::save_object::Request &req,
@@ -419,46 +513,12 @@ bool save_object(core_object_server::save_object::Request &req,
   string file = OBJECT_FILE_EXT;
   file += req.name;
   vector<Object*>::iterator obj = FindObjectByName(req.name, object_vector_);
-  vector<Point> points = (*obj)->get_points();
-  // Set up the JSON doc
-  rapidjson::Document doc;
-  rapidjson::Value json;
-  json.SetObject();
-  FILE *fp = fopen(file.c_str(), "w");
-  rapidjson::FileStream fs(fp);
-  rapidjson::PrettyWriter<rapidjson::FileStream> writer(fs);
-  writer.StartObject();
-  // Set up the object_name
-  rapidjson::Value object_name;
-  object_name.SetString(req.name.c_str());
-  json.AddMember("object_name", object_name, doc.GetAllocator());
-  // Set up the object_type
-  rapidjson::Value object_type;
-  object_type.SetString((*obj)->get_type().c_str());
-  json.AddMember("object_type", object_type, doc.GetAllocator());
-  // Set up the object_rigidity
-  rapidjson::Value rigidity((*obj)->get_rigidity());
-  json.AddMember("object_rigidity", rigidity, doc.GetAllocator());
-  // Set up array of points
-  rapidjson::Value point_id_array;
-  point_id_array.SetArray();
-  vector<Point>::iterator iter;
-  for (iter = points.begin(); iter != points.end(); ++iter) {
-    rapidjson::Value id;
-    id.SetInt(iter->id);
-    point_id_array.PushBack(id, doc.GetAllocator());
-  }
-  json.AddMember("object_points", point_id_array, doc.GetAllocator());
-  json.Accept(writer);
-  writer.EndObject();
-  fclose(fp);  
-  return true;
+  return store_object(*(*obj), file);
 }
 // load_object loads the object from the JSON file where the objects are stored
 // req: The ROS Service request for the core_object_server load_object service
 //      name: the name of the object to be loaded from memory
 // res: The ROS Service response for the core_object_server load_object service
-//      success: Answers whether this object has been correctly loaded with this name
 //      info: information of the running of this service
 // return: bool that indicates whether the service itself failed -> ROS_ERROR
 bool load_object(core_object_server::load_object::Request &req,
@@ -610,6 +670,8 @@ int main(int argc, char **argv) {
       n.advertiseService("save_object", save_object);
   ros::ServiceServer load =
       n.advertiseService("load_object", load_object);
+  ros::ServiceServer man = 
+      n.advertiseService("add_manual", add_manual);
   // The rate to loop throught the ROS calls
   // There is no need to do this at a higher rate than the PhaseSpace system
   ros::Rate loop_rate(frequency); 

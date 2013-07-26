@@ -54,55 +54,66 @@ bool Object::CollidesWith(Object* obj) {
   if ((a[0] +
        b[0]*(c[0][0] = fabs(A[0].dot(B[0]))) + b[1]*(c[0][1] = fabs(A[0].dot(B[1]))) + b[2]*(c[0][2] = fabs(A[0].dot(B[2]))))
        < fabs(A[0].dot(D)))
-       return 0;
+       return false;
   if ((a[1] +
        b[0]*(c[1][0] = fabs(A[1].dot(B[0]))) + b[1]*(c[1][1] = fabs(A[1].dot(B[1]))) + b[2]*(c[1][2] = fabs(A[1].dot(B[2]))))
        < fabs(A[1].dot(D)))
-       return 0;
+       return false;
   if ((a[2] +
        b[0]*(c[2][0] = fabs(A[2].dot(B[0]))) + b[1]*(c[2][1] = fabs(A[2].dot(B[1]))) + b[2]*(c[2][2] = fabs(A[2].dot(B[2]))))
        < fabs(A[2].dot(D)))
-      return 0;
+      return false;
   if ((a[0] * c[0][0] + a[1] * c[1][0] + a[2] * c[2][0]) +
        b[0]
        < fabs(B[0].dot(D)))
-       return 0;
+      return false;
   if ((a[0] * c[0][1] + a[1] * c[1][1] + a[2] * c[2][1]) +
        b[1]
-       < fabs(B[1].dot(D))) return 0;
+       < fabs(B[1].dot(D)))
+      return false;
   if ((a[0] * c[0][2] + a[1] * c[1][2] + a[2] * c[2][2]) +
        b[2]
-       < fabs(B[2].dot(D))) return 0;
+       < fabs(B[2].dot(D)))
+      return false;
   if ((a[1] * c[2][0] + a[2] * c[1][0]) +
       (b[1] * c[0][2] + b[2] * c[0][1])
-       < fabs(c[1][0] * A[2].dot(D) - c[2][0] * A[1].dot(D))) return 0;
+       < fabs(c[1][0] * A[2].dot(D) - c[2][0] * A[1].dot(D)))
+      return false;
   if ((a[1] * c[2][1] + a[2] * c[1][1]) +
       (b[0] * c[0][2] + b[2] * c[0][0])
-       < fabs(c[1][1] * A[2].dot(D) - c[2][1] * A[1].dot(D))) return 0;
+       < fabs(c[1][1] * A[2].dot(D) - c[2][1] * A[1].dot(D))) 
+      return false;
   if ((a[1] * c[2][2] + a[2] * c[1][2]) +
       (b[0] * c[0][1] + b[1] * c[0][0])
-       < fabs(c[1][2] * A[2].dot(D) - c[2][2] * A[1].dot(D))) return 0;
+       < fabs(c[1][2] * A[2].dot(D) - c[2][2] * A[1].dot(D)))
+      return false;
 
   if ((a[0] * c[2][0] + a[2] * c[0][0]) +
       (b[1] * c[1][2] + b[2] * c[1][1])
-       < fabs(c[2][0] * A[0].dot(D) - c[0][0] * A[2].dot(D))) return 0;
+       < fabs(c[2][0] * A[0].dot(D) - c[0][0] * A[2].dot(D)))
+      return false;
   if ((a[0] * c[2][1] + a[2] * c[0][1]) +
       (b[0] * c[1][2] + b[2] * c[1][0])
-     < fabs(c[2][1] * A[0].dot(D) - c[0][1] * A[2].dot(D))) return 0;
+     < fabs(c[2][1] * A[0].dot(D) - c[0][1] * A[2].dot(D)))
+      return false;
   if ((a[0] * c[2][2] + a[2] * c[0][2]) +
       (b[0] * c[1][1] + b[1] * c[1][0])
-     < fabs(c[2][2] * A[0].dot(D) - c[0][2] * A[2].dot(D))) return 0;
+     < fabs(c[2][2] * A[0].dot(D) - c[0][2] * A[2].dot(D)))
+      return false;
 
   if ((a[0] * c[1][0] + a[1] * c[0][0]) +
       (b[1] * c[2][2] + b[2] * c[2][1])
-     < fabs(c[0][0] * A[1].dot(D) - c[1][0] * A[0].dot(D))) return 0;
+     < fabs(c[0][0] * A[1].dot(D) - c[1][0] * A[0].dot(D))) 
+      return false;
   if ((a[0] * c[1][1] + a[1] * c[0][1]) +
       (b[0] * c[2][2] + b[2] * c[2][0])
-      < fabs(c[0][1] * A[1].dot(D) - c[1][1] * A[0].dot(D))) return 0;
+      < fabs(c[0][1] * A[1].dot(D) - c[1][1] * A[0].dot(D)))
+      return false;
   if ((a[0] * c[1][2] + a[1] * c[0][2]) +
       (b[0] * c[2][1] + b[1] * c[2][0])
-     < fabs(c[0][2] * A[1].dot(D) - c[1][2] * A[0].dot(D))) return 0;
-  return 1;
+      < fabs(c[0][2] * A[1].dot(D) - c[1][2] * A[0].dot(D)))
+      return false;
+  return true;
 }
 
 const vector<Object*>::iterator FindObjectByName(string name, vector<Object*> &objects) {
