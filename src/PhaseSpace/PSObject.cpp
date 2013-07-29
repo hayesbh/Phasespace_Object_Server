@@ -52,6 +52,7 @@ void PSObject::init(int ident, string call,
   center = type->get_center();
   angle = type->get_angle();
   axes = type->GetAxes();
+  dim = type->get_dimensions();
 }
 
 // Update updates the PhaseSpace Object

@@ -286,6 +286,7 @@ bool store_object(Object* obj, string filename){
     angle.PushBack(z, doc.GetAllocator());
     json.AddMember("angle", angle, doc.GetAllocator());
   } else {
+    PSObject* obj = static_cast<PSObject*>(obj);
     // Set up the object_rigidity
     rapidjson::Value rigidity(obj->get_rigidity());
     json.AddMember("rigid", rigidity, doc.GetAllocator());
@@ -304,34 +305,34 @@ bool store_object(Object* obj, string filename){
     rapidjson::Value axis1_ids;
     axis1_ids.SetArray();
     if(axis1.size() == 2) {
-      axis1_ids.PushBack(axis1[0]);
-      axis1_ids.PushBack(axis1[0]);
+      axis1_ids.PushBack(axis1[0], doc.GetAllocator());
+      axis1_ids.PushBack(axis1[1], doc.GetAllocator());
     }
     json.AddMember("axis1_ids", axis1_ids, doc.GetAllocator());
     // Store Original Axis1 vector
     Point o_axis1 = obj->get_OriginalAxis1();
     rapidjson::Value original_axis1;
     original_axis1.SetArray();
-    original_axis1.push_back(o_axis1.x);
-    original_axis1.push_back(o_axis1.y);
-    original_axis1.push_back(o_axis1.z);
-    json.AddMember("original_axis", original_axis2, doc.GetAllocator());
+    original_axis1.PushBack(o_axis1.x, doc.GetAllocator());
+    original_axis1.PushBack(o_axis1.y, doc.GetAllocator());
+    original_axis1.PushBack(o_axis1.z, doc.GetAllocator());
+    json.AddMember("original_axis1", original_axis1, doc.GetAllocator());
     // Store Axis2 Points
     vector<int> axis2 = obj->get_axis2_ids();
     rapidjson::Value axis2_ids;
     axis2_ids.SetArray();
     if(axis2.size() == 2) {
-      axis2_ids.PushBack(axis2[0]);
-      axis2_ids.PushBack(axis2[0]);
+      axis2_ids.PushBack(axis2[0], doc.GetAllocator());
+      axis2_ids.PushBack(axis2[0], doc.GetAllocator());
     }
     json.AddMember("axis2_ids", axis2_ids, doc.GetAllocator());
     // Store Original Axis1 vector
     Point o_axis2 = obj->get_OriginalAxis2();
     rapidjson::Value original_axis2;
     original_axis2.SetArray();
-    original_axis2.push_back(o_axis2.x);
-    original_axis2.push_back(o_axis2.y);
-    original_axis2.push_back(o_axis2.z);
+    original_axis2.PushBack(o_axis2.x, doc.GetAllocator());
+    original_axis2.PushBack(o_axis2.y, doc.GetAllocator());
+    original_axis2.PushBack(o_axis2.z, doc.GetAllocator());
     json.AddMember("original_axis2", original_axis2, doc.GetAllocator());
     // Store Dimensional Information
     vector<float> my_dim = obj->get_dimensions();
@@ -418,6 +419,7 @@ bool revive_object(string filename){
     rapidjson::Value &json_center = p["center"];
     if (!json_center.IsArray() || json_center.Size() != 3) {
       ROS_ERROR("Manual Object Center is not a properly sized array");
+      fclose(fp);
       return false;
     } else {
       obj->SetCenter((float)json_center[(rapidjson::SizeType)0].GetDouble(), (float)json_center[1].GetDouble(), (float)json_center[2].GetDouble());
@@ -425,6 +427,7 @@ bool revive_object(string filename){
     rapidjson::Value &dim = p["dimensions"];
     if (!dim.IsArray() || dim.Size() != 3) {
       ROS_ERROR("Manual Object dimensions is not a properly sized array");
+      fclose(fp);
       return false; 
     } else { 
       obj->SetDim((float)dim[(rapidjson::SizeType)0].GetDouble(), (float)dim[1].GetDouble(), (float)dim[2].GetDouble());
@@ -432,6 +435,7 @@ bool revive_object(string filename){
     rapidjson::Value &angle = p["angle"];
     if (!angle.IsArray() || angle.Size() != 4) {
       ROS_ERROR("Manual Object angle is not a properly sized array");
+      fclose(fp);
       return false;
     } else {
       obj->SetAngle((float)angle[(rapidjson::SizeType)0].GetDouble(), (float)angle[1].GetDouble(), (float)angle[2].GetDouble(), (float)angle[3].GetDouble());
@@ -461,19 +465,69 @@ bool revive_object(string filename){
     }
     // recover Axis 1 ids
     rapidjson::Value &ids1 = p["axis1_ids"];
-    vector<float> axis1_ids;
-    if (!axis1_ids.IsArray()) {
+    vector<int> axis1_ids;
+    if (!ids1.IsArray()) {
       ROS_ERROR("Axis was was not stored in a proper array");
       fclose(fp);
       return false;
     } else {
-      axis1_ids.PushBack(ids1[(rapidjson::SizeType)0]);
-      axis1_ids.PushBack(ids1[(rapidjson::SizeType)1]);
+      if(ids1.Size() == 2) {
+        axis1_ids.push_back(ids1[(rapidjson::SizeType)0].GetInt());
+        axis1_ids.push_back(ids1[(rapidjson::SizeType)1].GetInt());
+      }
     }
     // recover original Axis 1
     rapidjson::Value &o_ax1 = p["original_axis1"];
+    if ( o_ax1.Size() != 3 ) {
+      ROS_ERROR("Original Axis was not stored properly");
+      fclose(fp);
+      return false;
+    }
+    Point original_axis1;
+    original_axis1.init((float)o_ax1[(rapidjson::SizeType)0].GetDouble(), (float)o_ax1[1].GetDouble(), (float)o_ax1[2].GetDouble());
+    // recover Axis 2 ids
+    rapidjson::Value &ids2 = p["axis2_ids"];
+    vector<int> axis2_ids;
+    if (!ids2.IsArray()) {
+      ROS_ERROR("Axis was was not stored in a proper array");
+      fclose(fp);
+      return false;
+    } else {
+      if(ids2.Size() == 2) {
+        axis2_ids.push_back(ids2[(rapidjson::SizeType)0].GetInt());
+        axis2_ids.push_back(ids2[(rapidjson::SizeType)1].GetInt());
+      }
+    }
+    // recover original Axis 2
+    rapidjson::Value &o_ax2 = p["original_axis1"];
+    if ( o_ax2.Size() != 3 ) {
+      ROS_ERROR("Original Axis was not stored properly");
+      fclose(fp);
+      return false;
+    }
+    Point original_axis2;
+    original_axis2.init((float)o_ax2[(rapidjson::SizeType)0].GetDouble(), (float)o_ax2[1].GetDouble(), (float)o_ax2[2].GetDouble());
+    // get Dimensions
+    rapidjson::Value &dim = p["dimensions"];
+    vector<float> dimensions;
+    if (!dim.IsArray() || dim.Size() != 3) {
+      ROS_ERROR("PS Object dimensions is not a properly sized array");
+      fclose(fp);
+      return false;
+    } else {
+      dimensions.push_back((float)dim[(rapidjson::SizeType)0].GetDouble());
+      dimensions.push_back((float)dim[1].GetDouble());
+      dimensions.push_back((float)dim[2].GetDouble());
+    }
+
     PSObject* obj = new PSObject;
     obj->init(object_count_, object_name, object_points, t, rigid);
+    obj->SetRigid(rigid);
+    obj->SetAxis1IDs(axis1_ids);
+    obj->SetOriginalAxis1(original_axis1);
+    obj->SetAxis2IDs(axis2_ids);
+    obj->SetOriginalAxis2(original_axis2);
+    obj->SetDimensions(dimensions[0], dimensions[1], dimensions[2]);
     object_count_++;
     Object* casted = static_cast<Object*>(obj);
     object_vector_.push_back(casted);

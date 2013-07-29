@@ -19,6 +19,8 @@ using quaternions::QRotate;
 
 bool DefaultType::init (vector<Point> p, bool rig) {
   points = p;
+  OriginalAxis1.init(1, 0, 0);
+  OriginalAxis2.init(0, 1, 0);
   Axis1.init(1, 0, 0);
   Axis2.init(0, 1, 0);
   angle.push_back(1);
@@ -26,9 +28,9 @@ bool DefaultType::init (vector<Point> p, bool rig) {
   angle.push_back(0);
   angle.push_back(0);
   center.init(0, 0, 0);
-  dim.push_back(.1);
-  dim.push_back(.1);
-  dim.push_back(.1);
+  dim.push_back(.01);
+  dim.push_back(.01);
+  dim.push_back(.01);
   // Get the Center
   GetCenter(1);
   // Get the Angle information

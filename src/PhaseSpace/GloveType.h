@@ -35,6 +35,9 @@ class GloveType : public ObjectType {
     // GetSecondAxis sets the second axis of the hand (pointer and left base)
     // return success in finding
     bool GetBothAxes(int i = 0);
+    bool AddPoints() {
+      return false;
+    }
 };
 }  // object_server
 #endif  // _SHL__OBJECT_SERVER_SRC_PHASESPACE_GLOVETYPE_H_

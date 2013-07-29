@@ -51,8 +51,9 @@ void ObjectType::Update(OWLMarker *markers, int n) {
 // MaxDimensionalDistance find the dimensions along the local axis
 // dimension: int representing axis (0 --> x axis, 1 --> y axis, 2 --> z axis)
 // return  float giving the largest distance from the center along that axis
+//         if the dimensional distance is 0 then return .01
 float ObjectType::MaxDimensionalDistance(int dimension) {
-  float max = 0;
+  float max = .01;
   Point axis;
   /*find what axis we are looking at*/
   if(dimension == 0) axis.init(1, 0, 0);
@@ -71,7 +72,7 @@ float ObjectType::MaxDimensionalDistance(int dimension) {
 }
 // GetScale finds and sets the dimensions of the object
 void ObjectType::GetScale(int i){
-  if (!i || rigid) return;
+  if (i || rigid) return;
   float buffer = 1.10;
   dim.clear();
   dim.push_back(2 * MaxDimensionalDistance(0) * buffer);
@@ -84,7 +85,9 @@ void ObjectType::GetScale(int i){
 bool ObjectType::AddPoints(vector<Point> new_points) {
   vector<Point>::iterator i;
   points.insert(points.end(), new_points.begin(), new_points.end());
+  GetCenter();
   GetAngle();
+  GetScale();
   return true;
 }
 // GetCenter is finds the center of the object
