@@ -48,6 +48,8 @@ target_link_libraries(add_manual)
 
 set(OBJECTFILES src/PhaseSpace/Point.cpp src/PhaseSpace/quaternion.cpp src/PhaseSpace/GloveType.cpp src/PhaseSpace/DefaultType.cpp src/PhaseSpace/ManualObject.cpp src/PhaseSpace/ObjectType.cpp src/PhaseSpace/Object.cpp src/PhaseSpace/PSObject.cpp)
 
+rosbuild_add_gtest(test/ServerTest src/gtests/ServerTest.cpp ${OBJECTFILES})
+
 rosbuild_add_gtest(test/PSObjectTest src/gtests/PSObjectTest.cpp ${OBJECTFILES})
 
 rosbuild_add_gtest(test/DefaultObjectTest src/gtests/DefaultObjectTest.cpp ${OBJECTFILES})

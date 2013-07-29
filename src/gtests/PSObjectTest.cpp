@@ -76,6 +76,7 @@ TEST_F(InitTest, SeveralPoints) {
   printf("pre initialization\n");
   obj.init(0, "all_points", all_points_, "default", false);
   printf("PostInitialization\n");
+  for(int i = 0; i < 2; ++i) {
   vector<Point> points = obj.get_points();
   vector<Point>::iterator iter;
   printf("points: ");
@@ -86,7 +87,7 @@ TEST_F(InitTest, SeveralPoints) {
   printf("\n");
   EXPECT_TRUE(obj.get_center().x == .5 && obj.get_center().y == .5 && obj.get_center().z == .5) << obj.get_center();
   EXPECT_TRUE(obj.get_rotation()[0] == 1 && obj.get_rotation()[1] == 0 && obj.get_rotation()[2] == 0 && obj.get_rotation()[3] == 0);
-  EXPECT_TRUE(fabs(obj.get_dimensions()[0]-1.1) <= .0001 && fabs(obj.get_dimensions()[1]-1.1) <= .0001 && fabs(obj.get_dimensions()[0]-1.1) <= .0001)
+  EXPECT_TRUE(fabs(obj.get_dimensions()[0]-1.1) <= .0001 && fabs(obj.get_dimensions()[1]-1.1) <= .0001 && fabs(obj.get_dimensions()[2]-1.1) <= .0001)
     << obj.get_dimensions()[0] << ", " << obj.get_dimensions()[1] << ", " << obj.get_dimensions()[2];
   EXPECT_TRUE(obj.get_OriginalAxis1().x == 1 && obj.get_OriginalAxis1().y == 0 && obj.get_OriginalAxis1().z == 0)
     << obj.get_OriginalAxis1();
@@ -94,9 +95,11 @@ TEST_F(InitTest, SeveralPoints) {
     << obj.get_OriginalAxis2();
   EXPECT_TRUE(obj.get_type() == "default");
   EXPECT_TRUE(obj.get_axis1_ids().size() == 2) << obj.get_axis1_ids().size();
-  //EXPECT_TRUE(obj.get_axis1_ids()[0] == 0 && obj.get_axis1_ids()[1] == 1);
+  EXPECT_TRUE(obj.get_axis1_ids()[0] == 0 && obj.get_axis1_ids()[1] == 1);
   EXPECT_TRUE(obj.get_axis2_ids().size() == 2);
-  //EXPECT_TRUE(obj.get_axis2_ids()[0] == 0 && obj.get_axis1_ids()[2] == 2);
+  EXPECT_TRUE(obj.get_axis2_ids()[0] == 0 && obj.get_axis2_ids()[1] == 2);
+  obj.reset();
+  }
 }
 
 

@@ -61,10 +61,8 @@ bool DefaultType::GetFirstAxis(int i = 0){
     // If there are not enough points then just return the 0 vector
     if (points.size() < 2) {
       printf("GetFirstAxis not enough points\n");
-      Axis1.init(1, 0, 0);
       return false;
     }
-    AxisPoints1.clear();
     // compare with max distance squared
     float low1 = 100000000000;
     float low2 = 1000000000000;
@@ -99,6 +97,7 @@ bool DefaultType::GetFirstAxis(int i = 0){
       P2 = P1;
       P1 = temp;
     }
+    AxisPoints1.clear();
     AxisPoints1.push_back(P1);
     AxisPoints1.push_back(P2);
     OriginalAxis1 = P2->sub(*P1).normalize();
@@ -138,14 +137,11 @@ bool DefaultType::GetBothAxes(int i = 0){
   } else {
     // Make sure that there are enough points to define this second axis
     if (points.size() < 3) {
-      Axis2.init(0, 1, 0);
       printf("GetBothAxes Not Enough Points\n");
       return false;
     }
-    AxisPoints2.clear();
     // Make sure the first axis exists
     if(AxisPoints1[0]->current == 0 || AxisPoints1[1]->current == 0) {
-      Axis2.init(0, 1, 0);
       printf("GetBothAxes First axis Points not current\n");
       return false;
     }
@@ -173,6 +169,7 @@ bool DefaultType::GetBothAxes(int i = 0){
       printf("GetBothAxes P1 || P2 == points.end()\n");
       return false;
     }
+    AxisPoints2.clear();
     // Make sure that the Points are remembered for future reference
     AxisPoints2.push_back(P1);
     AxisPoints2.push_back(P2);

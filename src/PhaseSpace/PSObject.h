@@ -100,6 +100,9 @@ class PSObject : public Object {
   // return bool indicating whether this update was successful
   bool Update(OWLMarker *markers, int n);
   bool update();
+  void reset(){
+    type->reset();
+  }
 };
 }  // namespace object_server
 
