@@ -34,6 +34,9 @@ class PSObject : public Object {
   // t : the type of object
   // rig : boolean that indicates that the object is rigid
   void init(int ident, string call, vector<Point> points, string t, bool rig);
+  ~PSObject() {
+    delete type;
+  }
   // get_pointer returns a Point that represents where this object is pointing
   //   in this case that information is stored
   //    within the object type specific information
@@ -96,6 +99,7 @@ class PSObject : public Object {
   // n : the number of markers that have been updated
   // return bool indicating whether this update was successful
   bool Update(OWLMarker *markers, int n);
+  bool update();
 };
 }  // namespace object_server
 

@@ -11,6 +11,7 @@
 // * is scalar multiplication
 
 #include <vector>
+#include <cstdio>
 #include "./quaternion.h"
 
 namespace quaternions {
@@ -59,7 +60,10 @@ float Qnorm(vector<float> q) {
 vector<float> Qnormalize(vector<float> q) {
   vector<float>::iterator iter;
   float mag = Qnorm(q);
-  if (mag == 0) return q;
+  if(q.size() != 4) {
+    printf("Invalid quaternion\n");
+  }
+  if (fabs(mag) < .0000001) return q;
   for (iter = q.begin(); iter != q.end(); ++iter) {
     *iter = *iter / mag;
   } return q;

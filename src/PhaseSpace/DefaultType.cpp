@@ -37,31 +37,36 @@ bool DefaultType::init (vector<Point> p, bool rig) {
   GetAngle(1);
   // Get the Dimensional information
   GetScale(1);
+  printf("Object Initialized dd\n");
   rigid = rig;
+  printf("Rigid = rigid\n");
   return true;
 }
+
 Point DefaultType::get_pointer() {
   return center;
 }
+
 // GetFirstAxis finds (and sets if first time of i == 1) the local x_axis
 // default is two with lowest y-values
 bool DefaultType::GetFirstAxis(int i = 0){
-  printf("DefaultType: Getting First Axis\n");
   if (AxisPoints1.size() == 2 && i == 0) {
     if(AxisPoints1[0]->current == 0 || AxisPoints1[1]->current == 0) {
+      printf("GetFirstAxis points not current\n");
       return false;
     }
     Axis1 = AxisPoints1[1]->sub(*AxisPoints1[0]).normalize();
-    return false;
+    return true;
   } else {
     // If there are not enough points then just return the 0 vector
     if (points.size() < 2) {
-      Axis1.init();
+      printf("GetFirstAxis not enough points\n");
+      Axis1.init(1, 0, 0);
       return false;
     }
     AxisPoints1.clear();
     // compare with max distance squared
-    float low1 = 10000000000000;
+    float low1 = 100000000000;
     float low2 = 1000000000000;
     // P1 and P2 are the Points that define the vector
     vector<Point>::iterator P1 = points.end();
@@ -70,9 +75,10 @@ bool DefaultType::GetFirstAxis(int i = 0){
     vector<Point>::iterator iter;
     for (iter = points.begin(); iter != points.end(); ++iter) {
       if (!iter->current) continue;
+      // low1 is the smaller of the twop lows
       if (iter->y < low1) {
-        low1 = iter->y;
         low2 = low1;
+        low1 = iter->y;
         P2 = P1;
         P1 = iter;
       } else if (iter->y < low2) {
@@ -81,6 +87,8 @@ bool DefaultType::GetFirstAxis(int i = 0){
       } 
     }
     if (P1 == points.end() || P2 == points.end()) {
+      printf("GetFirstAxis P1 || P2 == points.end()\n");
+      Axis1.init(1, 0, 0);
       return false;  
     }
     // Remember the points that make up this axis
@@ -102,15 +110,22 @@ bool DefaultType::GetFirstAxis(int i = 0){
 // For a block (default type) this would be the one that
 // has the closest x value to one of the first axis points
 bool DefaultType::GetBothAxes(int i = 0){
-  if(!GetFirstAxis(i)) return false;
-  if (AxisPoints2.size() == 2 &&  i == 0) {
+  if(!GetFirstAxis(i)) {
+    printf("GetFirstAxis Failed\n");
+    return false;
+  } printf("GetFirstAxis(%i) succeeded\n", i);
+  if (AxisPoints1.size() == 2 && AxisPoints2.size() == 2 &&  i == 0) {
+    printf("AxisPoints2 already set\n");
     Point u;
     // Make sure that both axes are up to date
-    if(AxisPoints1[0]->current == 0 || AxisPoints1[1]->current == 0 || AxisPoints2[0]->current == 0 || AxisPoints2[2]->current == 0 ) {
+    if(AxisPoints1[0]->current == 0 || AxisPoints1[1]->current == 0 || AxisPoints2[0]->current == 0 || AxisPoints2[1]->current == 0 ) {
+      printf("GetBothAxes Points not current\n");
       return false;
     } else {
+      printf("in else clause 1\n");
       u = AxisPoints2[1]->sub(*AxisPoints2[0]);
     }
+    printf("Past the if else clause\n");
     Point v;
     if(AxisPoints1[1] == AxisPoints2[0]) {
       v = AxisPoints1[0]->sub(*AxisPoints1[1]);
@@ -123,19 +138,19 @@ bool DefaultType::GetBothAxes(int i = 0){
   } else {
     // Make sure that there are enough points to define this second axis
     if (points.size() < 3) {
-      printf("Not Enough Points\n");
-      Axis2.init();
+      Axis2.init(0, 1, 0);
+      printf("GetBothAxes Not Enough Points\n");
       return false;
     }
     AxisPoints2.clear();
     // Make sure the first axis exists
     if(AxisPoints1[0]->current == 0 || AxisPoints1[1]->current == 0) {
-      printf("Axis Points1 not current\n");
-      Axis2.init();
+      Axis2.init(0, 1, 0);
+      printf("GetBothAxes First axis Points not current\n");
       return false;
     }
     //  distance found so far
-    float x_dist = 0;
+    float x_dist = 10000000;
     // P1 and P2 are the Points that define the vector for the y_axis
     // minimize the distance in regards to the x_axis
     vector<Point>::iterator P1 = points.end();
@@ -154,7 +169,10 @@ bool DefaultType::GetBothAxes(int i = 0){
         }
       }
     }
-    if (P1 == points.end() || P2 == points.end()) return false;
+    if (P1 == points.end() || P2 == points.end()) {
+      printf("GetBothAxes P1 || P2 == points.end()\n");
+      return false;
+    }
     // Make sure that the Points are remembered for future reference
     AxisPoints2.push_back(P1);
     AxisPoints2.push_back(P2);

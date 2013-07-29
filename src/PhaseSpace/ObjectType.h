@@ -136,6 +136,7 @@ class ObjectType {
     }
     // updates the points information
     virtual void Update(OWLMarker *markers, int n);
+    virtual bool update();
     // MaxDimensionalDistance find the dimensions along the local axis
     // dimension: int representing axis (0 --> x axis, 1 --> y axis, 2 --> z axis)
     // return  float giving the largest distance from the center along that axis

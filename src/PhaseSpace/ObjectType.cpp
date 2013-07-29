@@ -16,7 +16,7 @@ using quaternions::Qinv;
 void ObjectType::reset(){
   GetCenter(1);
   GetAngle(1);
-  GetScale(1);
+  GetScale();
 }
 // GetAxes default is the right handed coordinate system defined by the first and second Axes
 vector<Point> ObjectType::GetAxes() {
@@ -47,7 +47,15 @@ void ObjectType::Update(OWLMarker *markers, int n) {
   GetScale();
   return;
 }
-
+bool ObjectType::update() {
+  GetCenter();
+  printf("GetCenter() complete\n");
+  GetAngle();
+  printf("GetAngle() complete\n");
+  GetScale();
+  printf("GetScale() complete\n");
+  return true;
+}
 // MaxDimensionalDistance find the dimensions along the local axis
 // dimension: int representing axis (0 --> x axis, 1 --> y axis, 2 --> z axis)
 // return  float giving the largest distance from the center along that axis
@@ -72,12 +80,14 @@ float ObjectType::MaxDimensionalDistance(int dimension) {
 }
 // GetScale finds and sets the dimensions of the object
 void ObjectType::GetScale(int i){
-  if (i || rigid) return;
+  if (rigid) return;
+  printf("getting Scale\n");
   float buffer = 1.10;
   dim.clear();
   dim.push_back(2 * MaxDimensionalDistance(0) * buffer);
   dim.push_back(2 * MaxDimensionalDistance(1) * buffer);
   dim.push_back(2 * MaxDimensionalDistance(2) * buffer);
+  printf("scale recived\n");
 }
 // AddPoints adds new_points to the object
 // new_points is a list of Points that are to be added to the Object
@@ -121,26 +131,14 @@ void ObjectType::GetCenter(int i) {
 // This angle is the rotation required to turn the current vector of the x-axis to the original x-axis vector
 // And the rotation to turn the y-axis to the original y-axis vector
 void ObjectType::GetAngle(int i) {
+  printf("GetBothAxes(%i) getting\n", i);
+  bool success = GetBothAxes(i);
   // If the Axis is unpopulated, it was unable to find two points
-  vector<float> default_Q;
-  default_Q.push_back(1);
-  default_Q.push_back(0);
-  default_Q.push_back(0);
-  default_Q.push_back(0);
-  if (!GetBothAxes(i)) {
-    printf("case 0");
-    angle = default_Q;
-  }
-  if (AxisPoints1.size() != 2) {
-    printf("case 1");
-    angle = default_Q;
+  if (!success) {
+    printf("GetBothAxes(%i) failed\n", i);
     return;
   }
-  if(OriginalAxis1.magnitude() == 0 || Axis1.magnitude() == 0) {
-    printf("case 2");
-    angle = default_Q;
-    return;
-  }
+  printf("GetBothAxes(%i) succeeded\n", i);
   vector<float> Q1;
   Point cross1 = OriginalAxis1.cross(Axis1);
   Q1.push_back(sqrt(pow(Axis1.magnitude(), 2) * pow(OriginalAxis1.magnitude(), 2)) + Axis1.dot(OriginalAxis1));
@@ -166,8 +164,9 @@ void ObjectType::GetAngle(int i) {
   Q2.push_back(cross2.z);
   // angle = Q;
   Q2 = Qnormalize(Q2);
-  printf("final\n");
+  printf("final2\n");
   angle = Qnormalize(Qmult(Q1, Q2));
+  printf("final3\n");
   return;
 }
 }  // namespace object_server

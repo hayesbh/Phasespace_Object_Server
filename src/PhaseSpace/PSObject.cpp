@@ -49,10 +49,25 @@ void PSObject::init(int ident, string call,
     type = static_cast<ObjectType*>(d);
     ext = "default";
   }
+  printf("In ps Object\n");
   center = type->get_center();
   angle = type->get_angle();
   axes = type->GetAxes();
   dim = type->get_dimensions();
+  printf("pre-updated\n");
+  update();
+}
+
+
+bool PSObject::update(){
+  printf("in PSObject::update\n");
+  type->update();
+  printf("type updated\n");
+  center = type->get_center();
+  angle = type->get_angle();
+  axes = type->GetAxes();
+  dim = type->get_dimensions();
+  return true;
 }
 
 // Update updates the PhaseSpace Object

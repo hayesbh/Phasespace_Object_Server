@@ -23,7 +23,7 @@ void Point::init(float X, float Y, float Z) {
 // init without arguments initializes the point with at (0,0,0)
 void  Point::init() {
   id = -1;
-  current = 0;
+  current = 1;
   x = y = z = 0;
   return;
 }

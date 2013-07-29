@@ -50,6 +50,8 @@ set(OBJECTFILES src/PhaseSpace/Point.cpp src/PhaseSpace/quaternion.cpp src/Phase
 
 rosbuild_add_gtest(test/PSObjectTest src/gtests/PSObjectTest.cpp ${OBJECTFILES})
 
+rosbuild_add_gtest(test/DefaultObjectTest src/gtests/DefaultObjectTest.cpp ${OBJECTFILES})
+
 rosbuild_add_gtest(test/ObjectTest src/gtests/ObjectTest.cpp src/PhaseSpace/Point.cpp src/PhaseSpace/quaternion.cpp src/PhaseSpace/GloveType.cpp src/PhaseSpace/DefaultType.cpp src/PhaseSpace/ManualObject.cpp src/PhaseSpace/ObjectType.cpp src/PhaseSpace/Object.cpp)
 rosbuild_add_gtest(test/GloveTest src/gtests/GloveTest.cpp src/PhaseSpace/Point.cpp src/PhaseSpace/GloveType.cpp src/PhaseSpace/ObjectType.cpp src/PhaseSpace/quaternion.cpp)
 rosbuild_add_gtest(test/QuatTest src/gtests/QuatTest.cpp src/PhaseSpace/Point.cpp src/PhaseSpace/quaternion.cpp)
