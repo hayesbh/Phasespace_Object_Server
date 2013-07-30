@@ -20,9 +20,9 @@ using std::pow;
 // Points
 using object_server::Point;
 // Quaternions
-using quaternions::Qmult;
-using quaternions::Qnormalize;
-using quaternions::Qinv;
+using quaternions::QMult;
+using quaternions::QNormalize;
+using quaternions::QInv;
 using quaternions::QRotate;
 
 // This class is the Default Object for holding type specific information
@@ -30,7 +30,7 @@ class DefaultType : public ObjectType {
   public:
   // init initializes the Object to hold in it the points given
   // p: The points that this object will track
-  bool init(vector<Point> p, bool rig);
+  bool Init(vector<Point> p, bool rig);
   // GetFirstAngleAxis finds (and sets if first time of i == 1) the local x_axis
   // default first angle axis is defined by the furthest two points
   bool GetFirstAxis(int i);

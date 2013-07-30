@@ -28,27 +28,27 @@ using object_server::Point;
 // v1: first quaternion to multiply
 // v2: second quaternion to multiply
 // return: the computed product
-vector<float> Qmult(vector<float> v1, vector<float> v2);
+vector<float> QMult(vector<float> v1, vector<float> v2);
 
 // Qconj finds the Conjugate of the given quaternion
 // v: the quaternion to compute the conjugate of
 // return: the computed conjugate
-vector<float> Qconj(vector<float> v);
+vector<float> QConj(vector<float> v);
 
 // Qnorm finds the magnitude of the the quaternion
 // v: the quaternion to find the magnitude of
 // return: the magnitude of the vector 
-float Qnorm(vector<float> v);
+float QNorm(vector<float> v);
 
 // Qnormalize finds the normalized unit-quaternion
 // v: the quaternion to find the unit-quaternion of
 // return: the unit quaternion
-vector<float> Qnormalize(vector<float> v);
+vector<float> QNormalize(vector<float> v);
 
 // Qinv finds the inverse of the quaternion
 // v: the quaternion to find the inverse of
 // return : the inverse quaternion
-vector<float> Qinv(vector<float> v);
+vector<float> QInv(vector<float> v);
 
 // QRotate rotates the given Point (which could represent a vector)
 //   by the angle represented by the quaternion

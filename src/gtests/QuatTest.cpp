@@ -22,9 +22,9 @@ class QuatTest : public ::testing::Test {
     vector<float> y90;
     vector<float> z90;
     virtual void SetUp() {
-      x_axis.init(1, 0, 0);
-      y_axis.init(0, 1, 0);
-      z_axis.init(0, 0, 1);
+      x_axis.Init(1, 0, 0);
+      y_axis.Init(0, 1, 0);
+      z_axis.Init(0, 0, 1);
 
       zero.push_back(0);
       zero.push_back(0);
@@ -67,117 +67,117 @@ class QuatTest : public ::testing::Test {
       z90.push_back(sqrt(0.5));
     }
 };
-// Rotate Each of the Axes by an empty vector (quaternion) (invalid)
+// Rotate Each of the Axes .y_ an emp.y_ vector (quaternion) (invalid)
 TEST_F(QuatTest, InvalidQuatRotation) {
   Point p = QRotate(x_axis, empty);
-  EXPECT_TRUE(p.equals(x_axis));
+  EXPECT_TRUE(p.Equals(x_axis));
   p = QRotate(y_axis, empty);
-  EXPECT_TRUE(p.equals(y_axis));
+  EXPECT_TRUE(p.Equals(y_axis));
   p = QRotate(z_axis, empty);
-  EXPECT_TRUE(p.equals(z_axis));
+  EXPECT_TRUE(p.Equals(z_axis));
 }
 
-// Rotate Each of the Axes by a 0 quaternion (invalid) 
+// Rotate Each of the Axes .y_ a 0 quaternion (invalid) 
 TEST_F(QuatTest, ZeroFailedRotation) {
   Point p = QRotate(x_axis, zero);
-  EXPECT_TRUE(p.equals(x_axis));
+  EXPECT_TRUE(p.Equals(x_axis));
   p = QRotate(y_axis, zero);
-  EXPECT_TRUE(p.equals(y_axis));
+  EXPECT_TRUE(p.Equals(y_axis));
   p = QRotate(z_axis, zero);
-  EXPECT_TRUE(p.equals(z_axis));
+  EXPECT_TRUE(p.Equals(z_axis));
 }
 
-// Roate each of the axes by the identity quaternion
+// Roate each of the axes .y_ the identi.y_ quaternion
 TEST_F(QuatTest, IdentityRotations) {
   Point p = QRotate(x_axis, ident);
-  EXPECT_TRUE(p.equals(x_axis));
+  EXPECT_TRUE(p.Equals(x_axis));
   p = QRotate(y_axis, ident);
-  EXPECT_TRUE(p.equals(y_axis));
+  EXPECT_TRUE(p.Equals(y_axis));
   p = QRotate(z_axis, ident);
-  EXPECT_TRUE(p.equals(z_axis));
+  EXPECT_TRUE(p.Equals(z_axis));
 }
 
-// Rotate each of the axes around the y-axis by 180 degress
+// Rotate each of the axes around the y-axis .y_ 180 degress
 TEST_F(QuatTest, X180) {
   Point p = QRotate(x_axis, x180);
-  EXPECT_TRUE(p.equals(x_axis)) << p;
+  EXPECT_TRUE(p.Equals(x_axis)) << p;
 
   p = QRotate(x_axis, y180);
-  p.x *= -1;
-  EXPECT_TRUE(p.equals(x_axis)) << p;
+  p.x_ *= -1;
+  EXPECT_TRUE(p.Equals(x_axis)) << p;
   
   p = QRotate(x_axis, z180);
-  p.x *= -1;
-  EXPECT_TRUE(p.equals(x_axis)) << p;
+  p.x_ *= -1;
+  EXPECT_TRUE(p.Equals(x_axis)) << p;
 }
 
-// Rotate each of the axes around the y-axis by 180 degrees
+// Rotate each of the axes around the y-axis .y_ 180 degrees
 TEST_F(QuatTest, Y180) {
   Point p = QRotate(y_axis, x180);
-  p.y *= -1;
-  EXPECT_TRUE(p.equals(y_axis)) << p;
+  p.y_ *= -1;
+  EXPECT_TRUE(p.Equals(y_axis)) << p;
 
   p = QRotate(y_axis, y180);
-  EXPECT_TRUE(p.equals(y_axis)) << p;
+  EXPECT_TRUE(p.Equals(y_axis)) << p;
 
   p = QRotate(y_axis, z180);
-  p.y *= -1;
-  EXPECT_TRUE(p.equals(y_axis)) << p;
+  p.y_ *= -1;
+  EXPECT_TRUE(p.Equals(y_axis)) << p;
 }
 
-// Rotate each of the axes around the z-axis by 180 degrees
+// Rotate each of the axes around the z-axis .y_ 180 degrees
 TEST_F(QuatTest, Z180) {
   Point p = QRotate(z_axis, x180);
-  p.z *= -1;
-  EXPECT_TRUE(p.equals(z_axis)) << p;
+  p.z_ *= -1;
+  EXPECT_TRUE(p.Equals(z_axis)) << p;
   
   p = QRotate(z_axis, y180);
-  p.z *= -1;
-  EXPECT_TRUE(p.equals(z_axis)) << p;
+  p.z_ *= -1;
+  EXPECT_TRUE(p.Equals(z_axis)) << p;
 
   p = QRotate(z_axis, z180);
-  EXPECT_TRUE(p.equals(z_axis)) << p;
+  EXPECT_TRUE(p.Equals(z_axis)) << p;
 }
 
-// Rotate each of the axes around the x-axis by 90 degrees
+// Rotate each of the axes around the x-axis .y_ 90 degrees
 TEST_F(QuatTest, X90) {
   Point p = QRotate(x_axis, x90);
-  EXPECT_TRUE(p.equals(x_axis)) << p;
+  EXPECT_TRUE(p.Equals(x_axis)) << p;
 
   p = QRotate(x_axis, y90);
-  EXPECT_TRUE(p.equals(z_axis.times(-1))) << p;
+  EXPECT_TRUE(p.Equals(z_axis.Times(-1))) << p;
 
   p = QRotate(x_axis, z90);
-  EXPECT_TRUE(p.equals(y_axis)) << p;
+  EXPECT_TRUE(p.Equals(y_axis)) << p;
 }
 
-// Rotate each of the axes around the y-axis by 90 degrees
+// Rotate each of the axes around the y-axis .y_ 90 degrees
 TEST_F(QuatTest, Y90) {
   Point p = QRotate(y_axis, x90);
-  EXPECT_TRUE(p.equals(z_axis)) << p;
+  EXPECT_TRUE(p.Equals(z_axis)) << p;
   
   p = QRotate(y_axis, y90);
-  EXPECT_TRUE(p.equals(y_axis)) << p;
+  EXPECT_TRUE(p.Equals(y_axis)) << p;
 
   p = QRotate(y_axis, z90);
-  p.x *= -1;
-  EXPECT_TRUE(p.equals(x_axis)) << p;
+  p.x_ *= -1;
+  EXPECT_TRUE(p.Equals(x_axis)) << p;
 }
 
-// Rotate each of the axes around the z-axis by 90 degrees
+// Rotate each of the axes around the z-axis .y_ 90 degrees
 TEST_F(QuatTest, Z90) {
   Point p = QRotate(z_axis, x90);
-  p.y *= -1;
-  EXPECT_TRUE(p.equals(y_axis)) << p;
+  p.y_ *= -1;
+  EXPECT_TRUE(p.Equals(y_axis)) << p;
   
   p = QRotate(z_axis, y90);
-  EXPECT_TRUE(p.equals(x_axis)) << p;
+  EXPECT_TRUE(p.Equals(x_axis)) << p;
 
   p = QRotate(z_axis, z90);
-  EXPECT_TRUE(p.equals(z_axis)) << p;
+  EXPECT_TRUE(p.Equals(z_axis)) << p;
 }
 
-// Test the Quaternion Class (Specifically Rotation
+// Test the Quaternion Class (Specifical.y_ Rotation
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

@@ -29,14 +29,14 @@ namespace object_server {
 // return bool: Does this object intersect obj?
 bool Object::CollidesWith(Object* obj) {
   // Unit Axes of First Object Stored in A
-  Point A[3] = { axes[0], axes[1], axes[0].cross(axes[1]).normalize() };
+  Point A[3] = { axes[0], axes[1], axes[0].Cross(axes[1]).Normalize() };
   // Unit Axes of the Second Object Stored in B
   vector<Point> ax = obj->get_axes();
   Point B[3] = { ax[0],
                  ax[1],
                  ax[2] };
   // D is the vector from First Object to Second Object
-  Point D = center.sub(obj->get_center());
+  Point D = center.Sub(obj->get_center());
   // The extents of object 1 : 
   // How far does it extend from the center to the edges in the local x, y, and z axis
   // Half the total width, length, and height of the object
@@ -44,7 +44,7 @@ bool Object::CollidesWith(Object* obj) {
   // The extents for object 2 :
   vector<float> dim2 = obj->get_dimensions();
   float b[3] = { dim2[0]/2, dim2[1]/2, dim2[2]/2 };
-  // Matrix c is a 3x3 Matrix of Dot Procducts s.t. c[i][j] = A[i] dot B[j]
+  // Matrix c is a 3x3 Matrix of Dot Procducts s.t. c[i][j] = A[i] Dot B[j]
   // These are set as the if statements are evaluated to prevent unneeded computation
   float c[3][3] = {{0,0,0},{0,0,0},{0,0,0}};
   // The following equations are taken from Chapter 2 Table 1 Eberly
@@ -52,66 +52,66 @@ bool Object::CollidesWith(Object* obj) {
   //   If this is the case then the two shadows must be intersecting
   //   This is the nonintersection test for two Oriented Bounding Boxes
   if ((a[0] +
-       b[0]*(c[0][0] = fabs(A[0].dot(B[0]))) + b[1]*(c[0][1] = fabs(A[0].dot(B[1]))) + b[2]*(c[0][2] = fabs(A[0].dot(B[2]))))
-       < fabs(A[0].dot(D)))
+       b[0]*(c[0][0] = fabs(A[0].Dot(B[0]))) + b[1]*(c[0][1] = fabs(A[0].Dot(B[1]))) + b[2]*(c[0][2] = fabs(A[0].Dot(B[2]))))
+       < fabs(A[0].Dot(D)))
        return false;
   if ((a[1] +
-       b[0]*(c[1][0] = fabs(A[1].dot(B[0]))) + b[1]*(c[1][1] = fabs(A[1].dot(B[1]))) + b[2]*(c[1][2] = fabs(A[1].dot(B[2]))))
-       < fabs(A[1].dot(D)))
+       b[0]*(c[1][0] = fabs(A[1].Dot(B[0]))) + b[1]*(c[1][1] = fabs(A[1].Dot(B[1]))) + b[2]*(c[1][2] = fabs(A[1].Dot(B[2]))))
+       < fabs(A[1].Dot(D)))
        return false;
   if ((a[2] +
-       b[0]*(c[2][0] = fabs(A[2].dot(B[0]))) + b[1]*(c[2][1] = fabs(A[2].dot(B[1]))) + b[2]*(c[2][2] = fabs(A[2].dot(B[2]))))
-       < fabs(A[2].dot(D)))
+       b[0]*(c[2][0] = fabs(A[2].Dot(B[0]))) + b[1]*(c[2][1] = fabs(A[2].Dot(B[1]))) + b[2]*(c[2][2] = fabs(A[2].Dot(B[2]))))
+       < fabs(A[2].Dot(D)))
       return false;
   if ((a[0] * c[0][0] + a[1] * c[1][0] + a[2] * c[2][0]) +
        b[0]
-       < fabs(B[0].dot(D)))
+       < fabs(B[0].Dot(D)))
       return false;
   if ((a[0] * c[0][1] + a[1] * c[1][1] + a[2] * c[2][1]) +
        b[1]
-       < fabs(B[1].dot(D)))
+       < fabs(B[1].Dot(D)))
       return false;
   if ((a[0] * c[0][2] + a[1] * c[1][2] + a[2] * c[2][2]) +
        b[2]
-       < fabs(B[2].dot(D)))
+       < fabs(B[2].Dot(D)))
       return false;
   if ((a[1] * c[2][0] + a[2] * c[1][0]) +
       (b[1] * c[0][2] + b[2] * c[0][1])
-       < fabs(c[1][0] * A[2].dot(D) - c[2][0] * A[1].dot(D)))
+       < fabs(c[1][0] * A[2].Dot(D) - c[2][0] * A[1].Dot(D)))
       return false;
   if ((a[1] * c[2][1] + a[2] * c[1][1]) +
       (b[0] * c[0][2] + b[2] * c[0][0])
-       < fabs(c[1][1] * A[2].dot(D) - c[2][1] * A[1].dot(D))) 
+       < fabs(c[1][1] * A[2].Dot(D) - c[2][1] * A[1].Dot(D))) 
       return false;
   if ((a[1] * c[2][2] + a[2] * c[1][2]) +
       (b[0] * c[0][1] + b[1] * c[0][0])
-       < fabs(c[1][2] * A[2].dot(D) - c[2][2] * A[1].dot(D)))
+       < fabs(c[1][2] * A[2].Dot(D) - c[2][2] * A[1].Dot(D)))
       return false;
 
   if ((a[0] * c[2][0] + a[2] * c[0][0]) +
       (b[1] * c[1][2] + b[2] * c[1][1])
-       < fabs(c[2][0] * A[0].dot(D) - c[0][0] * A[2].dot(D)))
+       < fabs(c[2][0] * A[0].Dot(D) - c[0][0] * A[2].Dot(D)))
       return false;
   if ((a[0] * c[2][1] + a[2] * c[0][1]) +
       (b[0] * c[1][2] + b[2] * c[1][0])
-     < fabs(c[2][1] * A[0].dot(D) - c[0][1] * A[2].dot(D)))
+     < fabs(c[2][1] * A[0].Dot(D) - c[0][1] * A[2].Dot(D)))
       return false;
   if ((a[0] * c[2][2] + a[2] * c[0][2]) +
       (b[0] * c[1][1] + b[1] * c[1][0])
-     < fabs(c[2][2] * A[0].dot(D) - c[0][2] * A[2].dot(D)))
+     < fabs(c[2][2] * A[0].Dot(D) - c[0][2] * A[2].Dot(D)))
       return false;
 
   if ((a[0] * c[1][0] + a[1] * c[0][0]) +
       (b[1] * c[2][2] + b[2] * c[2][1])
-     < fabs(c[0][0] * A[1].dot(D) - c[1][0] * A[0].dot(D))) 
+     < fabs(c[0][0] * A[1].Dot(D) - c[1][0] * A[0].Dot(D))) 
       return false;
   if ((a[0] * c[1][1] + a[1] * c[0][1]) +
       (b[0] * c[2][2] + b[2] * c[2][0])
-      < fabs(c[0][1] * A[1].dot(D) - c[1][1] * A[0].dot(D)))
+      < fabs(c[0][1] * A[1].Dot(D) - c[1][1] * A[0].Dot(D)))
       return false;
   if ((a[0] * c[1][2] + a[1] * c[0][2]) +
       (b[0] * c[2][1] + b[1] * c[2][0])
-      < fabs(c[0][2] * A[1].dot(D) - c[1][2] * A[0].dot(D)))
+      < fabs(c[0][2] * A[1].Dot(D) - c[1][2] * A[0].Dot(D)))
       return false;
   return true;
 }

@@ -174,7 +174,7 @@ vector<Point> get_unadded_points() {
       point.Update(markers[i]);
       points.push_back(point);
       // Record the id that has been set
-      ids_set_.push_back(point.id);
+      ids_set_.push_back(point.id_);
     }
   }
   return points;
@@ -204,7 +204,7 @@ vector<Point> get_points(int time, bool glove = false) {
   // And not all of them have been gathered
   // TODO: PERHAPS MAKE SURE THAT THIS DOESN'T ASSIGN LEDS FROM MORE THAN 1 WIRED CONNECTION
   if (glove && points.size() > 0 && points.size() < 7) {
-    int mult = points[0].id / 7;
+    int mult = points[0].id_ / 7;
     vector<Point>::iterator iter;
     for (int i = 0; i < 7; i++) {
       // if the id was not found Initialize the point with that id
@@ -212,8 +212,8 @@ vector<Point> get_points(int time, bool glove = false) {
       if (FindPointById(i + mult * 7, points) == points.end()) {
         ids_set_.push_back(i + mult * 7);
         Point p;
-        p.init();
-        p.id = (i+ mult * 7);
+        p.Init();
+        p.id_ = (i+ mult * 7);
         points.push_back(p);
       }
     }
@@ -243,15 +243,15 @@ bool store_object(Object* obj, string filename){
     rapidjson::Value center;
     center.SetArray();
     rapidjson::Value X;
-    X.SetDouble((double)my_center.x);
+    X.SetDouble((double)my_center.x_);
     center.PushBack(X, doc.GetAllocator());
     
     rapidjson::Value Y;
-    X.SetDouble((double)my_center.y);
+    X.SetDouble((double)my_center.y_);
     center.PushBack(Y, doc.GetAllocator());
 
     rapidjson::Value Z;
-    Z.SetDouble((double)my_center.z);
+    Z.SetDouble((double)my_center.z_);
     center.PushBack(X, doc.GetAllocator());
     json.AddMember("center", center, doc.GetAllocator());
 
@@ -296,7 +296,7 @@ bool store_object(Object* obj, string filename){
     vector<Point>::iterator iter;
     for (iter = points.begin(); iter != points.end(); ++iter) {
       rapidjson::Value id;
-      id.SetInt(iter->id);
+      id.SetInt(iter->id_);
       point_id_array.PushBack(id, doc.GetAllocator());
     }
     json.AddMember("points", point_id_array, doc.GetAllocator());
@@ -310,12 +310,12 @@ bool store_object(Object* obj, string filename){
     }
     json.AddMember("axis1_ids", axis1_ids, doc.GetAllocator());
     // Store Original Axis1 vector
-    Point o_axis1 = obj->get_OriginalAxis1();
+    Point o_axis1 = obj->get_original_axis1();
     rapidjson::Value original_axis1;
     original_axis1.SetArray();
-    original_axis1.PushBack(o_axis1.x, doc.GetAllocator());
-    original_axis1.PushBack(o_axis1.y, doc.GetAllocator());
-    original_axis1.PushBack(o_axis1.z, doc.GetAllocator());
+    original_axis1.PushBack(o_axis1.x_, doc.GetAllocator());
+    original_axis1.PushBack(o_axis1.y_, doc.GetAllocator());
+    original_axis1.PushBack(o_axis1.z_, doc.GetAllocator());
     json.AddMember("original_axis1", original_axis1, doc.GetAllocator());
     // Store Axis2 Points
     vector<int> axis2 = obj->get_axis2_ids();
@@ -327,12 +327,12 @@ bool store_object(Object* obj, string filename){
     }
     json.AddMember("axis2_ids", axis2_ids, doc.GetAllocator());
     // Store Original Axis1 vector
-    Point o_axis2 = obj->get_OriginalAxis2();
+    Point o_axis2 = obj->get_original_axis2();
     rapidjson::Value original_axis2;
     original_axis2.SetArray();
-    original_axis2.PushBack(o_axis2.x, doc.GetAllocator());
-    original_axis2.PushBack(o_axis2.y, doc.GetAllocator());
-    original_axis2.PushBack(o_axis2.z, doc.GetAllocator());
+    original_axis2.PushBack(o_axis2.x_, doc.GetAllocator());
+    original_axis2.PushBack(o_axis2.y_, doc.GetAllocator());
+    original_axis2.PushBack(o_axis2.z_, doc.GetAllocator());
     json.AddMember("original_axis2", original_axis2, doc.GetAllocator());
     // Store Dimensional Information
     vector<float> my_dim = obj->get_dimensions();
@@ -415,7 +415,7 @@ bool revive_object(string filename){
   string t = p["type"].GetString();
   if(t == "manual") {
     ManualObject* obj = new ManualObject;
-    obj->init(object_count_, object_name);
+    obj->Init(object_count_, object_name);
     rapidjson::Value &json_center = p["center"];
     if (!json_center.IsArray() || json_center.Size() != 3) {
       ROS_ERROR("Manual Object Center is not a properly sized array");
@@ -454,10 +454,10 @@ bool revive_object(string filename){
     } else {
       for(rapidjson::SizeType i = 0; i < points.Size(); ++i) {
         Point point;
-        point.init();
-        point.id = points[i].GetInt();
-        if (std::find(ids_set_.begin(), ids_set_.end(), point.id) != ids_set_.end()) {
-        ROS_ERROR("Point id (%i) has already been set.  Load Object (%s) failed", point.id, filename.c_str());
+        point.Init();
+        point.id_ = points[i].GetInt();
+        if (std::find(ids_set_.begin(), ids_set_.end(), point.id_) != ids_set_.end()) {
+        ROS_ERROR("Point id (%i) has already been set.  Load Object (%s) failed", point.id_, filename.c_str());
         fclose(fp);
         return false;
         }
@@ -484,7 +484,7 @@ bool revive_object(string filename){
       return false;
     }
     Point original_axis1;
-    original_axis1.init((float)o_ax1[(rapidjson::SizeType)0].GetDouble(), (float)o_ax1[1].GetDouble(), (float)o_ax1[2].GetDouble());
+    original_axis1.Init((float)o_ax1[(rapidjson::SizeType)0].GetDouble(), (float)o_ax1[1].GetDouble(), (float)o_ax1[2].GetDouble());
     // recover Axis 2 ids
     rapidjson::Value &ids2 = p["axis2_ids"];
     vector<int> axis2_ids;
@@ -506,7 +506,7 @@ bool revive_object(string filename){
       return false;
     }
     Point original_axis2;
-    original_axis2.init((float)o_ax2[(rapidjson::SizeType)0].GetDouble(), (float)o_ax2[1].GetDouble(), (float)o_ax2[2].GetDouble());
+    original_axis2.Init((float)o_ax2[(rapidjson::SizeType)0].GetDouble(), (float)o_ax2[1].GetDouble(), (float)o_ax2[2].GetDouble());
     // get Dimensions
     rapidjson::Value &dim = p["dimensions"];
     vector<float> dimensions;
@@ -521,7 +521,7 @@ bool revive_object(string filename){
     }
 
     PSObject* obj = new PSObject;
-    obj->init(object_count_, object_name, object_points, t, rigid);
+    obj->Init(object_count_, object_name, object_points, t, rigid);
     obj->SetRigid(rigid);
     obj->SetAxis1IDs(axis1_ids);
     obj->SetOriginalAxis1(original_axis1);
@@ -584,8 +584,8 @@ bool delete_object(core_object_server::delete_object::Request &req,
   vector<Point> const &object_points = target->get_points();
   vector<Point>::const_iterator iter;
   for (iter = object_points.begin(); iter != object_points.end(); ++iter) {
-    std::remove(ids_set_.begin(), ids_set_.end(), iter->id);
-    info << iter->id << " ";
+    std::remove(ids_set_.begin(), ids_set_.end(), iter->id_);
+    info << iter->id_ << " ";
   }
   /*Remove the Object from the Tracked Objects List*/
   delete target;
@@ -630,7 +630,7 @@ bool add_points(core_object_server::add_points::Request &req,
     // Indicate which ID's were added to this object
     vector<Point>::const_iterator iter;
     for (iter = points.begin(); iter != points.end(); ++iter) {
-      info << iter->id << " ";
+      info << iter->id_ << " ";
     }
     ROS_INFO("%s", info.str().c_str());
     res.info = info.str();
@@ -642,7 +642,7 @@ bool add_points(core_object_server::add_points::Request &req,
     res.info = info.str();
     vector<Point>::iterator iter;
     for (iter = points.begin(); iter != points.end(); ++iter) {
-      std::remove(ids_set_.begin(), ids_set_.end(), iter->id);
+      std::remove(ids_set_.begin(), ids_set_.end(), iter->id_);
     }
     return true;
   }
@@ -675,12 +675,12 @@ bool add_object(core_object_server::add_object::Request &req,
   info << "Object " << req.name << " using points: ";
   vector<Point>::const_iterator iter;
   for (iter = points.begin(); iter != points.end(); ++iter) {
-    info << iter->id << " ";
+    info << iter->id_ << " ";
   }
   ROS_INFO("%s", info.str().c_str());
   // Initialize this New Object with the name given, new points, and the type
   PSObject* temp_object = new PSObject;
-  temp_object->init(object_count_, req.name, points, req.type, req.rigid);
+  temp_object->Init(object_count_, req.name, points, req.type, req.rigid);
   // Add this object to the list of tracked objects
   Object* obj;
   obj = static_cast<Object*>(temp_object);
@@ -710,7 +710,7 @@ bool add_manual(core_object_server::add_manual::Request &req,
     return false;
   }
   ManualObject* obj = new ManualObject;
-  obj->init(object_count_, req.name);
+  obj->Init(object_count_, req.name);
   info << object_count_ << ", " << req.name;
   obj->SetCenter(req.center[0], req.center[1], req.center[2]);
   obj->SetDim(req.dim[0], req.dim[1], req.dim[2]);
@@ -751,7 +751,7 @@ bool collides(core_object_server::collides::Request &req,
 bool box_filled(core_object_server::box_filled::Request &req,
                 core_object_server::box_filled::Response &res) {
   ManualObject* box = new ManualObject;
-  box->init(-1, "cube");
+  box->Init(-1, "cube");
   box->SetCenter( req.x, req.y, req.z );
   box->SetAngle(1, 0, 0, 0);
   box->SetDim(req.width, req.width, req.width);
@@ -804,67 +804,7 @@ bool load_object(core_object_server::load_object::Request &req,
                  core_object_server::load_object::Response &res) {
   string file = OBJECT_FILE_EXT;
   file += req.name;
-  FILE *fp = fopen(file.c_str(), "r");
-  rapidjson::FileStream fs(fp);
-  rapidjson::Document p;
-  if (p.ParseStream<0>(fs).HasParseError()) {
-    ROS_ERROR("Parse error on filestream from load_object(%s).", file.c_str());
-    fclose(fp);
-    return false;
-  }
-  if (!p.IsObject()) {
-    ROS_ERROR("Couldn't load object from file: %s. Not a JSON object.", file.c_str());
-    fclose(fp);
-    return false;
-  }
-  if (!p.HasMember("object_name")) {
-    ROS_ERROR("Object in (%s) has no name field.", file.c_str());
-    fclose(fp);
-    return false;
-  }
-  if (!p.HasMember("object_type")) {
-    ROS_ERROR("Object in (%s) has no type associated with it.", file.c_str());
-    fclose(fp);
-    return false;
-  }
-  if (!p.HasMember("object_rigidity")) {
-    ROS_ERROR("Object in (%s) has an undefined rigidity.", file.c_str());
-    fclose(fp);
-    return false;
-  }
-  if (!p.HasMember("object_points")) {
-    ROS_ERROR("Object in (%s) has no points associated with it.", file.c_str());
-    fclose(fp);
-    return false;
-  }
-  string object_name = p["object_name"].GetString();
-  string t = p["type"].GetString();
-  bool rigid = p["rigid"].GetBool();
-  rapidjson::Value &points = p["points"];
-  if (!points.IsArray()) {
-    ROS_ERROR("Object points in (%s) is not an array.", file.c_str());
-    fclose(fp);
-    return false;
-  } else {
-    vector<Point> object_points;
-    for(rapidjson::SizeType i = 0; i < points.Size(); ++i) {
-      Point point;
-      point.init();
-      point.id = points[i].GetInt();
-      if (std::find(ids_set_.begin(), ids_set_.end(), point.id) != ids_set_.end()) {
-        ROS_ERROR("Point id (%i) has already been set.  Load Object (%s) failed", point.id, file.c_str());
-        fclose(fp);
-        return false;
-      }
-    }
-    PSObject* obj = new PSObject;
-    obj->init(object_count_, req.name, object_points, t, rigid);
-    object_count_++;
-    Object* casted = dynamic_cast<Object*>(obj);
-    object_vector_.push_back(casted);
-  }
-  fclose(fp);
-  return true;
+  return revive_object(file);
 }
 
 // print_digest takes the ObjectDigest and Transforms it into a string
@@ -994,9 +934,9 @@ int main(int argc, char **argv) {
         info.name = (*iter)->get_name();
         // Set the message's position data
         geometry_msgs::Point loc;
-        loc.x = position.x;
-        loc.y = position.y;
-        loc.z = position.z;
+        loc.x = position.x_;
+        loc.y = position.y_;
+        loc.z = position.z_;
         info.pos = loc;
         // Set the message's rotation data
         geometry_msgs::Quaternion q;
@@ -1014,9 +954,9 @@ int main(int argc, char **argv) {
         Point point;
         point = (*iter)->get_pointer();
         geometry_msgs::Point p;
-        p.x = point.x;
-        p.y = point.y;
-        p.z = point.z;
+        p.x = point.x_;
+        p.y = point.y_;
+        p.z = point.z_;
         info.pointer = p;
         // Add this object to the ObjectDigest
         digest.objects.push_back(info);
@@ -1035,9 +975,9 @@ int main(int argc, char **argv) {
         // Indicate that the object will need to be added
         marker.action = visualization_msgs::Marker::ADD;
         // Set the position for the Rviz marker
-        marker.pose.position.x = position.x;
-        marker.pose.position.y = position.y;
-        marker.pose.position.z = position.z;
+        marker.pose.position.x = position.x_;
+        marker.pose.position.y = position.y_;
+        marker.pose.position.z = position.z_;
         // Set the rotation for the Rviz marker (quaternion)
         marker.pose.orientation.w = rotation[0];
         marker.pose.orientation.x = rotation[1];

@@ -14,14 +14,14 @@ class PointTest : public ::testing::Test {
     Point NearZeroMag_;
     vector<Point> points;
     virtual void SetUp() {
-      ZeroMag_.init(0, 0, 0);
-      NearZeroMag_.init(0.000000000000000000001,
+      ZeroMag_.Init(0, 0, 0);
+      NearZeroMag_.Init(0.000000000000000000001,
                         0.000000000000000000001,
                         0.000000000000000000001);
       for (int i = 19; i >= 0; --i) {
         Point p;
-        p.init(i*173, i/79, i*1.735);
-        p.id = i;
+        p.Init(i*173, i/79, i*1.735);
+        p.id_ = i;
         points.push_back(p);
       }
     }
@@ -32,24 +32,24 @@ class PointTest : public ::testing::Test {
 // Vector normalization can handle a Zero Magnitude
 TEST_F(PointTest, NormZeroMag) {
   Point p = ZeroMag_;
-  p = p.normalize();
-  ASSERT_TRUE(p.equals(ZeroMag_)) << "Normalize 0 vector !=  0 vector";
-  ASSERT_EQ(p.magnitude(), 0)  << "Normalize 0 vector: Mag != 0";
+  p = p.Normalize();
+  ASSERT_TRUE(p.Equals(ZeroMag_)) << "Normalize 0 vector !=  0 vector";
+  ASSERT_EQ(p.Magnitude(), 0)  << "Normalize 0 vector: Mag != 0";
 }
 
 // Vector normalization can handle a Near-Zero Magnitude
 TEST_F(PointTest, NormNearZeroMag) {
   Point p = NearZeroMag_; 
-  p = p.normalize();
-  EXPECT_FALSE(p.equals(ZeroMag_)) << "Normalize near 0 vector == 0 vector";
-  ASSERT_EQ(p.magnitude(), 1)  << "Normalize near 0 vector: Mag != 1";
+  p = p.Normalize();
+  EXPECT_FALSE(p.Equals(ZeroMag_)) << "Normalize near 0 vector == 0 vector";
+  ASSERT_EQ(p.Magnitude(), 1)  << "Normalize near 0 vector: Mag != 1";
 }
 
 // FindById works if item is in the list
 TEST_F(PointTest, FindPointByIdSuccess) {
   for (int j = 0; j < 20; ++j) {
     for (int i = 0; i < 20; ++i) {
-      ASSERT_EQ(FindPointById(i, points)->id, i) 
+      ASSERT_EQ(FindPointById(i, points)->id_, i) 
                   << "FindPointById not returning right iterator";
     }
   std::random_shuffle(points.begin(), points.end());

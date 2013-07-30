@@ -25,7 +25,7 @@ class GloveType : public ObjectType {
     vector<Point>::iterator base_left_;
     vector<Point>::iterator base_right_;
     // Initialize the glove and all the finger Points with given rigidity
-    bool init(vector<Point> p, bool rig);
+    bool Init(vector<Point> p, bool rig);
     // get_pointer returns the pointer finger
     // return the point on the pointer finger
     Point get_pointer();

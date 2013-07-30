@@ -23,15 +23,15 @@ class CollidesTest : public ::testing::Test {
       Mutable = new ManualObject;
       CubeL0D1R0 = new ManualObject;
       CubeL0D2R0 = new ManualObject;
-      Mutable->init(-1, "mutatable");
+      Mutable->Init(-1, "mutatable");
       Mutable->SetCenter(0, 0, 0);
       Mutable->SetAngle(1, 0, 0, 0);
       Mutable->SetDim(1, 1, 1);
-      CubeL0D1R0->init(0, "cube1");
+      CubeL0D1R0->Init(0, "cube1");
       CubeL0D1R0->SetCenter(0, 0, 0);
       CubeL0D1R0->SetAngle(1, 0, 0, 0);
       CubeL0D1R0->SetDim(1, 1, 1);
-      CubeL0D2R0->init(1, "cube1");
+      CubeL0D2R0->Init(1, "cube1");
       CubeL0D2R0->SetCenter(0, 0, 0);
       CubeL0D2R0->SetAngle(1, 0, 0, 0);
       CubeL0D2R0->SetDim(2, 2, 2);

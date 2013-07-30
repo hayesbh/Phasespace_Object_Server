@@ -33,7 +33,7 @@ class PSObject : public Object {
   // points : a vector of Points that define the PhaseSpace Object
   // t : the type of object
   // rig : boolean that indicates that the object is rigid
-  void init(int ident, string call, vector<Point> points, string t, bool rig);
+  void Init(int ident, string call, vector<Point> points, string t, bool rig);
   ~PSObject() {
     delete type;
   }
@@ -61,11 +61,11 @@ class PSObject : public Object {
   vector<int> get_axis1_ids() {
     return type->get_axis1_ids();
   }
-  Point get_OriginalAxis1() {
-    return type->get_OriginalAxis1();
+  Point get_original_axis1() {
+    return type->get_original_axis1();
   }
-  Point get_OriginalAxis2() {
-    return type->get_OriginalAxis2();
+  Point get_original_axis2() {
+    return type->get_original_axis2();
   }
   vector<int> get_axis2_ids() {
     return type->get_axis2_ids();

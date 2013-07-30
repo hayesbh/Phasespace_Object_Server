@@ -21,25 +21,25 @@ namespace quaternions {
 //   w: (w1 * w2) + (v1 o v2)
 //   v: (v2 * w1) + (v1 * w2) + (v1 x v2)
 // This result q = (w, v) is returned
-vector<float> Qmult(vector<float> q1, vector<float> q2) {
+vector<float> QMult(vector<float> q1, vector<float> q2) {
   Point v1; 
-  v1.init(q1[1], q1[2], q1[3]);
+  v1.Init(q1[1], q1[2], q1[3]);
   Point v2; 
-  v2.init(q2[1], q2[2], q2[3]);
+  v2.Init(q2[1], q2[2], q2[3]);
   vector<float> result;
-  result.push_back(q1[0]*q2[0] - v1.dot(v2));
+  result.push_back(q1[0]*q2[0] - v1.Dot(v2));
   Point vec;
-  vec = v2.times(q1[0]).add(v1.times(q2[0])).add(v1.cross(v2));
-  result.push_back(vec.x);
-  result.push_back(vec.y);
-  result.push_back(vec.z);
+  vec = v2.Times(q1[0]).Add(v1.Times(q2[0])).Add(v1.Cross(v2));
+  result.push_back(vec.x_);
+  result.push_back(vec.y_);
+  result.push_back(vec.z_);
   return result;
 }
 
 // Qconj finds the conjugate of the qiven quaternion
 // It can be defined as (-w, v) or (w, -v)
 // tither one of these represent the same quaternion
-vector<float> Qconj(vector<float> q) {
+vector<float> QConj(vector<float> q) {
   vector<float> conj;
   conj.push_back(q[0]);
   conj.push_back(-1*q[1]);
@@ -51,15 +51,15 @@ vector<float> Qconj(vector<float> q) {
 // Qnorm finds the magnitude of the quaternion in the standard way
 //   sqrt(q o q)
 // This returns the length or magnitude of the vector (a quaternion)
-float Qnorm(vector<float> q) {
+float QNorm(vector<float> q) {
   return sqrt(pow(q[0], 2) + pow(q[1], 2) + pow(q[2], 2) + pow(q[3], 2));
 }
 
 // Qnormalize returns the unit vector
 //  It divides each of the components of q by its magnitude
-vector<float> Qnormalize(vector<float> q) {
+vector<float> QNormalize(vector<float> q) {
   vector<float>::iterator iter;
-  float mag = Qnorm(q);
+  float mag = QNorm(q);
   if(q.size() != 4) {
     printf("Invalid quaternion\n");
   }
@@ -74,13 +74,13 @@ vector<float> Qnormalize(vector<float> q) {
 //   It is made by dividing each of the components of the conjugate
 //   By the squared magnitude
 //   conjugate(q) / |q|^2
-vector<float> Qinv(vector<float> q) {
-  float divisor = pow(Qnorm(q), 2);
+vector<float> QInv(vector<float> q) {
+  float divisor = pow(QNorm(q), 2);
   if (divisor == 0) {
     vector<float> failed;
     return failed;
   }
-  vector<float> inverse = Qconj(q);
+  vector<float> inverse = QConj(q);
   inverse[0] /= divisor;
   inverse[1] /= divisor;
   inverse[2] /= divisor;
@@ -93,15 +93,15 @@ vector<float> Qinv(vector<float> q) {
 // Return the new vector
 Point QRotate(Point v, vector<float> q) {
   if (q.size() != 4) return v;
-  if (Qnorm(q) == 0) return v;
-  q = Qnormalize(q);
+  if (QNorm(q) == 0) return v;
+  q = QNormalize(q);
   Point u;
-  u.init(q[1], q[2], q[3]);
+  u.Init(q[1], q[2], q[3]);
   float s = q[0];
   Point result;
-  result = u.times(2.0f * u.dot(v));
-  result = result.add(v.times(s*s - u.dot(u)));
-  result = result.add(u.cross(v).times(s * 2.0f));
+  result = u.Times(2.0f * u.Dot(v));
+  result = result.Add(v.Times(s*s - u.Dot(u)));
+  result = result.Add(u.Cross(v).Times(s * 2.0f));
   return result;
 }
 

@@ -8,10 +8,10 @@
 namespace object_server {
 
 using quaternions::QRotate;
-using quaternions::Qinv;
+using quaternions::QInv;
 using std::vector;
 
-void ManualObject::init(int ident, string called) {
+void ManualObject::Init(int ident, string called) {
   id = ident;
   name = called;
   SetCenter(0, 0, 0);
@@ -24,9 +24,9 @@ bool ManualObject::SetCenter (Point c) {
   return true;
 }
 bool ManualObject::SetCenter (float x, float y, float z) {
-  center.x = x;
-  center.y = y;
-  center.z = z;
+  center.x_ = x;
+  center.y_ = y;
+  center.z_ = z;
   return true;
 }
 bool ManualObject::SetAngle (float ang[4]) {
@@ -71,12 +71,12 @@ bool ManualObject::Update(OWLMarker *marks, int i) {
 }
 bool ManualObject::update() {
   Point x_axis;
-  x_axis.init(1, 0, 0);
+  x_axis.Init(1, 0, 0);
   Point y_axis;
-  y_axis.init(0, 1, 0);
-  x_axis = QRotate(x_axis, Qinv(angle));
-  y_axis = QRotate(y_axis, Qinv(angle));
-  Point z_axis = x_axis.cross(y_axis);
+  y_axis.Init(0, 1, 0);
+  x_axis = QRotate(x_axis, QInv(angle));
+  y_axis = QRotate(y_axis, QInv(angle));
+  Point z_axis = x_axis.Cross(y_axis);
   axes.clear();
   axes.push_back(x_axis);
   axes.push_back(y_axis);

@@ -10,115 +10,115 @@ namespace object_server {
 
 // Initialize the point with the given x, y and z coordinates
 // x, y, z: floats describing location
-void Point::init(float X, float Y, float Z) {
-  id = -1;
-  current = 1;
-  x = X;
-  y = Y;
-  z = Z;
+void Point::Init(float X, float Y, float Z) {
+  id_ = -1;
+  current_ = 1;
+  x_ = X;
+  y_ = Y;
+  z_ = Z;
   return;
 }
 
 
-// init without arguments initializes the point with at (0,0,0)
-void  Point::init() {
-  id = -1;
-  current = 1;
-  x = y = z = 0;
+// Init without arguments initializes the point with at (0,0,0)
+void Point::Init() {
+  id_ = -1;
+  current_ = 1;
+  x_ = y_ = z_ = 0;
   return;
 }
-// Update updates the point with marker information
+// Update Updates the point with marker information
 // mark: OWLMarker passed by the Server
 // return: this new point
 void Point::Update(OWLMarker mark) {
-  current = 1;
-  id = mark.id;
-  x = mark.x;
-  y = mark.y;
-  z = mark.z;
+  current_ = 1;
+  id_ = mark.id;
+  x_ = mark.x;
+  y_ = mark.y;
+  z_ = mark.z;
 }
 
-// equals checks whether this point occupies the same space as another
+// Equals checks whether this point occupies the same space as another
 // p: a Point to compare against this one
 // return bool indicating "Is that point at the same place as this one?"
-bool Point::equals(Point p) {
+bool Point::Equals(Point p) {
   float epsilon = .00001;
-  return (fabs(p.x - x) < epsilon) &&
-         (fabs(p.y - y) < epsilon) &&
-         (fabs(p.z - z) < epsilon);
+  return (fabs(p.x_ - x_) < epsilon) &&
+         (fabs(p.y_ - y_) < epsilon) &&
+         (fabs(p.z_ - z_) < epsilon);
 }
 
 
-// sub subtracts two points
-// p: the Point to subtract from this one  
+// Sub subtracts two points
+// p: the Point to Subtract from this one  
 // return the new point
-Point Point::sub(Point p) {
+Point Point::Sub(Point p) {
   Point P;
-  (p.current && current) ? (P.current = 1) : (P.current = 0);
-  P.x = x - p.x;
-  P.y = y - p.y;
-  P.z = z - p.z;
+  (p.current_ && current_) ? (P.current_ = 1) : (P.current_ = 0);
+  P.x_ = x_ - p.x_;
+  P.y_ = y_ - p.y_;
+  P.z_ = z_ - p.z_;
   return P;
 }
-// times scalar multiplication of the point-vector
+// Times scalar multiplication of the point-vector
 // a: float scalar multiple
 // return: the new point
-Point Point::times(float a) {
+Point Point::Times(float a) {
   Point P;
-  P.current = current;
-  P.x = x*a;
-  P.y = y*a;
-  P.z = z*a;
+  P.current_ = current_;
+  P.x_ = x_*a;
+  P.y_ = y_*a;
+  P.z_ = z_*a;
   return P;
 }
-// add adds two vectors together
-// p: Point to add
+// Add adds two vectors together
+// p: Point to Add
 // return the new point
-Point Point::add(Point p) {
+Point Point::Add(Point p) {
   Point P;
-  (p.current && current) ? (P.current = 1) : (P.current = 0);
-  P.x = x + p.x;
-  P.y = y + p.y;
-  P.z = z + p.z;
+  (p.current_ && current_) ? (P.current_ = 1) : (P.current_ = 0);
+  P.x_ = x_ + p.x_;
+  P.y_ = y_ + p.y_;
+  P.z_ = z_ + p.z_;
   return P;
 }
 
-// cross performs the cross product of this point on the given
-// p: the point to be crossed agains -> this X p
-// return the vector representing the cross product
-Point Point::cross(Point p) {
+// Cross performs the cross product of this point on the given
+// p: the point to be Crossed agains -> this X p
+// return the vector representing the Cross product
+Point Point::Cross(Point p) {
   Point c;
-  (p.current && current) ? (c.current = 1) : (c.current = 0);
-  c.x = y * p.z - z * p.y;
-  c.y = z * p.x - x * p.z;
-  c.z = x * p.y - y * p.x;
+  (p.current_ && current_) ? (c.current_ = 1) : (c.current_ = 0);
+  c.x_ = y_ * p.z_ - z_ * p.y_;
+  c.y_ = z_ * p.x_ - x_ * p.z_;
+  c.z_ = x_ * p.y_ - y_ * p.x_;
   return c;
 }
 
-// dot performs the dot product of this Point with the given one
-// p: the other point to be dotted with
-// return the scalar floar representing the dot product
-float Point::dot(Point p) {
-  return p.x*x + p.y*y + p.z*z; 
+// Dot performs the dot product of this Point with the given one
+// p: the other point to be Dotted with
+// return the scalar floar representing the Dot product
+float Point::Dot(Point p) {
+  return p.x_*x_ + p.y_*y_ + p.z_*z_; 
 }
 
-// return the float magnitude
-float Point::magnitude() {
-  return sqrt(pow(x, 2)+pow(y, 2)+pow(z, 2));
+// return the float Magnitude
+float Point::Magnitude() {
+  return sqrt(pow(x_, 2)+pow(y_, 2)+pow(z_, 2));
 }
 
-// normalize finds the unit vector
+// Normalize finds the unit vector
 // return the unit vector
-Point Point::normalize() {
+Point Point::Normalize() {
   Point p;
-  float mag = magnitude();
+  float mag = Magnitude();
   if (mag == 0) {
-    p.init();
+    p.Init();
     return p;
   }
-  p.x = x / mag;
-  p.y = y / mag;
-  p.z = z / mag;
+  p.x_ = x_ / mag;
+  p.y_ = y_ / mag;
+  p.z_ = z_ / mag;
   return p;
 }
 
@@ -126,38 +126,38 @@ Point Point::normalize() {
 // p: the other point to compare with
 // return the distance between this and p
 float Point::DistanceToPoint(Point p) {
-  return sub(p).magnitude();
+  return Sub(p).Magnitude();
 }
 // VectorPerpendicularTo finds the vector perpendicular to a line
 // line: a vector of two points that define a line in R3
 // return: the shortest distance from this point to that line
 Point Point::VectorPerpendicularTo(vector<Point> line) {
-  Point v = line[1].sub(line[0]);
-  Point u = this->sub(line[0]);
-  return u.sub(v.normalize().times(v.dot(u)));
+  Point v = line[1].Sub(line[0]);
+  Point u = this->Sub(line[0]);
+  return u.Sub(v.Normalize().Times(v.Dot(u)));
 }
-// print returns the string representation of a point
-// return this string "(x, y, z)"
-string Point::print() {
+// Print returns the string representation of a point
+// return this string "(x_, y_, z_)"
+string Point::Print() {
   stringstream s;
-  s << "(" << x << "," << y << "," << z << ")";
+  s << "(" << x_ << "," << y_ << "," << z_ << ")";
   return s.str();
 }
 // FindById Finds a Point by its ID from a vector of points
-// id: the id of the point desired
+// id_: the id of the point desired
 // points: a vector of points to look in
 // return an iterator to that point
-const vector<Point>::iterator FindPointById(int id, vector<Point> &points) {
+const vector<Point>::iterator FindPointById(int id_, vector<Point> &points) {
   vector<Point>::iterator iter;
   for (iter = points.begin(); iter != points.end(); ++iter) {
-    if (iter->id == id)
+    if (iter->id_ == id_)
       return iter;
   }
   return points.end();
 }
 ::std::ostream& operator<<(::std::ostream& os, const Point& p) {
-  return os << "[" << p.id << "," << p.current << "]:("
-            << p.x << "," << p.y << "," << p.z << ")";
+  return os << "[" << p.id_ << "," << p.current_ << "]:("
+            << p.x_ << "," << p.y_ << "," << p.z_ << ")";
 }
 
 }  //  namespace object_server

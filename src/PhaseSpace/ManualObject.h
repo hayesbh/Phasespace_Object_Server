@@ -17,7 +17,7 @@ using object_server::Object;
 
 class ManualObject : public Object {
   public:
-  void init(int ident, string called);
+  void Init(int ident, string called);
   string get_type() {
     return "manual";
   }
