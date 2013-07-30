@@ -33,7 +33,7 @@ class PSObject : public Object {
   // points : a vector of Points that define the PhaseSpace Object
   // t : the type_ of object
   // rig : boolean that indicates that the object is rigid
-  void Init(int ident, string call, vector<Point> points, string t, bool rig);
+  bool Init(int ident, string call, vector<Point> points, string t, bool rig);
   ~PSObject() {
     delete type_;
   }

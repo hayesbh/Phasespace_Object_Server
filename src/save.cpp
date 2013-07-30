@@ -13,10 +13,10 @@ namespace object_server {
 bool store_object(Object* obj, string filename) {
     vector<Point> points = obj->get_points();
   FILE *fp = fopen(filename.c_str(), "w");
+  if (fp == NULL) return false;
   rapidjson::FileStream fs(fp);
   printf("rapid json filestream opened\n");
   rapidjson::PrettyWriter<rapidjson::FileStream> writer(fs);
-  writer.StartObject();
   rapidjson::Document doc;
   rapidjson::Value json;
   json.SetObject();
@@ -33,6 +33,7 @@ bool store_object(Object* obj, string filename) {
   if (obj->get_type() == "manual"){
     printf("Object is manual object\n");
     Point my_center = obj->get_center();
+    std::cout << my_center << std::endl;
     rapidjson::Value center;
     center.SetArray();
     rapidjson::Value X;
@@ -43,7 +44,7 @@ bool store_object(Object* obj, string filename) {
     center.PushBack(Y, doc.GetAllocator());
     rapidjson::Value Z;
     Z.SetDouble((double)my_center.z_);
-    center.PushBack(X, doc.GetAllocator());
+    center.PushBack(Z, doc.GetAllocator());
     json.AddMember("center", center, doc.GetAllocator());
     printf("center set\n");
     vector<float> my_dim = obj->get_dimensions();
@@ -52,7 +53,7 @@ bool store_object(Object* obj, string filename) {
     rapidjson::Value x_scale;
     x_scale.SetDouble((double)my_dim[0]);
     rapidjson::Value y_scale;
-    x_scale.SetDouble((double)my_dim[1]);
+    y_scale.SetDouble((double)my_dim[1]);
     rapidjson::Value z_scale;
     z_scale.SetDouble((double)my_dim[2]);
     dim.PushBack(x_scale, doc.GetAllocator());
@@ -83,6 +84,7 @@ bool store_object(Object* obj, string filename) {
     printf("Object is PSObject\n");
     PSObject* obj = dynamic_cast<PSObject*>(obj);
     // Set up the object_rigidity
+    std::cout << "obj rigidity: " << obj->get_rigidity() << std::endl;
     rapidjson::Value rigidity(obj->get_rigidity());
     json.AddMember("rigid", rigidity, doc.GetAllocator());
     // Set up array of points
@@ -147,8 +149,6 @@ bool store_object(Object* obj, string filename) {
   printf("at the writing and closing\n");
   json.Accept(writer);
   printf("json.Accept(writer)\n");
-  writer.EndObject();
-  printf("End of Object\n");
   fclose(fp);
   return true;
 }
@@ -219,7 +219,7 @@ bool revive_object(string filename, vector<int>& ids_set_, Object** object, int 
     return false;
   }
   string object_name = p["object_name"].GetString();
-  string t = p["type"].GetString();
+  string t = p["object_type"].GetString();
   if(t == "manual") {
     ManualObject* obj = new ManualObject;
     obj->Init(object_count, object_name);

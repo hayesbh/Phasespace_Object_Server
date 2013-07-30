@@ -40,6 +40,7 @@ bool DefaultType::Init (vector<Point> p, bool rig) {
   printf("Object Initialized dd\n");
   rigid_ = rig;
   printf("Rigid = rigid\n");
+  UpdateFields();
   return true;
 }
 

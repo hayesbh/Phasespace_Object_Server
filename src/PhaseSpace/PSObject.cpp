@@ -14,7 +14,7 @@ namespace object_server {
 // called : the name of the object
 // points : a vector of Points that define the PhaseSpace Object
 // t : the type_ of object
-void PSObject::Init(int ident, string call,
+bool PSObject::Init(int ident, string call,
                     vector<Point> points, string t, bool rigid) {
   Point p;
   p.Init();
@@ -38,18 +38,20 @@ void PSObject::Init(int ident, string call,
   
   name_ = call;
   id_ = ident;
+  bool success;
   if (t == "glove") {
     GloveType* g = new GloveType;
-    g->Init(points, rigid);
+    success = g->Init(points, rigid);
     type_ = static_cast<ObjectType*>(g);
     ext_ = "glove";
   } else {
     DefaultType* d = new DefaultType;
-    d->Init(points, rigid);
+    success = d->Init(points, rigid);
     type_ = static_cast<ObjectType*>(d);
     ext_ = "default";
   }
   UpdateFields();
+  return success;
 }
 
 
