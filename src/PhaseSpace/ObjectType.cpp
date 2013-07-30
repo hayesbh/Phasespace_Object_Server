@@ -47,7 +47,7 @@ void ObjectType::Update(OWLMarker *markers, int n) {
   GetScale();
   return;
 }
-bool ObjectType::update() {
+bool ObjectType::UpdateFields() {
   GetCenter();
   printf("GetCenter() complete\n");
   GetAngle();

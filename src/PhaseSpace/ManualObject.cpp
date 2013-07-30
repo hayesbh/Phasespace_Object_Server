@@ -12,75 +12,75 @@ using quaternions::QInv;
 using std::vector;
 
 void ManualObject::Init(int ident, string called) {
-  id = ident;
-  name = called;
+  id_ = ident;
+  name_ = called;
   SetCenter(0, 0, 0);
   SetAngle(1, 0, 0, 0);
   SetDim(.01, .01, .01);
-  update();
+  UpdateFields();
 }  
 bool ManualObject::SetCenter (Point c) {
-  center = c;
+  center_ = c;
   return true;
 }
 bool ManualObject::SetCenter (float x, float y, float z) {
-  center.x_ = x;
-  center.y_ = y;
-  center.z_ = z;
+  center_.x_ = x;
+  center_.y_ = y;
+  center_.z_ = z;
   return true;
 }
 bool ManualObject::SetAngle (float ang[4]) {
-  angle.clear();
-  angle.push_back(ang[0]);
-  angle.push_back(ang[1]);
-  angle.push_back(ang[2]);
-  angle.push_back(ang[3]);
-  update();
+  angle_.clear();
+  angle_.push_back(ang[0]);
+  angle_.push_back(ang[1]);
+  angle_.push_back(ang[2]);
+  angle_.push_back(ang[3]);
+  UpdateFields();
   return true;
 }
 bool ManualObject::SetAngle (vector<float> ang) {
-  if (angle.size() != 4) return false;
-  angle.clear();
-  angle.push_back(ang[0]);
-  angle.push_back(ang[1]);
-  angle.push_back(ang[2]);
-  angle.push_back(ang[3]);
-  update();
+  if (angle_.size() != 4) return false;
+  angle_.clear();
+  angle_.push_back(ang[0]);
+  angle_.push_back(ang[1]);
+  angle_.push_back(ang[2]);
+  angle_.push_back(ang[3]);
+  UpdateFields();
   return true;
 }
 
 bool ManualObject::SetAngle (float w, float x, float y, float z) {
-  angle.clear();
-  angle.push_back(w);
-  angle.push_back(x);
-  angle.push_back(y);
-  angle.push_back(z);
-  update();
+  angle_.clear();
+  angle_.push_back(w);
+  angle_.push_back(x);
+  angle_.push_back(y);
+  angle_.push_back(z);
+  UpdateFields();
   return true;
 }
 bool ManualObject::SetDim (float x, float y, float z) {
-  dim.clear();
-  dim.push_back(x);
-  dim.push_back(y);
-  dim.push_back(z);
+  dim_.clear();
+  dim_.push_back(x);
+  dim_.push_back(y);
+  dim_.push_back(z);
   return true;
 }
 bool ManualObject::Update(OWLMarker *marks, int i) {
-  update();
+  UpdateFields();
   return true;
 }
-bool ManualObject::update() {
+bool ManualObject::UpdateFields() {
   Point x_axis;
   x_axis.Init(1, 0, 0);
   Point y_axis;
   y_axis.Init(0, 1, 0);
-  x_axis = QRotate(x_axis, QInv(angle));
-  y_axis = QRotate(y_axis, QInv(angle));
+  x_axis = QRotate(x_axis, QInv(angle_));
+  y_axis = QRotate(y_axis, QInv(angle_));
   Point z_axis = x_axis.Cross(y_axis);
-  axes.clear();
-  axes.push_back(x_axis);
-  axes.push_back(y_axis);
-  axes.push_back(z_axis);
+  axes_.clear();
+  axes_.push_back(x_axis);
+  axes_.push_back(y_axis);
+  axes_.push_back(z_axis);
   return true;
 }
 

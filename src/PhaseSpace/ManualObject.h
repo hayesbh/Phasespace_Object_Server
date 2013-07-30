@@ -30,13 +30,13 @@ class ManualObject : public Object {
   bool SetAngle (vector<float> angle);
   bool SetAngle (float w, float x, float y, float z);
   bool SetDim (float x, float y, float z);
-  bool update();
+  bool UpdateFields();
   bool Update (OWLMarker *marks, int n);
   bool AddPoints(vector<Point> new_points){
     return false;
   }
   virtual Point get_pointer() {
-    return center;
+    return center_;
   }
 };
 

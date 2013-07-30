@@ -13,60 +13,52 @@ namespace object_server {
 // identification : the id of the object
 // called : the name of the object
 // points : a vector of Points that define the PhaseSpace Object
-// t : the type of object
+// t : the type_ of object
 void PSObject::Init(int ident, string call,
                     vector<Point> points, string t, bool rigid) {
   Point p;
   p.Init();
-  center = p;
-  angle.push_back(1);
-  angle.push_back(0);
-  angle.push_back(0);
-  angle.push_back(0);
+  center_ = p;
+  angle_.push_back(1);
+  angle_.push_back(0);
+  angle_.push_back(0);
+  angle_.push_back(0);
   Point x_axis;
   x_axis.Init(1, 0, 0);
   Point y_axis;
   y_axis.Init(0, 1, 0);
   Point z_axis;
   z_axis.Init(0, 0, 1);
-  axes.push_back(x_axis);
-  axes.push_back(y_axis);
-  axes.push_back(z_axis);
-  dim.push_back(.1);
-  dim.push_back(.1);
-  dim.push_back(.1);
+  axes_.push_back(x_axis);
+  axes_.push_back(y_axis);
+  axes_.push_back(z_axis);
+  dim_.push_back(.1);
+  dim_.push_back(.1);
+  dim_.push_back(.1);
   
-  name = call;
-  id = ident;
+  name_ = call;
+  id_ = ident;
   if (t == "glove") {
     GloveType* g = new GloveType;
     g->Init(points, rigid);
-    type = static_cast<ObjectType*>(g);
-    ext = "glove";
+    type_ = static_cast<ObjectType*>(g);
+    ext_ = "glove";
   } else {
     DefaultType* d = new DefaultType;
     d->Init(points, rigid);
-    type = static_cast<ObjectType*>(d);
-    ext = "default";
+    type_ = static_cast<ObjectType*>(d);
+    ext_ = "default";
   }
-  printf("In ps Object\n");
-  center = type->get_center();
-  angle = type->get_angle();
-  axes = type->GetAxes();
-  dim = type->get_dimensions();
-  printf("pre-updated\n");
-  update();
+  UpdateFields();
 }
 
 
-bool PSObject::update(){
-  printf("in PSObject::update\n");
-  type->update();
-  printf("type updated\n");
-  center = type->get_center();
-  angle = type->get_angle();
-  axes = type->GetAxes();
-  dim = type->get_dimensions();
+bool PSObject::UpdateFields(){
+  type_->UpdateFields();
+  center_ = type_->get_center();
+  angle_ = type_->get_angle();
+  axes_ = type_->GetAxes();
+  dim_ = type_->get_dimensions();
   return true;
 }
 
@@ -75,11 +67,8 @@ bool PSObject::update(){
 // n : the number of markers that have been updated
 bool PSObject::Update(OWLMarker *markers, int n) {
   printf("Updating PSObject\n");
-  type->Update(markers, n);
-  center = type->get_center();
-  angle = type->get_angle();
-  axes = type->GetAxes();
-  dim = type->get_dimensions();
+  type_->Update(markers, n);
+  UpdateFields();
   return true;
 }
 

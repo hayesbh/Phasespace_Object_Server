@@ -29,18 +29,18 @@ namespace object_server {
 // return bool: Does this object intersect obj?
 bool Object::CollidesWith(Object* obj) {
   // Unit Axes of First Object Stored in A
-  Point A[3] = { axes[0], axes[1], axes[0].Cross(axes[1]).Normalize() };
+  Point A[3] = { axes_[0], axes_[1], axes_[0].Cross(axes_[1]).Normalize() };
   // Unit Axes of the Second Object Stored in B
   vector<Point> ax = obj->get_axes();
   Point B[3] = { ax[0],
                  ax[1],
                  ax[2] };
   // D is the vector from First Object to Second Object
-  Point D = center.Sub(obj->get_center());
+  Point D = center_.Sub(obj->get_center());
   // The extents of object 1 : 
   // How far does it extend from the center to the edges in the local x, y, and z axis
   // Half the total width, length, and height of the object
-  float a[3] = { dim[0]/2, dim[1]/2, dim[2]/2 };
+  float a[3] = { dim_[0]/2, dim_[1]/2, dim_[2]/2 };
   // The extents for object 2 :
   vector<float> dim2 = obj->get_dimensions();
   float b[3] = { dim2[0]/2, dim2[1]/2, dim2[2]/2 };
