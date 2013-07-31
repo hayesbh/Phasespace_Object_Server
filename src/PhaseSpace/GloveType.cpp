@@ -12,8 +12,7 @@ namespace object_server {
 // finds all of the finges' specific Points
 // Finds the center, the angle_ and the scale
 bool GloveType::Init(vector<Point> p, bool rig) {
-  printf("Setting up Glove\n");
-  if (p.size() == 0) return false;
+  if (p.size() != 7) return false;
   vector<Point>::iterator iter;
   // Push back each of the points_ and blank ones where they are needed
   points_ = p;
@@ -27,7 +26,6 @@ bool GloveType::Init(vector<Point> p, bool rig) {
   dim_.push_back(.1);
   dim_.push_back(.1);
   dim_.push_back(.1);
-
   int mult = points_[0].id_ / 7;
   // Set up finger specific pointers
   for (iter = points_.begin(); iter != points_.end(); ++iter) {
@@ -38,7 +36,7 @@ bool GloveType::Init(vector<Point> p, bool rig) {
     else if ( iter->id_ % 7 == 0 ) ring_ = iter;
     else if ( iter->id_ % 7 == 5 ) pinkey_ = iter;
     else if ( iter->id_ % 7 == 6 ) base_right_ = iter;
-    if (iter->id_ / 7 != mult) return false;
+    if (iter->id_  / 7 != mult) return false;
   }
   GetCenter(1);
   GetAngle(1);

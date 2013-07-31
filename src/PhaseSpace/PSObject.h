@@ -34,9 +34,6 @@ class PSObject : public Object {
   // t : the type_ of object
   // rig : boolean that indicates that the object is rigid
   bool Init(int ident, string call, vector<Point> points, string t, bool rig);
-  ~PSObject() {
-    delete type_;
-  }
   // get_pointer returns a Point that represents where this object is pointing
   //   in this case that information is stored
   //    within the object type_ specific information
@@ -83,6 +80,10 @@ class PSObject : public Object {
     return type_->SetOriginalAxis2(p);
   }
   bool SetDimensions(float x, float y, float z) {
+    dim_.clear();
+    dim_.push_back(x);
+    dim_.push_back(y);
+    dim_.push_back(z);
     return type_->SetDimensions(x, y, z);
   }
   bool SetRigid(bool rigid) {

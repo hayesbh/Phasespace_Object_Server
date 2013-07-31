@@ -37,9 +37,7 @@ bool DefaultType::Init (vector<Point> p, bool rig) {
   GetAngle(1);
   // Get the Dimensional information
   GetScale(1);
-  printf("Object Initialized dd\n");
   rigid_ = rig;
-  printf("Rigid = rigid\n");
   UpdateFields();
   return true;
 }
@@ -53,7 +51,6 @@ Point DefaultType::get_pointer() {
 bool DefaultType::GetFirstAxis(int i = 0){
   if (axis_points1_.size() == 2 && i == 0) {
     if(axis_points1_[0]->current_ == 0 || axis_points1_[1]->current_ == 0) {
-      printf("GetFirstAxis points_ not current\n");
       return false;
     }
     axis1_ = axis_points1_[1]->Sub(*axis_points1_[0]).Normalize();
@@ -61,7 +58,6 @@ bool DefaultType::GetFirstAxis(int i = 0){
   } else {
     // If there are not enough points_ then just return the 0 vector
     if (points_.size() < 2) {
-      printf("GetFirstAxis not enough points_\n");
       return false;
     }
     // compare with max distance squared
@@ -86,7 +82,6 @@ bool DefaultType::GetFirstAxis(int i = 0){
       } 
     }
     if (P1 == points_.end() || P2 == points_.end()) {
-      printf("GetFirstAxis P1 || P2 == points_.end()\n");
       axis1_.Init(1, 0, 0);
       return false;  
     }
@@ -111,21 +106,16 @@ bool DefaultType::GetFirstAxis(int i = 0){
 // has the closest x value to one of the first axis points_
 bool DefaultType::GetBothAxes(int i = 0){
   if(!GetFirstAxis(i)) {
-    printf("GetFirstAxis Failed\n");
     return false;
-  } printf("GetFirstAxis(%i) succeeded\n", i);
+  }
   if (axis_points1_.size() == 2 && axis_points2_.size() == 2 &&  i == 0) {
-    printf("axis_points2_ already set\n");
     Point u;
     // Make sure that both axes are up to date
     if(axis_points1_[0]->current_ == 0 || axis_points1_[1]->current_ == 0 || axis_points2_[0]->current_ == 0 || axis_points2_[1]->current_ == 0 ) {
-      printf("GetBothAxes Points not current\n");
       return false;
     } else {
-      printf("in else clause 1\n");
       u = axis_points2_[1]->Sub(*axis_points2_[0]);
     }
-    printf("Past the if else clause\n");
     Point v;
     if(axis_points1_[1] == axis_points2_[0]) {
       v = axis_points1_[0]->Sub(*axis_points1_[1]);
@@ -138,12 +128,10 @@ bool DefaultType::GetBothAxes(int i = 0){
   } else {
     // Make sure that there are enough points_ to define this second axis
     if (points_.size() < 3) {
-      printf("GetBothAxes Not Enough Points\n");
       return false;
     }
     // Make sure the first axis exists
     if(axis_points1_[0]->current_ == 0 || axis_points1_[1]->current_ == 0) {
-      printf("GetBothAxes First axis Points not current\n");
       return false;
     }
     //  distance found so far
@@ -167,7 +155,6 @@ bool DefaultType::GetBothAxes(int i = 0){
       }
     }
     if (P1 == points_.end() || P2 == points_.end()) {
-      printf("GetBothAxes P1 || P2 == points_.end()\n");
       return false;
     }
     axis_points2_.clear();

@@ -73,18 +73,13 @@ TEST_F(InitTest, OnePoint) {
 
 TEST_F(InitTest, SeveralPoints) {
   PSObject obj;
-  printf("pre Initialization\n");
   obj.Init(0, "all_points", all_points_, "default", false);
-  printf("PostInitialization\n");
   for(int i = 0; i < 2; ++i) {
   vector<Point> points = obj.get_points();
   vector<Point>::iterator iter;
-  printf("points: ");
   for (iter = points.begin(); iter != points.end(); ++iter) {
-    printf("%i, ", iter->id_);
     EXPECT_TRUE(iter->current_ == 1);
   }
-  printf("\n");
   EXPECT_TRUE(obj.get_center().x_ == .5 && obj.get_center().y_ == .5 && obj.get_center().z_ == .5) << obj.get_center();
   EXPECT_TRUE(obj.get_rotation()[0] == 1 && obj.get_rotation()[1] == 0 && obj.get_rotation()[2] == 0 && obj.get_rotation()[3] == 0);
   EXPECT_TRUE(fabs(obj.get_dimensions()[0]-1.1) <= .0001 && fabs(obj.get_dimensions()[1]-1.1) <= .0001 && fabs(obj.get_dimensions()[2]-1.1) <= .0001)

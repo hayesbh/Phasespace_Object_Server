@@ -48,12 +48,10 @@ void ObjectType::Update(OWLMarker *markers, int n) {
   return;
 }
 bool ObjectType::UpdateFields() {
+  if(rigid_) return true;
   GetCenter();
-  printf("GetCenter() complete\n");
   GetAngle();
-  printf("GetAngle() complete\n");
   GetScale();
-  printf("GetScale() complete\n");
   return true;
 }
 // MaxDimensionalDistance find the dimensions along the local axis
@@ -81,13 +79,11 @@ float ObjectType::MaxDimensionalDistance(int dimension) {
 // GetScale finds and sets the dimensions of the object
 void ObjectType::GetScale(int i){
   if (rigid_) return;
-  printf("getting Scale\n");
   float buffer = 1.10;
   dim_.clear();
   dim_.push_back(2 * MaxDimensionalDistance(0) * buffer);
   dim_.push_back(2 * MaxDimensionalDistance(1) * buffer);
   dim_.push_back(2 * MaxDimensionalDistance(2) * buffer);
-  printf("scale recived\n");
 }
 // AddPoints adds new_points to the object
 // new_points is a list of Points that are to be added to the Object
@@ -131,14 +127,11 @@ void ObjectType::GetCenter(int i) {
 // This angle is the rotation required to turn the current_ vector of the x-axis to the original x-axis vector
 // And the rotation to turn the y-axis to the original y-axis vector
 void ObjectType::GetAngle(int i) {
-  printf("GetBothAxes(%i) getting\n", i);
   bool success = GetBothAxes(i);
   // If the Axis is unpopulated, it was unable to find two points
   if (!success) {
-    printf("GetBothAxes(%i) failed\n", i);
     return;
   }
-  printf("GetBothAxes(%i) succeeded\n", i);
   vector<float> Q1;
   Point cross1 = original_axis1_.Cross(axis1_);
   Q1.push_back(sqrt(pow(axis1_.Magnitude(), 2) * pow(original_axis1_.Magnitude(), 2)) + axis1_.Dot(original_axis1_));
@@ -163,9 +156,7 @@ void ObjectType::GetAngle(int i) {
   Q2.push_back(cross2.z_);
   // angle = Q;
   Q2 = QNormalize(Q2);
-  printf("final2\n");
   angle_ = QNormalize(QMult(Q1, Q2));
-  printf("final3\n");
   return;
 }
 }  // namespace object_server

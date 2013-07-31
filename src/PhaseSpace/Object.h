@@ -27,6 +27,8 @@ class Object {
 
   public:
     //virtual void init()=0;
+    bool SetDimensions(float x, float y, float z);
+    
     // get_id returns the id of the object
     // return int representing the identification number
     int get_id() {

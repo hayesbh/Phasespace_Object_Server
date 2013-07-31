@@ -68,7 +68,6 @@ bool PSObject::UpdateFields(){
 // Uses updated PhaseSpace OWLMarker s to update points
 // n : the number of markers that have been updated
 bool PSObject::Update(OWLMarker *markers, int n) {
-  printf("Updating PSObject\n");
   type_->Update(markers, n);
   UpdateFields();
   return true;
