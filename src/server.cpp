@@ -75,7 +75,7 @@ using object_server::restore_env;
 #define INIT_FLAGS 0
 // OBJECT_FILE_EXT is the relative path of the saved object information
 #define OBJECT_FILE_EXT "object_files/"
-#define ENV_EXT "environments/"
+#define ENV_EXT "environments"
 // object_count is the number of objects set so far (deletions are not counted)
 // It is used for assigning new identification numbers to objects
 int object_count_ = 0;

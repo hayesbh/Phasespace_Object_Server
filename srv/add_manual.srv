@@ -1,6 +1,6 @@
 string name
-float64[3] center
-float64[3] dim
-float64[4] rot
+float64[] center
+float64[] dim
+float64[] rot
 ---
 string info

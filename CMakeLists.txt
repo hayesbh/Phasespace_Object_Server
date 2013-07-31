@@ -46,6 +46,24 @@ target_link_libraries(delete_object)
 rosbuild_add_executable(add_manual src/add_manual.cpp)
 target_link_libraries(add_manual)
 
+rosbuild_add_executable(collides src/collides.cpp)
+target_link_libraries(collides)
+
+rosbuild_add_executable(box_filled src/box_filled.cpp)
+target_link_libraries(box_filled)
+
+rosbuild_add_executable(save_object src/save_object.cpp)
+target_link_libraries(save_object)
+
+rosbuild_add_executable(save_env src/save_env.cpp)
+target_link_libraries(save_env)
+
+rosbuild_add_executable(load_object src/load_object.cpp)
+target_link_libraries(load_object)
+
+rosbuild_add_executable(load_env src/load_env.cpp)
+target_link_libraries(load_env)
+
 set(OBJECTFILES src/PhaseSpace/Point.cpp src/PhaseSpace/quaternion.cpp src/PhaseSpace/GloveType.cpp src/PhaseSpace/DefaultType.cpp src/PhaseSpace/ManualObject.cpp src/PhaseSpace/ObjectType.cpp src/PhaseSpace/Object.cpp src/PhaseSpace/PSObject.cpp)
 
 rosbuild_add_gtest(test/ServerTest src/gtests/ServerTest.cpp src/save.cpp ${OBJECTFILES})
