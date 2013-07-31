@@ -34,7 +34,9 @@ class Object {
     int get_id() {
       return id_;
     }
+    // return the type of object
     virtual string get_type()=0;
+    // return the rigidity
     virtual bool get_rigidity()=0;
     // get_name returns the name of the object
     // return a string representing the user given name
@@ -44,6 +46,7 @@ class Object {
     // get_pointer returns a Point that represents where this object is pointing
     virtual Point get_pointer()=0;
     // CollidesWith determines whether this object collides with another object
+    // obj: the Object to check the collision with
     virtual bool CollidesWith(Object* obj);
     // get_center returns the center of the object
     // return a Point
@@ -65,12 +68,18 @@ class Object {
     vector<float> get_dimensions() {
       return dim_;
     }
+    // return the points that make up the object
+    // default is just to return the empty vector
     virtual vector<Point> get_points() {
       vector<Point> p;
       return p;
     }
+    // AddPoints adds the points to the object
+    // return: bool indicating whether any points were succesfully added
     virtual bool AddPoints(vector<Point> new_points)=0;
+    // Update Updates the fields based of new marker information
     virtual bool Update(OWLMarker* marks, int n)=0;
+    // UpdateFields updates the fields of the object
     virtual bool UpdateFields()=0;
 };
 

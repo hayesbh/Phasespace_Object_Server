@@ -9,8 +9,10 @@
 namespace object_server {
 
 // Init sets initializes the points_ of the glove
-// finds all of the finges' specific Points
+// finds all of the fingers' specific Points
 // Finds the center, the angle_ and the scale
+// p: is the list of points for the glove
+// rig: is the rigidity of the glove
 bool GloveType::Init(vector<Point> p, bool rig) {
   if (p.size() != 7) return false;
   vector<Point>::iterator iter;

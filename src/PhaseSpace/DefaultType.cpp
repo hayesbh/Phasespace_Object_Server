@@ -17,8 +17,14 @@ using quaternions::QNormalize;
 using quaternions::QInv;
 using quaternions::QRotate;
 
+// init initializes the Object to hold in it the points given
+// p: The points that this object will track
+// rig: bool value indicating whether the object is rigid (true if it is)
+// return: bool indicated whether this object was successfully initialized
 bool DefaultType::Init (vector<Point> p, bool rig) {
   points_ = p;
+  // Need DefaultState because of loading
+  // Just in case none of the points of the object are current
   original_axis1_.Init(1, 0, 0);
   original_axis2_.Init(0, 1, 0);
   axis1_.Init(1, 0, 0);
@@ -41,13 +47,16 @@ bool DefaultType::Init (vector<Point> p, bool rig) {
   UpdateFields();
   return true;
 }
-
+// get_pointer returns the pointer of the Object (specifically in the glove's case)
 Point DefaultType::get_pointer() {
   return center_;
 }
 
-// GetFirstAxis finds (and sets if first time of i == 1) the local x_axis
-// default is two with lowest y-values
+// GetFirstAngleAxis finds (and sets if first time of i == 1) the local x_axis
+// default first angle axis is defined by the two points with the y values closest to zero
+// the vector points in the +x direction
+// i: default set to 0 but if it is ever set to 1 the first axis will be reset according to the rules above
+// return: bool indicating whether this was successful at getting the first axis
 bool DefaultType::GetFirstAxis(int i = 0){
   if (axis_points1_.size() == 2 && i == 0) {
     if(axis_points1_[0]->current_ == 0 || axis_points1_[1]->current_ == 0) {
@@ -101,9 +110,11 @@ bool DefaultType::GetFirstAxis(int i = 0){
     return true;
   }
 }
-// GetSecondAxis gets the y_axis in the local object's frame of reference
-// For a block (default type) this would be the one that
-// has the closest x value to one of the first axis points_
+// GetBothAxes ginds both Axes (calls on GetFirstAxis) and sets both (if the first time or i == 1)
+// this is the local y axis and is defined by the point that has the closest x value to one of the base points
+// these axes that are initialized define the angle of the object
+// i: default set to 0 but if it is ever set to 1 the second axis and first axis will be reset according to the rules above
+// return: bool that indicates whether both axes were set
 bool DefaultType::GetBothAxes(int i = 0){
   if(!GetFirstAxis(i)) {
     return false;
@@ -117,6 +128,7 @@ bool DefaultType::GetBothAxes(int i = 0){
       u = axis_points2_[1]->Sub(*axis_points2_[0]);
     }
     Point v;
+    // upon initial set up ensure that the x_axis is in the +x direction --> right handed coordinate system
     if(axis_points1_[1] == axis_points2_[0]) {
       v = axis_points1_[0]->Sub(*axis_points1_[1]);
     } else {
@@ -154,6 +166,7 @@ bool DefaultType::GetBothAxes(int i = 0){
         }
       }
     }
+    // if there were not enough current points then try again next time GetBothAxes is called
     if (P1 == points_.end() || P2 == points_.end()) {
       return false;
     }
