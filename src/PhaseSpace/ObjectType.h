@@ -3,8 +3,8 @@
 // Date: 5/18/13
 // About: ObjectType contains type specific information
 
-#ifndef _SHL_COREOBJECTSERVER_H
-#define _SHL_COREOBJECTSERVER_H
+#ifndef _SHL_OBJECT_SERVER_SRC_PHASESPACE_OBJECTTYPE_H_
+#define _SHL_OBJECT_SERVER_SRC_PHASESPACE_OBJECTTYPE_H_
 
 #include <vector>
 #include <cstdio>
@@ -210,4 +210,4 @@ class ObjectType {
     virtual void GetAngle(int i=0);
 };
 }  // namespace object_server
-#endif
+#endif  // _SHL_OBJECT_SERVER_SRC_PHASESPACE_OBJECTTYPE_H_

@@ -3,8 +3,8 @@
 // Date: 7/18/13
 // About: Virtual General Object Class
 
-#ifndef _SHL_COREOBJECTSERVER_OBJECT_H
-#define _SHL_COREOBJECTSERVER_OBJECT_H
+#ifndef _SHL_OBJECT_SERVER_SRC_PHASESPACE_OBJECT_H_
+#define _SHL_OBJECT_SERVER_SRC_PHASESPACE_OBJECT_H_
 #include <string>
 #include <vector>
 #include "./Point.h"
@@ -26,7 +26,11 @@ class Object {
     vector<float> dim_; // The extents of the object
 
   public:
-    //virtual void init()=0;
+    // SetDimensions sets the dimensions of the Object
+    // x: the object's scale along the local x_axis
+    // y: the object's scale along the local y_axis
+    // z: the object's scale along the local z_axis
+    // return whether these dimensions were properly set
     bool SetDimensions(float x, float y, float z);
     
     // get_id returns the id of the object
@@ -34,9 +38,14 @@ class Object {
     int get_id() {
       return id_;
     }
-    // return the type of object
+    // get_type returns the type of object
+    // return string i.e. manual, default, glove
+    //   where manual indicates that it is a manual object
+    //         default indicates that it is a default PSObject
+    //         glove indicates that it is a Glove PSObject
     virtual string get_type()=0;
-    // return the rigidity
+    // get_rigidity returns the rigidity
+    // return: bool (true = rigid, false = not rigid)
     virtual bool get_rigidity()=0;
     // get_name returns the name of the object
     // return a string representing the user given name
@@ -49,22 +58,23 @@ class Object {
     // obj: the Object to check the collision with
     virtual bool CollidesWith(Object* obj);
     // get_center returns the center of the object
-    // return a Point
+    // return a Point that represents the center of the object
     Point get_center() {
       return center_;
     }
     // get_rotation returns the rotation of the object
-    // return a quaternion representing rotation
+    // return vector of floats (a quaternion) representing rotation
     vector<float> get_rotation() {
       return angle_;
     }
     // get_axes returns the axes of the object
-    // return a vector of floats representing the unit axes
+    // return a vector of Points representing the unit axes
+    //  (X, Y, Z) where X is the local x axis etc.
     vector<Point> get_axes() {
       return axes_;
     }
     // get_dimensions returns the dimension (extents) of the object
-    // return a 3D array of floats
+    // return a 3D array of floats descibing the local dimensions of the object
     vector<float> get_dimensions() {
       return dim_;
     }
@@ -77,13 +87,14 @@ class Object {
     // AddPoints adds the points to the object
     // return: bool indicating whether any points were succesfully added
     virtual bool AddPoints(vector<Point> new_points)=0;
-    // Update Updates the fields based of new marker information
+    // Update updates points with new marker information
+    // and Updates the Fields based of new marker information
     virtual bool Update(OWLMarker* marks, int n)=0;
-    // UpdateFields updates the fields of the object
+    // UpdateFields updates the Fields of the object dimension, axes, angle, center
     virtual bool UpdateFields()=0;
 };
 
 const vector<Object*>::iterator FindObjectByName(string name, vector<Object*> &objects);
 
 }  // namespace object_server
-#endif      
+#endif  // _SHL_OBJECT_SERVER_SRC_PHASESPACE_OBJECT_H_

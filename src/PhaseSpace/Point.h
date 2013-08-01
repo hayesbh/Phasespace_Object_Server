@@ -3,8 +3,8 @@
 // Date: 5/18/13
 // About: Point Class for describing 3D points and vectors
 
-#ifndef _SHL__OBJECT_SERVER_SRC_PHASESPACE_POINT_H_
-#define _SHL__OBJECT_SERVER_SRC_PHASESPACE_POINT_H_
+#ifndef _SHL_OBJECT_SERVER_SRC_PHASESPACE_POINT_H_
+#define _SHL_OBJECT_SERVER_SRC_PHASESPACE_POINT_H_
 
 #include <vector>
 #include <sstream>
@@ -85,4 +85,4 @@ const vector<Point>::iterator FindPointById(int id, vector<Point> &points);
 ::std::ostream& operator<<(::std::ostream& os, const Point& point);
 }  // namespace object_server
 
-#endif  // _SHL__OBJECT_SERVER_SRC_PHASESPACE_POINT_H_
+#endif  // _SHL_OBJECT_SERVER_SRC_PHASESPACE_POINT_H_

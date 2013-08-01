@@ -3,8 +3,8 @@
 // Date: 5/18/13
 // About: Quaternions
 
-#ifndef _SHL__OBJECT_SERVER_SRC_PHASESPACE_QUATERNION_H_
-#define _SHL__OBJECT_SERVER_SRC_PHASESPACE_QUATERNION_H_
+#ifndef _SHL_OBJECT_SERVER_SRC_PHASESPACE_QUATERNION_H_
+#define _SHL_OBJECT_SERVER_SRC_PHASESPACE_QUATERNION_H_
 
 
 // Note: Notation for quaternions q1 can be represented as (w1, v1)
@@ -59,4 +59,4 @@ Point QRotate(Point p, vector<float> q);
 
 }  // namespace quaternions
 
-#endif  // _SHL__OBJECT_SERVER_SRC_PHASESPACE_QUATERNION_H_
+#endif  // _SHL_OBJECT_SERVER_SRC_PHASESPACE_QUATERNION_H_

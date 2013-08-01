@@ -3,8 +3,8 @@
 // Date: 5/18/13
 // About: Glove extends Object Type adding in more specific "Hand" information
 
-#ifndef _SHL__OBJECT_SERVER_SRC_PHASESPACE_GLOVETYPE_H_
-#define _SHL__OBJECT_SERVER_SRC_PHASESPACE_GLOVETYPE_H_
+#ifndef _SHL_OBJECT_SERVER_SRC_PHASESPACE_GLOVETYPE_H_
+#define _SHL_OBJECT_SERVER_SRC_PHASESPACE_GLOVETYPE_H_
 
 #include <vector>
 #include "./ObjectType.h"
@@ -33,8 +33,9 @@ class GloveType : public ObjectType {
     // return success in finding
     bool GetFirstAxis(int i = 0);
     // GetSecondAxis sets the second axis of the hand (pointer and left base)
-    // return success in finding
+    // return true if it was able to update the axis information (the Points were current)
     bool GetBothAxes(int i = 0);
+    // AddPoints for a Glove always returns false, nothing else can be added to this set object
     bool AddPoints() {
       return false;
     }

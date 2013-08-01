@@ -4,6 +4,9 @@
 // About: Header file for saving and loading objects
 // NOTE: ALL folder names should not be followed by a /
 
+#ifndef _SHL_OBJECT_SERVER_SRC_SAVE_H_
+#define _SHL_OBJECT_SERVER_SRC_SAVE_H_
+
 // Include the ROS system
 #include <ros/ros.h>
 #include <sys/stat.h>
@@ -62,4 +65,8 @@ bool revive_object(string filename, vector<int>& ids_set_, Object** object, int 
 // object_count: current object count for setting ids
 bool restore_env(string env_ext, string env_name, vector<int>& ids_set_, vector<Object*>& objects, int &object_count);
 
-}
+}  // object_server
+
+#endif  // _SHL_OBJECT_SERVER_SRC_SAVE_H_
+
+

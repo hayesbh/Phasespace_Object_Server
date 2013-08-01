@@ -2,8 +2,8 @@
 // Author: Dylan Visher
 // Date: 5/18/13
 // About: DefaultType contains default information
-#ifndef _SHL_COREOBJECTSERVER_DEFAULTTYPE_H
-#define _SHL_COREOBJECTSERVER_DEFAULTTYPE_H
+#ifndef _SHL_OBJECT_SERVER_SRC_PHASESPACE_DEFAULTTYPE_H_
+#define _SHL_OBJECT_SERVER_SRC_PHASESPACE_DEFAULTTYPE_H_
 
 #include <vector>
 #include <cmath>
@@ -50,4 +50,4 @@ class DefaultType : public ObjectType {
 };
 
 }  // namespace object_server
-#endif
+#endif  // _SHL_OBJECT_SERVER_SRC_PHASESPACE_DEFAULTTYPE_H_
