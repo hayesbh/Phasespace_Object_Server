@@ -45,7 +45,7 @@ class ManualObject : public Object {
   // UpdatesFields and returns true to indicate that it has been updated
   bool Update (OWLMarker *marks, int n);
   // AddPoints returns false to indicate that points cannot be added to this object
-  bool AddPoints(vector<Point> new_points){
+  bool AddPoints(vector<Point>& new_points){
     return false;
   }
   // get_pointer returns the center of the object as a Point

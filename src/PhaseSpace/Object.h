@@ -86,7 +86,7 @@ class Object {
     }
     // AddPoints adds the points to the object
     // return: bool indicating whether any points were succesfully added
-    virtual bool AddPoints(vector<Point> new_points)=0;
+    virtual bool AddPoints(vector<Point>& new_points)=0;
     // Update updates points with new marker information
     // and Updates the Fields based of new marker information
     virtual bool Update(OWLMarker* marks, int n)=0;
