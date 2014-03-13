@@ -10,7 +10,7 @@
 #include <cstdlib>
 #include <vector>
 #include "ros/ros.h"
-#include "core_object_server/collides.h"
+#include "Phasespace_Object_Server/collides.h"
 
 using std::vector;
 using std::string;
@@ -20,14 +20,14 @@ int main(int argc, char **argv) {
   ros::init(argc, argv, "collides");
   /*Check for inproper number of arguments*/
   if (argc != 3) {
-    ROS_WARN("usage: rosrun core_object_server collides name1 name2");
+    ROS_WARN("usage: rosrun Phasespace_Object_Server collides name1 name2");
     return 1;
   }
   /*Initialize the service client Node on the add_object service*/
   ros::NodeHandle n;
   ros::ServiceClient client =
-    n.serviceClient<core_object_server::collides>("collides");
-  core_object_server::collides srv;
+    n.serviceClient<Phasespace_Object_Server::collides>("collides");
+  Phasespace_Object_Server::collides srv;
   srv.request.name1 = argv[1];
   srv.request.name2 = argv[2];
   /*If the call was successful*/

@@ -10,7 +10,7 @@
 #include "./Point.h"
 #include <math.h>
 
-namespace object_server {
+namespace Phasespace_Object_Server {
 
 using std::string;
 
@@ -96,5 +96,5 @@ class Object {
 
 const vector<Object*>::iterator FindObjectByName(string name, vector<Object*> &objects);
 
-}  // namespace object_server
+}  // namespace Phasespace_Object_Server
 #endif  // _SHL_OBJECT_SERVER_SRC_PHASESPACE_OBJECT_H_

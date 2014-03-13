@@ -6,7 +6,7 @@
 #include <vector>
 #include "./Point.h"
 
-namespace object_server {
+namespace Phasespace_Object_Server {
 
 // Initialize the point with the given x, y and z coordinates
 // x, y, z: floats describing location
@@ -160,4 +160,4 @@ const vector<Point>::iterator FindPointById(int id_, vector<Point> &points) {
             << p.x_ << "," << p.y_ << "," << p.z_ << ")";
 }
 
-}  //  namespace object_server
+}  //  namespace Phasespace_Object_Server

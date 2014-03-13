@@ -5,7 +5,7 @@
 
 #include "./DefaultType.h"
 
-namespace object_server {
+namespace Phasespace_Object_Server {
 
 // Math And Vectors
 using std::vector;
@@ -178,4 +178,4 @@ bool DefaultType::GetBothAxes(int i = 0){
     return true;
   }
 }
-}  // namespace object_server
+}  // namespace Phasespace_Object_Server

@@ -23,23 +23,23 @@
 #include <rapidjson/stringbuffer.h>
 
 // service files
-#include "core_object_server/add_object.h"
-#include "core_object_server/add_points.h"
-#include "core_object_server/delete_object.h"
-#include "core_object_server/box_filled.h"
-#include "core_object_server/collides.h"
-#include "core_object_server/save_object.h"
-#include "core_object_server/load_object.h"
-#include "core_object_server/add_manual.h"
-#include "core_object_server/save_env.h"
-#include "core_object_server/load_env.h"
+#include "Phasespace_Object_Server/add_object.h"
+#include "Phasespace_Object_Server/add_points.h"
+#include "Phasespace_Object_Server/delete_object.h"
+#include "Phasespace_Object_Server/box_filled.h"
+#include "Phasespace_Object_Server/collides.h"
+#include "Phasespace_Object_Server/save_object.h"
+#include "Phasespace_Object_Server/load_object.h"
+#include "Phasespace_Object_Server/add_manual.h"
+#include "Phasespace_Object_Server/save_env.h"
+#include "Phasespace_Object_Server/load_env.h"
 
 // Set up ROS messages
 #include "std_msgs/String.h"
 #include "geometry_msgs/Point.h"
 #include "geometry_msgs/Quaternion.h"
-#include "core_object_server/ObjectInfo.h"
-#include "core_object_server/ObjectDigest.h"
+#include "Phasespace_Object_Server/ObjectInfo.h"
+#include "Phasespace_Object_Server/ObjectDigest.h"
 
 // Object functionality
 #include "PhaseSpace/Object.h"
@@ -54,18 +54,18 @@
 #include "owl/owl.h"
 
 using std::vector;
-using object_server::Object;
-using object_server::Point;
+using Phasespace_Object_Server::Object;
+using Phasespace_Object_Server::Point;
 using std::string;
 using std::stringstream;
-using object_server::FindPointById;
-using object_server::ManualObject;
-using object_server::PSObject;
-using object_server::FindObjectByName;
-using object_server::store_object;
-using object_server::store_env;
-using object_server::revive_object;
-using object_server::restore_env;
+using Phasespace_Object_Server::FindPointById;
+using Phasespace_Object_Server::ManualObject;
+using Phasespace_Object_Server::PSObject;
+using Phasespace_Object_Server::FindObjectByName;
+using Phasespace_Object_Server::store_object;
+using Phasespace_Object_Server::store_env;
+using Phasespace_Object_Server::revive_object;
+using Phasespace_Object_Server::restore_env;
 
 // MARKER_COUNT is the maximum number of markers that will ever be used 
 #define MARKER_COUNT 200
@@ -79,7 +79,7 @@ using object_server::restore_env;
 // object_count is the number of objects set so far (deletions are not counted)
 // It is used for assigning new identification numbers to objects
 int object_count_ = 0;
-// markers is the gloval array of OWLMarkers that are taken from the PhaseSpace System */
+// markers is the global array of OWLMarkers that are taken from the PhaseSpace System
 OWLMarker markers[MARKER_COUNT];
 // ids_set_ is a vector of Marker/Point ID's that have been set
 // This is used when finding unassigned id's to set */
@@ -100,8 +100,10 @@ const float shift[3] = { 2.10094,0.637346,-1.24804 };
 const float rotate[3][3] = {{-0.802454, -0.0236066, 0.599659},
                             {0.529394, 0.213418, 0.823575},
                             {-0.14712, 0.976347, -0.158438}};
+                            
+                            
 /////////////////////////////
-/// OWL PHASESPACE ERRROR ///
+/// OWL PHASESPACE ERROR  ///
 /////////////////////////////
 void owl_print_error(const char *s, int n)
 {
@@ -130,7 +132,8 @@ void Transform(OWLMarker *mark) {
   mark->z = rotate[2][0]*x + rotate[2][1]*y + rotate[2][2]*z;
   return;
 }
-// TransformMarkers transforms the position of n-many OWLMarkers in an Array]
+
+// TransformMarkers transforms the position of n-many OWLMarkers in an Array
 // markers[]: An array of owl markers of length MARKER_COUNT]
 // n: The number of markers to change
 void TransformMarkers(OWLMarker markers[MARKER_COUNT], int n) {
@@ -138,12 +141,14 @@ void TransformMarkers(OWLMarker markers[MARKER_COUNT], int n) {
     Transform(&markers[i]);
   } return;
 }
+
 //FindObject finds the location (iterator) of the object with the given id in the global object_vector_]
 //id: the integer identification number for the object desired
 //return: An iterator to the object in the global object_vector_
 vector<Object*>::iterator FindObject(int id) {
   vector<Object*>::iterator iter;
   for (iter = object_vector_.begin(); iter != object_vector_.end(); ++iter)
+    if (*iter == NULL) { ROS_ERROR("NULL object in Phasespace object_vector_."); continue; }
     if ((*iter)->get_id() == id) return iter;
   return iter;
 }
@@ -193,18 +198,19 @@ vector<Point> get_unadded_points() {
 // time: The time in seconds the system will look for new points
 // glove: A boolean that says whether to assign the whole 7 LED set to the object
 // return a vector of unassigned points
-vector<Point> get_points(int time, bool glove = false) {
+vector<Point> get_points(double time, bool glove = false) {
   ROS_ASSERT(time >= 0);
 
-  float rate = 10.0;  // frequency for looking for new unadded points (HZ)
-  time *= rate;  // break time into blocks dependent on rate
+  double rate = 10.0;  // frequency for looking for new unadded points (HZ)
+  double time_decrement = 1./rate;
   vector<Point> points;
   while (time > 0) {
     vector <Point> new_points = get_unadded_points();
     points.insert(points.end(), new_points.begin(), new_points.end());
-    ros::Duration(1.0/rate).sleep();
-    time--;
+    ros::Duration(time_decrement).sleep();
+    time -= time_decrement;
   }
+  
   // If this is an object that takes up one whole connection
   // If at least one point has been gathered
   // And not all of them have been gathered
@@ -234,12 +240,12 @@ vector<Point> get_points(int time, bool glove = false) {
 ////////////////////////////////////////////////////////////////////////////////
 
 // delete_object deletes the Object with the Given ID from the list of Tracked Objects
-// req: The ROS Service request for the core_object_server delete_object service
+// req: The ROS Service request for the Phasespace_Object_Server delete_object service
 //      (int32) id: the id of the object to be deleted
-// res: The ROS Service response fo the core_object_server delete_object service
+// res: The ROS Service response fo the Phasespace_Object_Server delete_object service
 // return: bool that indicates whether the service itself failed -> ROS_ERROR
-bool delete_object(core_object_server::delete_object::Request &req,
-                   core_object_server::delete_object::Response &res) {
+bool delete_object(Phasespace_Object_Server::delete_object::Request &req,
+                   Phasespace_Object_Server::delete_object::Response &res) {
   vector<Object*>::iterator target_iter = FindObject(req.id);
   if (target_iter == object_vector_.end()) {
     ROS_INFO("delete_object: target object(%i) does not exist", req.id);
@@ -265,22 +271,22 @@ bool delete_object(core_object_server::delete_object::Request &req,
   return true;
 }
 
-// add_points add points to a given object for a given time
-// req: The ROS Service request for the core_object_server add_points service
+// add_points add points to a given object
+// req: The ROS Service request for the Phasespace_Object_Server add_points service
 //       (int32) id: The ID of the object to add points to
 //       (int32) time: The time to be looking for new pointers
-// res:  The ROS Service response for the core_object_server add_points service
+// res:  The ROS Service response for the Phasespace_Object_Server add_points service
 //       (string) info: Information on how the program succeeded or failed
-// return: bool that indeicates whether the service itself failed -> ROS_ERROR
-bool add_points(core_object_server::add_points::Request &req,
-                core_object_server::add_points::Response &res) {
+// return: bool that indicates whether the service itself failed -> ROS_ERROR
+bool add_points(Phasespace_Object_Server::add_points::Request &req,
+                Phasespace_Object_Server::add_points::Response &res) {
   // Find target object for addition of points
   vector<Object*>::iterator target= FindObject(req.id);
   // If the object does not exist indicate a failed service
   if (target == object_vector_.end()) {
-    ROS_INFO("add_points: no such target object exists\n");
+    ROS_ERROR("add_points: no such target object exists\n");
     res.info = "No Such Object Exists";
-    return true;
+    return false;
   }
   Object* object = *target;
   // Gather Additional Unset Points
@@ -293,7 +299,7 @@ bool add_points(core_object_server::add_points::Request &req,
   }
   // Add the Points To this Object
   if (object->AddPoints(points)) {
-    // Indicate a successfull points addition
+    // Indicate a successful points addition
     stringstream info;
     info << "Object: " << req.id << " has added the points: ";
     // Indicate which ID's were added to this object
@@ -313,21 +319,21 @@ bool add_points(core_object_server::add_points::Request &req,
     for (iter = points.begin(); iter != points.end(); ++iter) {
       std::remove(ids_set_.begin(), ids_set_.end(), iter->id_);
     }
-    return true;
+    return false;
   }
 }
 
 // add_object adds an object to be tracked
-//            needs the axes to be visible when the alloted time is up
-// req: The ROS Service request for the core_object_server add_object service
+//            needs the axes to be visible when the allotted time is up
+// req: The ROS Service request for the Phasespace_Object_Server add_object service
 //       (string) name: User given name for the object
 //       (int32)  time: User given time to be searching for new points
 //       (string) type: Type of Object to be added
-// res: The ROS Service response for the core_object_server add_object service
+// res: The ROS Service response for the Phasespace_Object_Server add_object service
 //       (string)  info: Information as to how the program succeeded or failed
 // return: bool that indicates whether the service itself failed -> ROS_ERROR
-bool add_object(core_object_server::add_object::Request &req,
-                core_object_server::add_object::Response &res) {
+bool add_object(Phasespace_Object_Server::add_object::Request &req,
+                Phasespace_Object_Server::add_object::Response &res) {
   stringstream info;
   if (FindObjectByName(req.name, object_vector_) != object_vector_.end()) {
     info << "Name " << req.name << " is already in use";
@@ -348,30 +354,30 @@ bool add_object(core_object_server::add_object::Request &req,
   }
   ROS_INFO("%s", info.str().c_str());
   // Initialize this New Object with the name given, new points, and the type
-  PSObject* temp_object = new PSObject;
+  PSObject* temp_object = new PSObject();
   temp_object->Init(object_count_, req.name, points, req.type, req.rigid);
   // Add this object to the list of tracked objects
   Object* obj;
   obj = static_cast<Object*>(temp_object);
   object_vector_.push_back(obj);
-  // pdate the universal object_count
-  object_count_++;
+  // Update the universal object_count
+  ++object_count_;
   //Send the service caller the information associated with their call
   res.info = info.str();
   ROS_INFO("Object Added: %s\n", info.str().c_str());
   return true;
 }
 // add_manual adds a manual object to the environment
-// req: The ROS Service requiest for the core_object_server add_manual service
+// req: The ROS Service requiest for the Phasespace_Object_Server add_manual service
 //      (string) name: Unique user given name for object
 //      (float[3]) center: Center for the new object
 //      (float[3]) dim: Local dimensions for the object
 //      (float[4]) rot: Rotation of Object (quaternion)
-// res: The ROS Service response for the core_object_server add_manual service
+// res: The ROS Service response for the Phasespace_Object_Server add_manual service
 //      (string) info: Information on how the service succeeded or failed
 // return: bool that indicates whether the service succeeded
-bool add_manual(core_object_server::add_manual::Request &req,
-                       core_object_server::add_manual::Response &res) {
+bool add_manual(Phasespace_Object_Server::add_manual::Request &req,
+                Phasespace_Object_Server::add_manual::Response &res) {
   stringstream info;
   if (FindObjectByName(req.name, object_vector_) != object_vector_.end()) {
     info << "Name " << req.name << " is already in use";
@@ -384,22 +390,23 @@ bool add_manual(core_object_server::add_manual::Request &req,
   obj->SetCenter(req.center[0], req.center[1], req.center[2]);
   obj->SetDim(req.dim[0], req.dim[1], req.dim[2]);
   obj->SetAngle(req.rot[0], req.rot[1], req.rot[2], req.rot[3]);
-  object_count_++;
+  ++object_count_;
   Object* Obj = static_cast<Object*>(obj);
   object_vector_.push_back(Obj);
   res.info = info.str();
   ROS_INFO("Object Added: %s\n", info.str().c_str());
   return true;
 }
+
 // collides checks whether two objects with the given names collide
-// req: The ROS Service request for the core_object_server collide service
+// req: The ROS Service request for the Phasespace_Object_Server collide service
 //      name1: the string representing the first object in the questionable collision
 //      name2: the string representing the second object in the collision
-// res: The ROS service response for the core_object_server colled service
+// res: The ROS service response for the Phasespace_Object_Server colled service
 //      collides: bool that answers the question: The two objects are colliding?
 // return: bool that indicates whether the service itself has failed -> ROS_ERROR
-bool collides(core_object_server::collides::Request &req,
-              core_object_server::collides::Response &res) {
+bool collides(Phasespace_Object_Server::collides::Request &req,
+              Phasespace_Object_Server::collides::Response &res) {
   const vector<Object*>::iterator object1 = FindObjectByName(req.name1, object_vector_);
   const vector<Object*>::iterator object2 = FindObjectByName(req.name2, object_vector_);
   if (object1 == object_vector_.end() || object2 == object_vector_.end()) {
@@ -410,21 +417,21 @@ bool collides(core_object_server::collides::Request &req,
 }
 // box filled checks whether a given box is filled
 //     defined by a center(X,Y,Z) and side-length
-// req: The ROS Service request for the core_object_server box_filled service
+// req: The ROS Service request for the Phasespace_Object_Server box_filled service
 //      x: x coordinate for the center of the cube
 //      y: y coordinate for the center of the cube
 //      z: z coordinate for the center of the cube
 //      width: the width of one side of the cube
-// res: The ROS Service response for the core_object_server box_filled service
+// res: The ROS Service response for the Phasespace_Object_Server box_filled service
 // return: bool that indicates whether the service itself failed -> ROS_ERROR
-bool box_filled(core_object_server::box_filled::Request &req,
-                core_object_server::box_filled::Response &res) {
+bool box_filled(Phasespace_Object_Server::box_filled::Request &req,
+                Phasespace_Object_Server::box_filled::Response &res) {
   ManualObject* box = new ManualObject;
   box->Init(-1, "cube");
   box->SetCenter( req.x, req.y, req.z );
   box->SetAngle(1, 0, 0, 0);
   box->SetDim(req.width, req.width, req.width);
-  Object* obj = dynamic_cast<Object*>(box);
+  Object* obj = static_cast<Object*>(box);
   vector<Object*>::iterator iter;
   res.filled = false;
   vector<string> objects_in;
@@ -439,40 +446,40 @@ bool box_filled(core_object_server::box_filled::Request &req,
   return true;
 }
 // save_object stores the object into disk memory for later recall in a JSON file
-// req: The ROS Service request for the core_object_server save_object service
+// req: The ROS Service request for the Phasespace_Object_Server save_object service
 //      name: the name of the object to be saved
 //            it will be stored under this name for later recall
 //            this name must be unique
-// res: The ROS Service response for the core_object_server save_object service
+// res: The ROS Service response for the Phasespace_Object_Server save_object service
 //      info: information on the running of this service
 // return: bool that indicates whether the service itself failed -> ROS_ERROR
-bool save_object(core_object_server::save_object::Request &req,
-                 core_object_server::save_object::Response &res) {
+bool save_object(Phasespace_Object_Server::save_object::Request &req,
+                 Phasespace_Object_Server::save_object::Response &res) {
   string file = OBJECT_FILE_EXT;
   file += req.name;
   vector<Object*>::iterator obj = FindObjectByName(req.name, object_vector_);
   return store_object(*obj, file);
 }
 
-bool save_env(core_object_server::save_env::Request &req,
-              core_object_server::save_env::Response &res) {
+bool save_env(Phasespace_Object_Server::save_env::Request &req,
+              Phasespace_Object_Server::save_env::Response &res) {
   return store_env(ENV_EXT, req.name, object_vector_);
 }
 
-bool load_env(core_object_server::load_env::Request &req,
-              core_object_server::load_env::Response &res) {
+bool load_env(Phasespace_Object_Server::load_env::Request &req,
+              Phasespace_Object_Server::load_env::Response &res) {
   string env_ext = ENV_EXT;
   string env_name = req.name;
   return restore_env(env_ext, env_name, ids_set_, object_vector_, object_count_);
 }
 // load_object loads the object from the JSON file where the objects are stored
-// req: The ROS Service request for the core_object_server load_object service
+// req: The ROS Service request for the Phasespace_Object_Server load_object service
 //      name: the name of the object to be loaded from memory
-// res: The ROS Service response for the core_object_server load_object service
+// res: The ROS Service response for the Phasespace_Object_Server load_object service
 //      info: information of the running of this service
 // return: bool that indicates whether the service itself failed -> ROS_ERROR
-bool load_object(core_object_server::load_object::Request &req,
-                 core_object_server::load_object::Response &res) {
+bool load_object(Phasespace_Object_Server::load_object::Request &req,
+                 Phasespace_Object_Server::load_object::Response &res) {
   string file = OBJECT_FILE_EXT;
   file += req.name;
   Object *obj;
@@ -486,10 +493,10 @@ bool load_object(core_object_server::load_object::Request &req,
 // print_digest takes the ObjectDigest and Transforms it into a string
 //    that can be displayed using ROS_INFO
 // &digest: A ROS ObjectDigest message containing all the objects' information
-string print_digest(core_object_server::ObjectDigest const &digest) {
+string print_digest(Phasespace_Object_Server::ObjectDigest const &digest) {
   stringstream print;
   print << digest.time << "\n";
-  vector<core_object_server::ObjectInfo>::const_iterator iter;
+  vector<Phasespace_Object_Server::ObjectInfo>::const_iterator iter;
   for (iter = digest.objects.begin(); iter != digest.objects.end(); ++iter) {
     print << "(" << iter->id << ")";
     print << iter->name;
@@ -540,11 +547,11 @@ int main(int argc, char **argv) {
   /// Initialize ROS Node ///
   ///////////////////////////
   // Initialize the rosnode server which will output this data
-  ros::init(argc, argv, "server");
+  ros::init(argc, argv, "Phasespace_Object_Server");
   ros::NodeHandle n;
-  // publish object information on core_object_server/objects channel
+  // publish object information on Phasespace_Object_Server/objects channel
   ros::Publisher publisher =
-    n.advertise<core_object_server::ObjectDigest>("objects", 0);
+    n.advertise<Phasespace_Object_Server::ObjectDigest>("/phasespace/objects", 0);
   // publish object information also to rviz
   ros::Publisher rviz_pub =
       n.advertise<visualization_msgs::Marker>("visualization_marker", 1);
@@ -574,6 +581,7 @@ int main(int argc, char **argv) {
   // The rate to loop throught the ROS calls
   // There is no need to do this at a higher rate than the PhaseSpace system
   ros::Rate loop_rate(frequency); 
+
   while (ros::ok()) {
     // Populate the markers with new position information from the PhaseSpace System
     int err;
@@ -581,14 +589,13 @@ int main(int argc, char **argv) {
     // Transform these markers to be representative of the new coordinate system
     TransformMarkers(markers, n);
     // Put a timestamp on the messages
-    ros::Time timestamp;
-    timestamp = ros::Time::now();
+    ros::Time timestamp = ros::Time::now();
     // If there was an error in getting the marker information indicate that
     if ((err = owlGetError()) != OWL_NO_ERROR) {
       owl_print_error("error", err);
     }
     // Initialize the message object for giving out Object Information
-    core_object_server::ObjectDigest digest;
+    Phasespace_Object_Server::ObjectDigest digest;
     digest.time = timestamp.sec;
     // If there are no Object's set then we are done
     if (object_vector_.size() == 0) {
@@ -605,7 +612,7 @@ int main(int argc, char **argv) {
         // Get the rotational data from the object
         vector<float> rotation = (*iter)->get_rotation();
         // Make the message type to hold all of this information
-        core_object_server::ObjectInfo info;
+        Phasespace_Object_Server::ObjectInfo info;
         info.id = (*iter)->get_id();
         info.name = (*iter)->get_name();
         // Set the message's position data
@@ -644,8 +651,8 @@ int main(int argc, char **argv) {
         marker.header.frame_id ="/tablesurface";
         // The time for the object
         marker.header.stamp = timestamp;
-        // Set the NameSpoace and ID
-        marker.ns = "PhaseSpace_Objects";
+        // Set the NameSpace and ID
+        marker.ns = "Phasespace_Objects";
         marker.id = (*iter)->get_id();
         marker.type = shape;
         // Indicate that the object will need to be added
@@ -680,7 +687,6 @@ int main(int argc, char **argv) {
     ros::spinOnce();
     loop_rate.sleep();
   }
-  ros::spin();
   /*Clean up PhaseSpace system*/
   owlDone();
   return 0;

@@ -12,7 +12,7 @@
 #include <cmath>
 #include "owl/owl.h"
 
-namespace object_server {
+namespace Phasespace_Object_Server {
 
 using std::string;
 using std::stringstream;
@@ -83,6 +83,6 @@ class Point {
 
 const vector<Point>::iterator FindPointById(int id, vector<Point> &points);
 ::std::ostream& operator<<(::std::ostream& os, const Point& point);
-}  // namespace object_server
+}  // namespace Phasespace_Object_Server
 
 #endif  // _SHL_OBJECT_SERVER_SRC_PHASESPACE_POINT_H_

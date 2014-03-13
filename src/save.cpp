@@ -5,7 +5,7 @@
 
 #include "save.h"
 
-namespace object_server {
+namespace Phasespace_Object_Server {
 // Store Object obj in file filename
 // obj: pointer to object to store
 // filename: filename where it will be stored

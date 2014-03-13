@@ -7,7 +7,7 @@
 #include <vector>
 #include "./PSObject.h"
 
-namespace object_server {
+namespace Phasespace_Object_Server {
 
 // Init initializes the PSObject with the given information
 // identification : the id of the object
@@ -73,4 +73,4 @@ bool PSObject::Update(OWLMarker *markers, int n) {
   return true;
 }
 
-}  // namespace object_server
+}  // namespace Phasespace_Object_Server

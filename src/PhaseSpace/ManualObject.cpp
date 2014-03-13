@@ -5,7 +5,7 @@
 
 #include "./ManualObject.h"
 
-namespace object_server {
+namespace Phasespace_Object_Server {
 
 using quaternions::QRotate;
 using quaternions::QInv;
@@ -84,4 +84,4 @@ bool ManualObject::UpdateFields() {
   return true;
 }
 
-} // namespace object_server
+} // namespace Phasespace_Object_Server

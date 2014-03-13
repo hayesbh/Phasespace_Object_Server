@@ -10,10 +10,10 @@
 #include "./ObjectType.h"
 #include "./Point.h"
 
-namespace object_server {
+namespace Phasespace_Object_Server {
 
 using std::vector;
-using object_server::ObjectType;
+using Phasespace_Object_Server::ObjectType;
 
 class GloveType : public ObjectType {
   public:
@@ -40,5 +40,5 @@ class GloveType : public ObjectType {
       return false;
     }
 };
-}  // object_server
+}  // Phasespace_Object_Server
 #endif  // _SHL__OBJECT_SERVER_SRC_PHASESPACE_GLOVETYPE_H_

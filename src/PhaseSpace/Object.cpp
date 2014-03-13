@@ -5,7 +5,7 @@
 
 #include "./Object.h"
 
-namespace object_server {
+namespace Phasespace_Object_Server {
 
 //Default CollidesWith(Object obj)
 
@@ -124,4 +124,4 @@ const vector<Object*>::iterator FindObjectByName(string name, vector<Object*> &o
   return objects.end();
 }
 
-}  // namespace object_server
+}  // namespace Phasespace_Object_Server

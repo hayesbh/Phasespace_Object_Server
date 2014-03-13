@@ -7,7 +7,7 @@
  */
 #include <cstdlib>
 #include "ros/ros.h"
-#include "core_object_server/delete_object.h"
+#include "Phasespace_Object_Server/delete_object.h"
 
 int main(int argc, char **argv) {
   /*initialize ROS*/
@@ -20,8 +20,8 @@ int main(int argc, char **argv) {
   /*create the service client node on the delete_object service*/
   ros::NodeHandle n;
   ros::ServiceClient client =
-    n.serviceClient<core_object_server::delete_object>("delete_object");
-  core_object_server::delete_object srv;
+    n.serviceClient<Phasespace_Object_Server::delete_object>("delete_object");
+  Phasespace_Object_Server::delete_object srv;
   srv.request.id = atol(argv[1]);
   ROS_INFO("Request Sent");
   if (client.call(srv)) {

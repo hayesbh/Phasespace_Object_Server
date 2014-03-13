@@ -1,2 +1,2 @@
 int32 time
-core_object_server/ObjectInfo[] objects
+Phasespace_Object_Server/ObjectInfo[] objects

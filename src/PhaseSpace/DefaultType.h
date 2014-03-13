@@ -11,14 +11,14 @@
 #include "quaternion.h"
 #include "ObjectType.h"
 
-namespace object_server {
+namespace Phasespace_Object_Server {
 
 // Math And Vectors
 using std::vector;
 
 using std::pow;
 // Points
-using object_server::Point;
+using Phasespace_Object_Server::Point;
 // Quaternions
 using quaternions::QMult;
 using quaternions::QNormalize;

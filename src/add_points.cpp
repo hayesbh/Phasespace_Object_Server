@@ -7,7 +7,7 @@
  */
 #include <cstdlib>
 #include "ros/ros.h"
-#include "core_object_server/add_points.h"
+#include "Phasespace_Object_Server/add_points.h"
 
 int main(int argc, char **argv) {
   ros::init(argc, argv, "add_points");
@@ -18,8 +18,8 @@ int main(int argc, char **argv) {
   }
   /*initialize service client node on add_points service*/
   ros::NodeHandle n;
-  ros::ServiceClient client = n.serviceClient<core_object_server::add_points>("add_points");
-  core_object_server::add_points srv;
+  ros::ServiceClient client = n.serviceClient<Phasespace_Object_Server::add_points>("add_points");
+  Phasespace_Object_Server::add_points srv;
   /*get the id and time*/
   srv.request.id = atol(argv[1]);
   /*default time is 5 seconds*/

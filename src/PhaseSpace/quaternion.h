@@ -22,7 +22,7 @@
 namespace quaternions {
 
 using std::vector;
-using object_server::Point;
+using Phasespace_Object_Server::Point;
 
 // Qmult uses Quaternion multiplication to multiply two quaternions together
 // v1: first quaternion to multiply

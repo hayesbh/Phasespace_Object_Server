@@ -8,7 +8,7 @@
 
 #include <cstdlib>
 #include "ros/ros.h"
-#include "core_object_server/add_object.h"
+#include "Phasespace_Object_Server/add_object.h"
 
 int main(int argc, char **argv) {
   /*itintialize the ROS client*/
@@ -21,8 +21,8 @@ int main(int argc, char **argv) {
   /*Initialize the service client Node on the add_object service*/
   ros::NodeHandle n;
   ros::ServiceClient client =
-    n.serviceClient<core_object_server::add_object>("add_object");
-  core_object_server::add_object srv;
+    n.serviceClient<Phasespace_Object_Server::add_object>("add_object");
+  Phasespace_Object_Server::add_object srv;
   srv.request.name = argv[1];
   /*Otherwise set it to the time the user gives*/
   int t = atoi(argv[2]);

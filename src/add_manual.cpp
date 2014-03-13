@@ -9,7 +9,7 @@
 #include <cstdlib>
 #include <vector>
 #include "ros/ros.h"
-#include "core_object_server/add_manual.h"
+#include "Phasespace_Object_Server/add_manual.h"
 
 using std::vector;
 
@@ -18,14 +18,14 @@ int main(int argc, char **argv) {
   ros::init(argc, argv, "add_manual");
   /*Check for inproper number of arguments*/
   if (argc != 12) {
-    ROS_WARN("usage: rosrun core_object_server add_manual name x y z x_scale y_scale z_scale w x y z");
+    ROS_WARN("usage: rosrun Phasespace_Object_Server add_manual name x y z x_scale y_scale z_scale w x y z");
     return 1;
   }
   /*Initialize the service client Node on the add_object service*/
   ros::NodeHandle n;
   ros::ServiceClient client =
-    n.serviceClient<core_object_server::add_manual>("add_manual");
-  core_object_server::add_manual srv;
+    n.serviceClient<Phasespace_Object_Server::add_manual>("add_manual");
+  Phasespace_Object_Server::add_manual srv;
   srv.request.name = argv[1];
   for(int i = 2; i < 5; ++i) {
      srv.request.center.push_back(atof(argv[i]));

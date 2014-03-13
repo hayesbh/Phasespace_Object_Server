@@ -6,7 +6,7 @@
 #include <vector>
 #include "./GloveType.h"
 
-namespace object_server {
+namespace Phasespace_Object_Server {
 
 // Init sets initializes the points_ of the glove
 // finds all of the fingers' specific Points
@@ -102,4 +102,4 @@ bool GloveType::GetBothAxes(int i) {
     return true;
   }
 }
-}  // namespace object_server
+}  // namespace Phasespace_Object_Server

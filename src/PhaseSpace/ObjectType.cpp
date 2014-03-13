@@ -5,7 +5,7 @@
 
 #include "ObjectType.h"
 
-namespace object_server {
+namespace Phasespace_Object_Server {
 
 using std::vector;
 using quaternions::QNormalize;
@@ -159,4 +159,4 @@ void ObjectType::GetAngle(int i) {
   angle_ = QNormalize(QMult(Q1, Q2));
   return;
 }
-}  // namespace object_server
+}  // namespace Phasespace_Object_Server

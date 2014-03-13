@@ -30,7 +30,7 @@
 #include "PhaseSpace/ManualObject.h"
 #include "PhaseSpace/Point.h"
 
-namespace object_server {
+namespace Phasespace_Object_Server {
 
 using std::vector;
 using std::string;
@@ -65,7 +65,7 @@ bool revive_object(string filename, vector<int>& ids_set_, Object** object, int 
 // object_count: current object count for setting ids
 bool restore_env(string env_ext, string env_name, vector<int>& ids_set_, vector<Object*>& objects, int &object_count);
 
-}  // object_server
+}  // Phasespace_Object_Server
 
 #endif  // _SHL_OBJECT_SERVER_SRC_SAVE_H_
 

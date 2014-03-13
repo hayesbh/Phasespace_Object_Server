@@ -10,7 +10,7 @@
 #include <cstdlib>
 #include <vector>
 #include "ros/ros.h"
-#include "core_object_server/box_filled.h"
+#include "Phasespace_Object_Server/box_filled.h"
 
 using std::vector;
 using std::string;
@@ -20,14 +20,14 @@ int main(int argc, char **argv) {
   ros::init(argc, argv, "box_filled");
   /*Check for inproper number of arguments*/
   if (argc != 5) {
-    ROS_WARN("usage: rosrun core_object_server box_filled x y z width");
+    ROS_WARN("usage: rosrun Phasespace_Object_Server box_filled x y z width");
     return 1;
   }
   /*Initialize the service client Node on the add_object service*/
   ros::NodeHandle n;
   ros::ServiceClient client =
-    n.serviceClient<core_object_server::box_filled>("box_filled");
-  core_object_server::box_filled srv;
+    n.serviceClient<Phasespace_Object_Server::box_filled>("box_filled");
+  Phasespace_Object_Server::box_filled srv;
   srv.request.x = atof(argv[1]);
   srv.request.y = atof(argv[2]);
   srv.request.z = atof(argv[3]);

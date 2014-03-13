@@ -12,7 +12,7 @@
 #include "./Point.h"
 #include "./quaternion.h"
 
-namespace object_server {
+namespace Phasespace_Object_Server {
 
 
 class ObjectType {
@@ -209,5 +209,5 @@ class ObjectType {
     // This just runs the GetAxes(0) and compares them against the original
     virtual void GetAngle(int i=0);
 };
-}  // namespace object_server
+}  // namespace Phasespace_Object_Server
 #endif  // _SHL_OBJECT_SERVER_SRC_PHASESPACE_OBJECTTYPE_H_

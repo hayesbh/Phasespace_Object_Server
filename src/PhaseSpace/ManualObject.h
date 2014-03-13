@@ -11,9 +11,9 @@
 #include "Object.h"
 #include "quaternion.h"
 
-namespace object_server {
+namespace Phasespace_Object_Server {
 
-using object_server::Object;
+using Phasespace_Object_Server::Object;
 
 class ManualObject : public Object {
   public:
@@ -54,5 +54,5 @@ class ManualObject : public Object {
   }
 };
 
-}  // namespace object_server
+}  // namespace Phasespace_Object_Server
 #endif  // _SHL_OBJECT_SERVER_SRC_PHASESPACE_MANUALOBJECT_H_

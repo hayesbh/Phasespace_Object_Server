@@ -14,11 +14,11 @@
 #include "./GloveType.h"
 #include "./DefaultType.h"
 
-namespace object_server {
+namespace Phasespace_Object_Server {
 
 using std::vector;
 using std::string;
-using object_server::Object;
+using Phasespace_Object_Server::Object;
 
 class PSObject : public Object {
  protected:
@@ -120,7 +120,7 @@ class PSObject : public Object {
   // AddPoints adds points to this object
   // new_points : a vector of new Point s to add to this object
   // return bool indicating whether this addition was successful
-  virtual bool AddPoints(vector<Point> new_points) {
+  virtual bool AddPoints(vector<Point> &new_points) {
     return type_->AddPoints(new_points);
   }
   // Update updates the PhaseSpace Object
@@ -137,6 +137,6 @@ class PSObject : public Object {
     type_->reset();
   }
 };
-}  // namespace object_server
+}  // namespace Phasespace_Object_Server
 
 #endif  // _SHL_OBJECT_SERVER_SRC_PHASESPACE_PSOBJECT_H_
