@@ -13,7 +13,7 @@ int main(int argc, char **argv) {
   ros::init(argc, argv, "add_points");
   /*Check for improper argument*/
   if (argc != 3) {
-    ROS_WARN("usage: rosrun test add_points name time");
+    ROS_WARN("usage: add_points object_id time_to_search_for_new_points");
     return 1;
   }
   /*initialize service client node on add_points service*/

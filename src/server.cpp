@@ -142,15 +142,32 @@ void TransformMarkers(OWLMarker markers[MARKER_COUNT], int n) {
   } return;
 }
 
-//FindObject finds the location (iterator) of the object with the given id in the global object_vector_]
-//id: the integer identification number for the object desired
-//return: An iterator to the object in the global object_vector_
-vector<Object*>::iterator FindObject(int id) {
+/**
+  * FindObject finds the location of the object with the given id in the global object_vector_
+  * @param id the integer identification number for the object desired
+  * @return An iterator to the object in the global object_vector_
+**/
+Object* FindObject(int id) {
   vector<Object*>::iterator iter;
-  for (iter = object_vector_.begin(); iter != object_vector_.end(); ++iter)
+  for (iter = object_vector_.begin(); iter != object_vector_.end(); ++iter) {
     if (*iter == NULL) { ROS_ERROR("NULL object in Phasespace object_vector_."); continue; }
-    if ((*iter)->get_id() == id) return iter;
-  return iter;
+    if ((*iter)->get_id() == id) return *iter;
+  }
+  return NULL;
+}
+
+/**
+  * FindObject finds the location of the object with the given id in the global object_vector_
+  * @param id the integer identification number for the object desired
+  * @return An iterator to the object in the global object_vector_
+**/
+Object* FindObject(string obj_name) {
+  vector<Object*>::iterator iter;
+  for (iter = object_vector_.begin(); iter != object_vector_.end(); ++iter) {
+    if (*iter == NULL) { ROS_ERROR("NULL object in Phasespace object_vector_."); continue; }
+    if ((*iter)->get_name().compare(obj_name) == 0) return *iter;
+  }
+  return NULL;
 }
 
 ////////////////////////////////////////
@@ -242,31 +259,40 @@ vector<Point> get_points(double time, bool glove = false) {
 // delete_object deletes the Object with the Given ID from the list of Tracked Objects
 // req: The ROS Service request for the Phasespace_Object_Server delete_object service
 //      (int32) id: the id of the object to be deleted
-// res: The ROS Service response fo the Phasespace_Object_Server delete_object service
+// res: The ROS Service response of the Phasespace_Object_Server delete_object service
 // return: bool that indicates whether the service itself failed -> ROS_ERROR
 bool delete_object(Phasespace_Object_Server::delete_object::Request &req,
                    Phasespace_Object_Server::delete_object::Response &res) {
-  vector<Object*>::iterator target_iter = FindObject(req.id);
-  if (target_iter == object_vector_.end()) {
-    ROS_INFO("delete_object: target object(%i) does not exist", req.id);
-    return true;
+  Object* target_obj = NULL;
+  if (req.name.size() == 0) 
+    target_obj = FindObject(req.id);
+  else
+    target_obj = FindObject(req.name);
+    
+  if (target_obj == NULL) {
+    ROS_INFO("delete_object: target object (%i,'%s') does not exist", req.id, req.name.c_str());
+    return false;
   }
+  
   stringstream info;
-  info << "Object (" << req.id << ") " "deleted\n";
+  info << "Object (" << target_obj->get_id() << ") " "deleted\n";
   info << "Points: ";
   // Remove the Object's Associated Marker ID's from the list of set IDs
-  Object* target = *target_iter;
-  vector<Point> const &object_points = target->get_points();
+  vector<Point> const &object_points = target_obj->get_points();
   vector<Point>::const_iterator iter;
   for (iter = object_points.begin(); iter != object_points.end(); ++iter) {
     std::remove(ids_set_.begin(), ids_set_.end(), iter->id_);
     info << iter->id_ << " ";
   }
-  /*Remove the Object from the Tracked Objects List*/
-  delete target;
-  object_vector_.erase(target_iter, target_iter+1);
+  /*Remove the Object from the Tracked Objects List*/  
+  vector<Object*>::iterator obj_iter = std::find(object_vector_.begin(), object_vector_.end(), target_obj);
+  if (obj_iter != object_vector_.end())
+    object_vector_.erase(obj_iter, obj_iter+1);
   /*Print out that this Object was successfully Removed*/
   info << "removed";
+
+  delete target_obj;
+  
   ROS_INFO("%s", info.str().c_str());
   return true;
 }
@@ -281,24 +307,29 @@ bool delete_object(Phasespace_Object_Server::delete_object::Request &req,
 bool add_points(Phasespace_Object_Server::add_points::Request &req,
                 Phasespace_Object_Server::add_points::Response &res) {
   // Find target object for addition of points
-  vector<Object*>::iterator target= FindObject(req.id);
+  Object* target_obj = NULL;
+  if (req.name.size() == 0) 
+    target_obj = FindObject(req.id);
+  else
+    target_obj = FindObject(req.name);
+  
   // If the object does not exist indicate a failed service
-  if (target == object_vector_.end()) {
+  if (target_obj == NULL) {
     ROS_ERROR("add_points: no such target object exists\n");
     res.info = "No Such Object Exists";
     return false;
   }
-  Object* object = *target;
+  
   // Gather Additional Unset Points
   vector<Point> points = get_points(req.time);
-  // If there were no points indicate teh the
   if (points.size() == 0) {
     ROS_WARN("add_points: No Additional Points Recieved");
     res.info.append("No Points Recieved");
     return true;
   }
+  
   // Add the Points To this Object
-  if (object->AddPoints(points)) {
+  if (target_obj->AddPoints(points)) {
     // Indicate a successful points addition
     stringstream info;
     info << "Object: " << req.id << " has added the points: ";

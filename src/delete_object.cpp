@@ -13,8 +13,8 @@ int main(int argc, char **argv) {
   /*initialize ROS*/
   ros::init(argc, argv, "add");
   /*check for proper number of arguments*/
-  if (argc != 2) {
-    ROS_WARN("usage: rosrun test delete_object name");
+  if (argc != 3) {
+    ROS_WARN("usage: delete_object <id|name> <value>");
     return 1;
   }
   /*create the service client node on the delete_object service*/
@@ -22,7 +22,13 @@ int main(int argc, char **argv) {
   ros::ServiceClient client =
     n.serviceClient<Phasespace_Object_Server::delete_object>("delete_object");
   Phasespace_Object_Server::delete_object srv;
-  srv.request.id = atol(argv[1]);
+  
+  if (std::string(argv[1]).compare("id") == 0) {
+    srv.request.id = atol(argv[2]);    
+  } else {
+    srv.request.name = argv[2];
+  }
+  
   ROS_INFO("Request Sent");
   if (client.call(srv)) {
     ROS_INFO("Object Successfully Deleted");

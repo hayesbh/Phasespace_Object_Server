@@ -15,7 +15,7 @@ int main(int argc, char **argv) {
   ros::init(argc, argv, "add_object");
   /*Check for inproper number of arguments*/
   if (argc != 5) {
-    ROS_WARN("usage: rosrun test add_object name time type rigid");
+    ROS_WARN("usage: add_object object_name search_time_in_seconds <object_type:glove|other> <is_rigid:true|false>");
     return 1;
   }
   /*Initialize the service client Node on the add_object service*/
@@ -28,7 +28,7 @@ int main(int argc, char **argv) {
   int t = atoi(argv[2]);
   srv.request.time = t;
   srv.request.type = argv[3];
-  if(atoi(argv[4]))
+  if(std::string(argv[4]).compare("true")==0)
     srv.request.rigid = 1;
   else srv.request.rigid = 0;
   /*If the call was successful*/
