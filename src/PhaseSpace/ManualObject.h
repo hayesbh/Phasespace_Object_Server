@@ -38,7 +38,7 @@ class ManualObject : public Object {
   bool SetAngle (vector<float> angle);
   bool SetAngle (float w, float x, float y, float z);
   // SetDim sets the dimensions of the object
-  bool SetDim (float x, float y, float z);
+  bool SetDimensions (float x, float y, float z);
   // UpdateFields updates the fields (axes according to the angle)
   bool UpdateFields();
   // Update (with Markers) so that way update can be called on all objects

@@ -1,6 +1,5 @@
 // File: server.cpp
-// Author: Dylan Visher
-// Date: 5/18/13
+// Authors: Brad Hayes (bradley.h.hayes@yale.edu), Dylan Visher
 // About: ROS node for tracking objects in the PhaseSpace System
 
 #include <sys/stat.h>
@@ -53,11 +52,10 @@
 // OWL (PhaseSpace System API)
 #include "owl/owl.h"
 
-using std::vector;
+using namespace std;
+using ros::NodeHandle;
 using Phasespace_Object_Server::Object;
 using Phasespace_Object_Server::Point;
-using std::string;
-using std::stringstream;
 using Phasespace_Object_Server::FindPointById;
 using Phasespace_Object_Server::ManualObject;
 using Phasespace_Object_Server::PSObject;
@@ -67,8 +65,15 @@ using Phasespace_Object_Server::store_env;
 using Phasespace_Object_Server::revive_object;
 using Phasespace_Object_Server::restore_env;
 
+
+void TransformToROSReferenceFrame(OWLMarker *mark);
+void TransformMarkersToROSReferenceFrame(int n);
+void LoadParameters(NodeHandle &nh);
+
 // MARKER_COUNT is the maximum number of markers that will ever be used 
 #define MARKER_COUNT 200
+
+#if 0
 // SERVER_NAME is the IP Address for the PhaseSpace System
 #define SERVER_NAME "192.168.2.123"
 // This flag will set the OWL system up to be in not slave mode;
@@ -76,43 +81,104 @@ using Phasespace_Object_Server::restore_env;
 // OBJECT_FILE_EXT is the relative path of the saved object information
 #define OBJECT_FILE_EXT "object_files/"
 #define ENV_EXT "environments"
+
+#endif
+
 // object_count is the number of objects set so far (deletions are not counted)
 // It is used for assigning new identification numbers to objects
 int object_count_ = 0;
-// markers is the global array of OWLMarkers that are taken from the PhaseSpace System
-OWLMarker markers[MARKER_COUNT];
+// markers_ is the global array of OWLMarkers that are taken from the PhaseSpace System
+OWLMarker markers_[MARKER_COUNT];
 // ids_set_ is a vector of Marker/Point ID's that have been set
 // This is used when finding unassigned id's to set */
 vector<int> ids_set_;
 int tracker_ = 0;
 
-// TODO: POINTERS TO OBJECTS
-// Make Pure Virtual Classes (Object and Object Type)
-// Pass only pointers to Objects
-// new PSObject *glove -> set the information -> cast as Object -> delete glove when done
 vector<Object*> object_vector_;
 // Camera Frame Information
-// shift is a vector that moves the PhaseSpace Origin to the left hand side of the table
-const float shift[3] = { 2.10094,0.637346,-1.24804 };
-// rotate is a 3x3 matrix that defines the rotational transformation of from the Camera Origin
+// translation_vector_ moves the PhaseSpace Origin to the left hand side of the table
+const float translation_vector_[3] = { 2.10094,0.637346,-1.24804 };
+// rotation_matrix_ is a 3x3 matrix that defines the rotational transformation of from the Camera Origin
 // to the local origin: It is in the form of {X, Y, Z}^-1
 // Where X, Y, and Z are the desired axes in the coordinate system of the already shifted camera system
-const float rotate[3][3] = {{-0.802454, -0.0236066, 0.599659},
+const float rotation_matrix_[3][3] = {{-0.802454, -0.0236066, 0.599659},
                             {0.529394, 0.213418, 0.823575},
                             {-0.14712, 0.976347, -0.158438}};
-                            
+
+
+class PhasespaceTrackerParams {
+ public:
+  string SERVER_NAME;
+  int INIT_FLAGS;
+  string OBJECT_FILE_EXT;
+  string ENV_EXT;  
+
+  float translation_vector[3];
+  float rotation_matrix[3][3];
+};
+
+PhasespaceTrackerParams params_;
+
+
+void LoadParameters(NodeHandle &nh) {
+  if (nh.hasParam("server_name")) {
+    nh.getParam("server_name", params_.SERVER_NAME);
+  } else {
+    params_.SERVER_NAME = "192.168.2.123";
+  }
+
+  if (nh.hasParam("init_flags")) {
+    nh.getParam("init_flags", params_.INIT_FLAGS);
+  } else {
+    params_.INIT_FLAGS = 0;
+  }
+
+  if (nh.hasParam("object_files_path")) {
+    nh.getParam("object_files_path", params_.OBJECT_FILE_EXT);
+  } else {
+    params_.OBJECT_FILE_EXT = "object_files/";
+  }
+
+  if (nh.hasParam("environment_files_path")) {
+    nh.getParam("environment_files_path", params_.ENV_EXT);
+  } else {
+    params_.ENV_EXT = "environment_files/";
+  }
+
+  if (nh.hasParam("translation_vector")) {
+    string tv_str;
+    nh.getParam("translation_vector", tv_str);
+    ROS_WARN("translation vector parameter loading not implemented.");
+  } else {
+
+    float default_translation[3] = { 2.10094,0.637346,-1.24804 };    
+    std::copy(default_translation, default_translation+3, params_.translation_vector);
+  }
+
+  if (nh.hasParam("rotation_matrix")) {
+    string rm_str;
+    nh.getParam("rotation_matrix", rm_str);
+    ROS_WARN("rotation matrix parameter loading not implemented.");
+  } else {
+    float default_rotation[3][3] = {{-0.802454, -0.0236066, 0.599659},
+                            {0.529394, 0.213418, 0.823575},
+                            {-0.14712, 0.976347, -0.158438}};
+    std::copy(&default_rotation[0][0], &default_rotation[0][0]+9, &params_.rotation_matrix[0][0]);
+  }
+}
+
                             
 /////////////////////////////
 /// OWL PHASESPACE ERROR  ///
 /////////////////////////////
 void owl_print_error(const char *s, int n)
 {
-  if(n < 0) printf("%s: %d\n", s, n);
-  else if(n == OWL_NO_ERROR) printf("%s: No Error\n", s);
-  else if(n == OWL_INVALID_VALUE) printf("%s: Invalid Value\n", s);
-  else if(n == OWL_INVALID_ENUM) printf("%s: Invalid Enum\n", s);
-  else if(n == OWL_INVALID_OPERATION) printf("%s: Invalid Operation\n", s);
-  else printf("%s: 0x%x\n", s, n);
+  if(n < 0) ROS_WARN("%s: %d\n", s, n);
+  else if(n == OWL_NO_ERROR) ROS_WARN("%s: No Error\n", s);
+  else if(n == OWL_INVALID_VALUE) ROS_WARN("%s: Invalid Value\n", s);
+  else if(n == OWL_INVALID_ENUM) ROS_WARN("%s: Invalid Enum\n", s);
+  else if(n == OWL_INVALID_OPERATION) ROS_WARN("%s: Invalid Operation\n", s);
+  else ROS_WARN("%s: 0x%x\n", s, n);
 }
 
 ////////////////////////////////////
@@ -123,24 +189,42 @@ void owl_print_error(const char *s, int n)
 //   mark: A PhaseSpace OWL API marker
 // This shifts it using the globally defined shift vector
 // This rotates it using the globally defined rotation matrix
-void Transform(OWLMarker *mark) {
-  float x = mark->x - shift[0];
-  float y = mark->y - shift[1];
-  float z = mark->z - shift[2];
-  mark->x = rotate[0][0]*x + rotate[0][1]*y + rotate[0][2]*z;
-  mark->y = rotate[1][0]*x + rotate[1][1]*y + rotate[1][2]*z;
-  mark->z = rotate[2][0]*x + rotate[2][1]*y + rotate[2][2]*z;
+void TransformToROSReferenceFrame(OWLMarker *mark) {
+  float x = mark->x - translation_vector_[0];
+  float y = mark->y - translation_vector_[1];
+  float z = mark->z - translation_vector_[2];
+  mark->x = rotation_matrix_[0][0]*x + rotation_matrix_[0][1]*y + rotation_matrix_[0][2]*z;
+  mark->y = rotation_matrix_[1][0]*x + rotation_matrix_[1][1]*y + rotation_matrix_[1][2]*z;
+  mark->z = rotation_matrix_[2][0]*x + rotation_matrix_[2][1]*y + rotation_matrix_[2][2]*z;
   return;
 }
 
-// TransformMarkers transforms the position of n-many OWLMarkers in an Array
-// markers[]: An array of owl markers of length MARKER_COUNT]
-// n: The number of markers to change
-void TransformMarkers(OWLMarker markers[MARKER_COUNT], int n) {
+/**
+ * TransformMarkersToROSReferenceFrame transforms the position of n-many OWLMarkers to the
+ * frame of reference used in the current ROS/Rviz setup
+ * @param n The quantity of markers to transform (transforms the first n markers)
+ **/
+void TransformMarkersToROSReferenceFrame(int n) {
   for (int i = 0; i < n; i++) {
-    Transform(&markers[i]);
+    TransformToROSReferenceFrame(&markers_[i]);
   } return;
 }
+
+int RefreshOWLMarkers() {
+  int err = OWL_NO_ERROR;
+  int num_markers = owlGetMarkers(markers_, MARKER_COUNT);
+  // Transform these Markers to be reflective of the new Coordinate System
+  TransformMarkersToROSReferenceFrame(num_markers);
+  // Catch errors in the OWL System: If there is an error shut the system down
+  if ((err = owlGetError()) != OWL_NO_ERROR) {
+    ROS_ERROR("get_unadded_points: owlGetError %d", err);
+    owl_print_error("error", err);
+    owlDone();
+    exit(1);
+  }
+  return num_markers;
+}
+
 
 /**
   * FindObject finds the location of the object with the given id in the global object_vector_
@@ -173,33 +257,26 @@ Object* FindObject(string obj_name) {
 ////////////////////////////////////////
 //// ROS SERVICE AUXILLARY PROGRAMS ////
 ////////////////////////////////////////
-//// get_unadded_points, get_points ////
+//// get_untracked_markers, get_points ////
 ////////////////////////////////////////
 
-// get_unadded_points finds the valid points that have not been assigned yet
+// get_untracked_markers finds the valid points that have not been assigned yet
 // return a vector of points that have not been assigned]
-vector<Point> get_unadded_points() {
-  int err;
-  // Recieve Updated Information about the Markers
-  int num_markers = owlGetMarkers(markers, MARKER_COUNT);
-  // Transform these Markers to be reflective of the new Coordinate System
-  TransformMarkers(markers, num_markers);
-  // Catch errors in the OWL System: If there is an error shut the system down
-  if ((err = owlGetError()) != OWL_NO_ERROR) {
-    ROS_ERROR("get_unadded_points: owlGetError %d", err);
-    owl_print_error("error", err);
-    owlDone();
-    exit(1);
-  }
+vector<Point> get_untracked_markers() {
+  // Update Marker Information
+  int num_markers = RefreshOWLMarkers();
   
   // Make a vector of points that have not been added
   vector<Point> points;
   for (int i = 0; i < num_markers; i++) {
     // Only Add to Points if the valid marker has not been set and the data is good/reliable
-    if (std::find(ids_set_.begin(), ids_set_.end(), markers[i].id) == ids_set_.end() && markers[i].cond > 0) {
+
+    // If the marker's ID isn't in the list of object-assigned markers and it's condition is good, add it to
+    // the list of untracked markers
+    if (std::find(ids_set_.begin(), ids_set_.end(), markers_[i].id) == ids_set_.end() && markers_[i].cond > 0) {
       Point point;
       // Update the Point object to be reflective of the OWLMarker
-      point.Update(markers[i]);
+      point.Update(markers_[i]);
       points.push_back(point);
       // Record the id that has been set
       ids_set_.push_back(point.id_);
@@ -210,8 +287,8 @@ vector<Point> get_unadded_points() {
 
 // get_points gathers all unassigned points for a given time
 //            If there is an Object that needs a set amount of points (glove)
-//            Assign the set of 7 points to be art of that object
-//              [the PS LED Driver assignes 7 leds to each wired connection]
+//            Assign the set of 7 points to be part of that object
+//              [the PS LED Driver assigns 7 leds to each wired connection]
 // time: The time in seconds the system will look for new points
 // glove: A boolean that says whether to assign the whole 7 LED set to the object
 // return a vector of unassigned points
@@ -222,7 +299,7 @@ vector<Point> get_points(double time, bool glove = false) {
   double time_decrement = 1./rate;
   vector<Point> points;
   while (time > 0) {
-    vector <Point> new_points = get_unadded_points();
+    vector <Point> new_points = get_untracked_markers();
     points.insert(points.end(), new_points.begin(), new_points.end());
     ros::Duration(time_decrement).sleep();
     time -= time_decrement;
@@ -419,7 +496,7 @@ bool add_manual(Phasespace_Object_Server::add_manual::Request &req,
   obj->Init(object_count_, req.name);
   info << object_count_ << ", " << req.name;
   obj->SetCenter(req.center[0], req.center[1], req.center[2]);
-  obj->SetDim(req.dim[0], req.dim[1], req.dim[2]);
+  obj->SetDimensions(req.dim[0], req.dim[1], req.dim[2]);
   obj->SetAngle(req.rot[0], req.rot[1], req.rot[2], req.rot[3]);
   ++object_count_;
   Object* Obj = static_cast<Object*>(obj);
@@ -461,7 +538,7 @@ bool box_filled(Phasespace_Object_Server::box_filled::Request &req,
   box->Init(-1, "cube");
   box->SetCenter( req.x, req.y, req.z );
   box->SetAngle(1, 0, 0, 0);
-  box->SetDim(req.width, req.width, req.width);
+  box->SetDimensions(req.width, req.width, req.width);
   Object* obj = static_cast<Object*>(box);
   vector<Object*>::iterator iter;
   res.filled = false;
@@ -486,7 +563,7 @@ bool box_filled(Phasespace_Object_Server::box_filled::Request &req,
 // return: bool that indicates whether the service itself failed -> ROS_ERROR
 bool save_object(Phasespace_Object_Server::save_object::Request &req,
                  Phasespace_Object_Server::save_object::Response &res) {
-  string file = OBJECT_FILE_EXT;
+  string file = params_.OBJECT_FILE_EXT;
   file += req.name;
   vector<Object*>::iterator obj = FindObjectByName(req.name, object_vector_);
   return store_object(*obj, file);
@@ -494,14 +571,13 @@ bool save_object(Phasespace_Object_Server::save_object::Request &req,
 
 bool save_env(Phasespace_Object_Server::save_env::Request &req,
               Phasespace_Object_Server::save_env::Response &res) {
-  return store_env(ENV_EXT, req.name, object_vector_);
+  return store_env(params_.ENV_EXT, req.name, object_vector_);
 }
 
 bool load_env(Phasespace_Object_Server::load_env::Request &req,
               Phasespace_Object_Server::load_env::Response &res) {
-  string env_ext = ENV_EXT;
   string env_name = req.name;
-  return restore_env(env_ext, env_name, ids_set_, object_vector_, object_count_);
+  return restore_env(params_.ENV_EXT, env_name, ids_set_, object_vector_, object_count_);
 }
 // load_object loads the object from the JSON file where the objects are stored
 // req: The ROS Service request for the Phasespace_Object_Server load_object service
@@ -511,7 +587,7 @@ bool load_env(Phasespace_Object_Server::load_env::Request &req,
 // return: bool that indicates whether the service itself failed -> ROS_ERROR
 bool load_object(Phasespace_Object_Server::load_object::Request &req,
                  Phasespace_Object_Server::load_object::Response &res) {
-  string file = OBJECT_FILE_EXT;
+  string file = params_.OBJECT_FILE_EXT;
   file += req.name;
   Object *obj;
   if(revive_object(file, ids_set_, &obj, object_count_)) {
@@ -551,12 +627,23 @@ int main(int argc, char **argv) {
   // If frequency is increased make sure to check for lag
   // Increase in small increments
   int frequency = 10;
+
+
+  ///////////////////////////
+  /// Initialize ROS Node ///
+  ///////////////////////////
+  ros::init(argc, argv, "Phasespace_Object_Server");
+  ros::NodeHandle n;
+
+  // Load parameter configuration from the launch parameters
+  LoadParameters(n);
+
   /////////////////////////////////////
   /// Initialize PhaseSpace OWL API ///
   /////////////////////////////////////
   // This section follows the given PhaseSpace Example 1 for point tracking
   // Start up the Owl Server and make sure that it does not fail
-  if (owlInit(SERVER_NAME, INIT_FLAGS) < 0) return 0;
+  if (owlInit(params_.SERVER_NAME.c_str(), params_.INIT_FLAGS) < 0) return 0;
   // Set up a point tracker and assign all markers to it
   owlTrackeri(tracker_, OWL_CREATE, OWL_POINT_TRACKER);
   for (int i = 0; i < MARKER_COUNT; i++)
@@ -574,12 +661,12 @@ int main(int argc, char **argv) {
   owlSetInteger(OWL_STREAMING, OWL_ENABLE);
   // Set Scale of OWL System (millimeters -> meters)
   owlScale(0.001);
+
+
+
   ///////////////////////////
-  /// Initialize ROS Node ///
+  /// Initialize ROS services/publishers ///
   ///////////////////////////
-  // Initialize the rosnode server which will output this data
-  ros::init(argc, argv, "Phasespace_Object_Server");
-  ros::NodeHandle n;
   // publish object information on Phasespace_Object_Server/objects channel
   ros::Publisher publisher =
     n.advertise<Phasespace_Object_Server::ObjectDigest>("/phasespace/objects", 0);
@@ -616,9 +703,7 @@ int main(int argc, char **argv) {
   while (ros::ok()) {
     // Populate the markers with new position information from the PhaseSpace System
     int err;
-    int n = owlGetMarkers(markers, MARKER_COUNT);
-    // Transform these markers to be representative of the new coordinate system
-    TransformMarkers(markers, n);
+    int n = RefreshOWLMarkers();
     // Put a timestamp on the messages
     ros::Time timestamp = ros::Time::now();
     // If there was an error in getting the marker information indicate that
@@ -637,7 +722,7 @@ int main(int argc, char **argv) {
       vector<Object*>::iterator iter;
       for (iter = object_vector_.begin(); iter != object_vector_.end(); ++iter) {
         // Update Objects and Get Info
-        (*iter)->Update(markers, n);
+        (*iter)->Update(markers_, n);
         // Get the positional data from the object
         Point position = (*iter)->get_center();
         // Get the rotational data from the object

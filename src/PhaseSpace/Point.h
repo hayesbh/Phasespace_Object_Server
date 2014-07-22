@@ -36,7 +36,6 @@ class Point {
   void Init();
   // Update updates the point with marker information
   // mark: OWLMarker passed by the Server
-  // return this new point
   void Update(OWLMarker mark);
   // equals checks whether this point occupies the same space as another
   // p: a Point to compare against this one

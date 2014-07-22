@@ -31,7 +31,7 @@ class Object {
     // y: the object's scale along the local y_axis
     // z: the object's scale along the local z_axis
     // return whether these dimensions were properly set
-    bool SetDimensions(float x, float y, float z);
+    virtual bool SetDimensions(float x, float y, float z) = 0;
     
     // get_id returns the id of the object
     // return int representing the identification number
@@ -59,23 +59,23 @@ class Object {
     virtual bool CollidesWith(Object* obj);
     // get_center returns the center of the object
     // return a Point that represents the center of the object
-    Point get_center() {
+    virtual Point get_center() {
       return center_;
     }
     // get_rotation returns the rotation of the object
     // return vector of floats (a quaternion) representing rotation
-    vector<float> get_rotation() {
+    virtual vector<float> get_rotation() {
       return angle_;
     }
     // get_axes returns the axes of the object
     // return a vector of Points representing the unit axes
     //  (X, Y, Z) where X is the local x axis etc.
-    vector<Point> get_axes() {
+    virtual vector<Point> get_axes() {
       return axes_;
     }
     // get_dimensions returns the dimension (extents) of the object
     // return a 3D array of floats descibing the local dimensions of the object
-    vector<float> get_dimensions() {
+    virtual vector<float> get_dimensions() {
       return dim_;
     }
     // return the points that make up the object

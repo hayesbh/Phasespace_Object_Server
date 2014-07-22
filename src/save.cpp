@@ -70,7 +70,7 @@ bool store_object(Object* obj, string filename) {
     angle.PushBack(z, doc.GetAllocator());
     json.AddMember("angle", angle, doc.GetAllocator());
   } else {
-    PSObject* ps_obj = new PSObject;
+    PSObject* ps_obj = new PSObject();
     ps_obj = dynamic_cast<PSObject*>(obj);
     
     // Set up the object_rigidity
@@ -249,7 +249,7 @@ bool revive_object(string filename, vector<int>& ids_set_, Object** object, int 
       fclose(fp);
       return false;
     } else {
-      obj->SetDim((float)dim[(rapidjson::SizeType)0].GetDouble(), (float)dim[1].GetDouble(), (float)dim[2].GetDouble());
+      obj->SetDimensions((float)dim[(rapidjson::SizeType)0].GetDouble(), (float)dim[1].GetDouble(), (float)dim[2].GetDouble());
     }
     rapidjson::Value &angle = p["angle"];
     if (!angle.IsArray() || angle.Size() != 4) {

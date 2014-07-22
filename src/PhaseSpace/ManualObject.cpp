@@ -16,7 +16,7 @@ void ManualObject::Init(int ident, string called) {
   name_ = called;
   SetCenter(0, 0, 0);
   SetAngle(1, 0, 0, 0);
-  SetDim(.01, .01, .01);
+  SetDimensions(.01, .01, .01);
   UpdateFields();
 }  
 bool ManualObject::SetCenter (Point c) {
@@ -58,7 +58,7 @@ bool ManualObject::SetAngle (float w, float x, float y, float z) {
   UpdateFields();
   return true;
 }
-bool ManualObject::SetDim (float x, float y, float z) {
+bool ManualObject::SetDimensions (float x, float y, float z) {
   dim_.clear();
   dim_.push_back(x);
   dim_.push_back(y);

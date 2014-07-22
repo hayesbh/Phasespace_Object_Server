@@ -76,7 +76,7 @@ Point Point::Times(float a) {
 // return the new point
 Point Point::Add(Point p) {
   Point P;
-  (p.current_ && current_) ? (P.current_ = 1) : (P.current_ = 0);
+  P.current_ = (p.current_ && current_) ? 1 : 0;
   P.x_ = x_ + p.x_;
   P.y_ = y_ + p.y_;
   P.z_ = z_ + p.z_;
